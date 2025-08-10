@@ -543,7 +543,14 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Check if Chart.js loads properly
+        let chartJsLoaded = false;
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" 
+            onload="chartJsLoaded = true" 
+            onerror="console.warn('Chart.js failed to load. Charts will be disabled.')">
+    </script>
     <script>
         // Florida Native Plants Database
         const floridaNativePlants = [
@@ -571,32 +578,39 @@
 
         // Initialize IndexedDB
         function initDB() {
-            const request = indexedDB.open('GardenTrackerDB', 1);
-            
-            request.onerror = function() {
-                console.error("Database failed to open");
-            };
-            
-            request.onsuccess = function() {
-                db = request.result;
-                loadInventory();
-                updateStats();
-                initializeCalendars();
-            };
-            
-            request.onupgradeneeded = function(e) {
-                db = e.target.result;
+            try {
+                const request = indexedDB.open('GardenTrackerDB', 1);
                 
-                if (!db.objectStoreNames.contains('inventory')) {
-                    const objectStore = db.createObjectStore('inventory', { keyPath: 'id', autoIncrement: true });
-                    objectStore.createIndex('type', 'type', { unique: false });
-                    objectStore.createIndex('date', 'date', { unique: false });
-                }
+                request.onerror = function() {
+                    console.error("Database failed to open");
+                    alert("Unable to open database. The app may not save data properly. Try refreshing the page.");
+                };
                 
-                if (!db.objectStoreNames.contains('settings')) {
-                    db.createObjectStore('settings', { keyPath: 'key' });
-                }
-            };
+                request.onsuccess = function() {
+                    db = request.result;
+                    console.log("Database opened successfully");
+                    loadInventory();
+                    updateStats();
+                    initializeCalendars();
+                };
+                
+                request.onupgradeneeded = function(e) {
+                    db = e.target.result;
+                    
+                    if (!db.objectStoreNames.contains('inventory')) {
+                        const objectStore = db.createObjectStore('inventory', { keyPath: 'id', autoIncrement: true });
+                        objectStore.createIndex('type', 'type', { unique: false });
+                        objectStore.createIndex('date', 'date', { unique: false });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+            } catch (error) {
+                console.error("Error initializing database:", error);
+                alert("Database initialization failed. Some features may not work properly.");
+            }
         }
 
         // Tab navigation
@@ -966,12 +980,71 @@
 
         // Update charts
         function updateCharts() {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined' || !chartJsLoaded) {
+                console.warn('Chart.js is not available. Showing text statistics instead.');
+                
+                // Show alternative text-based statistics
+                const chartsTab = document.getElementById('charts');
+                if (chartsTab.classList.contains('active')) {
+                    const transaction = db.transaction(['inventory'], 'readonly');
+                    const objectStore = transaction.objectStore('inventory');
+                    const request = objectStore.getAll();
+                    
+                    request.onsuccess = function() {
+                        const items = request.result;
+                        const plants = items.filter(i => i.type === 'plant').length;
+                        const bugs = items.filter(i => i.type === 'bug').length;
+                        
+                        // Create text-based statistics if charts fail
+                        const speciesContainer = document.getElementById('species-chart').parentElement;
+                        speciesContainer.innerHTML = `
+                            <h3>Species Distribution</h3>
+                            <div style="padding: 20px; background: #f0f8ff; border-radius: 10px;">
+                                <p>🌿 Plants: ${plants} entries</p>
+                                <p>🐛 Insects & Wildlife: ${bugs} entries</p>
+                                <p>📊 Total: ${items.length} entries</p>
+                            </div>
+                        `;
+                        
+                        const activityContainer = document.getElementById('activity-chart').parentElement;
+                        activityContainer.innerHTML = `
+                            <h3>Monthly Activity</h3>
+                            <div style="padding: 20px; background: #f0f8ff; border-radius: 10px;">
+                                <p>View your monthly entry statistics in the Timeline tab</p>
+                            </div>
+                        `;
+                        
+                        const bloomContainer = document.getElementById('blooming-chart').parentElement;
+                        bloomContainer.innerHTML = `
+                            <h3>Blooming Patterns</h3>
+                            <div style="padding: 20px; background: #f0f8ff; border-radius: 10px;">
+                                <p>Check the Timeline tab for seasonal blooming information</p>
+                            </div>
+                        `;
+                    };
+                }
+                return;
+            }
+            
+            // Original chart code continues here if Chart.js is loaded
             const transaction = db.transaction(['inventory'], 'readonly');
             const objectStore = transaction.objectStore('inventory');
             const request = objectStore.getAll();
             
             request.onsuccess = function() {
                 const items = request.result;
+                
+                // Clear any existing charts
+                const canvases = ['species-chart', 'activity-chart', 'blooming-chart'];
+                canvases.forEach(id => {
+                    const canvas = document.getElementById(id);
+                    const parent = canvas.parentElement;
+                    canvas.remove();
+                    const newCanvas = document.createElement('canvas');
+                    newCanvas.id = id;
+                    parent.appendChild(newCanvas);
+                });
                 
                 // Species Distribution Chart
                 const speciesCtx = document.getElementById('species-chart').getContext('2d');
@@ -1119,9 +1192,169 @@
             }
         }
 
-        function identifyWithAI() {
-            alert('AI identification would connect to your configured API here. For now, using simulated identification.');
-            simulateIdentification();
+        async function identifyWithAI() {
+            // Get the saved API key
+            const transaction = db.transaction(['settings'], 'readonly');
+            const objectStore = transaction.objectStore('settings');
+            const request = objectStore.get('apiKey');
+            
+            request.onsuccess = async function() {
+                const apiKeyData = request.result;
+                
+                if (!apiKeyData || !apiKeyData.value) {
+                    alert('Please save your Perplexity API key first in the Settings tab');
+                    return;
+                }
+                
+                const apiKey = apiKeyData.value;
+                
+                // Get the image from canvas
+                const canvas = document.getElementById('captured-image');
+                if (!canvas || canvas.style.display === 'none') {
+                    alert('Please capture or upload a photo first');
+                    return;
+                }
+                
+                // Convert canvas to base64
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Show loading state
+                const resultDiv = document.getElementById('identification-result');
+                const contentDiv = document.getElementById('id-content');
+                resultDiv.style.display = 'block';
+                contentDiv.innerHTML = '<p>🔄 Analyzing image with AI... Please wait...</p>';
+                
+                try {
+                    // Call Perplexity API
+                    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: "llama-3.1-sonar-small-128k-online",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: "You are a Florida gardening expert specializing in plant and insect identification for the Tampa Bay area. Provide identification in a structured format."
+                                },
+                                {
+                                    role: "user",
+                                    content: `Please identify this plant or insect from a Tampa, Florida garden. Based on common species in this region, provide:
+                                    1. Common name
+                                    2. Scientific name
+                                    3. Type (Plant/Insect/Other wildlife)
+                                    4. Category (Tree/Shrub/Flower/Butterfly/Beetle/etc.)
+                                    5. Blooming season (if plant) or Active season (if wildlife)
+                                    6. Brief description
+                                    7. Care tips or interesting facts
+                                    
+                                    Note: This image is from Tampa, Florida, so focus on species native to or commonly found in Central Florida.
+                                    
+                                    If you cannot identify the specific species, provide your best guess based on visible characteristics and what's common in Tampa gardens.`
+                                }
+                            ],
+                            temperature: 0.2,
+                            max_tokens: 500
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    const aiResponse = data.choices[0].message.content;
+                    
+                    // Parse the AI response
+                    const identification = parseAIResponse(aiResponse);
+                    currentIdentification = identification;
+                    
+                    // Display the results
+                    contentDiv.innerHTML = `
+                        <p><strong>Common Name:</strong> ${identification.common}</p>
+                        <p><strong>Scientific Name:</strong> <em>${identification.scientific}</em></p>
+                        <p><strong>Type:</strong> ${identification.type}</p>
+                        <p><strong>Category:</strong> ${identification.category}</p>
+                        ${identification.bloom ? `<p><strong>Blooming Season:</strong> ${identification.bloom.join(', ')}</p>` : ''}
+                        ${identification.season ? `<p><strong>Active Season:</strong> ${identification.season.join(', ')}</p>` : ''}
+                        <p><strong>Description:</strong> ${identification.description}</p>
+                        ${identification.care ? `<p><strong>Care Tips:</strong> ${identification.care}</p>` : ''}
+                        <p style="margin-top: 10px; font-size: 0.9em; color: #666;">✨ Identified using Perplexity AI</p>
+                    `;
+                    
+                } catch (error) {
+                    console.error('API Error:', error);
+                    contentDiv.innerHTML = `
+                        <p style="color: red;">❌ Error connecting to Perplexity API</p>
+                        <p>${error.message}</p>
+                        <p>Falling back to simulated identification...</p>
+                    `;
+                    
+                    // Fallback to simulation
+                    setTimeout(() => {
+                        simulateIdentification();
+                    }, 2000);
+                }
+            };
+        }
+        
+        // Parse AI response into structured data
+        function parseAIResponse(response) {
+            // Default structure
+            const identification = {
+                type: 'plant',
+                common: 'Unknown Species',
+                scientific: 'Species unknown',
+                category: 'Unknown',
+                description: response,
+                care: ''
+            };
+            
+            // Try to extract common name
+            const commonMatch = response.match(/Common name:?\s*([^\n]*)/i);
+            if (commonMatch) identification.common = commonMatch[1].trim();
+            
+            // Try to extract scientific name
+            const scientificMatch = response.match(/Scientific name:?\s*([^\n]*)/i);
+            if (scientificMatch) identification.scientific = scientificMatch[1].trim();
+            
+            // Determine if plant or bug
+            if (response.toLowerCase().includes('insect') || 
+                response.toLowerCase().includes('butterfly') || 
+                response.toLowerCase().includes('beetle') ||
+                response.toLowerCase().includes('spider') ||
+                response.toLowerCase().includes('bug')) {
+                identification.type = 'bug';
+            }
+            
+            // Extract category
+            const categoryMatch = response.match(/Category:?\s*([^\n]*)/i) || 
+                                response.match(/Type:?\s*([^\n]*)/i);
+            if (categoryMatch) identification.category = categoryMatch[1].trim();
+            
+            // Extract blooming/active season
+            const bloomMatch = response.match(/Blooming season:?\s*([^\n]*)/i);
+            if (bloomMatch) {
+                identification.bloom = bloomMatch[1].split(/[,;]/).map(s => s.trim());
+            }
+            
+            const seasonMatch = response.match(/Active season:?\s*([^\n]*)/i);
+            if (seasonMatch) {
+                identification.season = seasonMatch[1].split(/[,;]/).map(s => s.trim());
+            }
+            
+            // Extract description
+            const descMatch = response.match(/Description:?\s*([^\n]*)/i);
+            if (descMatch) identification.description = descMatch[1].trim();
+            
+            // Extract care tips
+            const careMatch = response.match(/Care tips:?\s*([^\n]*)/i) || 
+                            response.match(/Care:?\s*([^\n]*)/i);
+            if (careMatch) identification.care = careMatch[1].trim();
+            
+            return identification;
         }
 
         function showFloridaPlants() {
@@ -1148,7 +1381,13 @@
 
         // Initialize app
         window.onload = function() {
-            initDB();
+            try {
+                initDB();
+                console.log("Florida Garden Tracker initialized successfully");
+            } catch (error) {
+                console.error("Error during app initialization:", error);
+                alert("There was an error loading the app. Please refresh the page.");
+            }
         };
 
         // Handle window click for modal
@@ -1158,6 +1397,12 @@
                 modal.style.display = 'none';
             }
         };
+
+        // Error handler for uncaught errors
+        window.addEventListener('error', function(event) {
+            console.error('Global error caught:', event.error);
+            // Don't show alerts for every error, just log them
+        });
     </script>
 </body>
 </html>
