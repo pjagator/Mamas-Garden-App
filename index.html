@@ -1,1430 +1,448 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Florida Garden Tracker - Tampa</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    :root {
+        --primary: #2ecc71;
+        --secondary: #27ae60;
+        --accent: #f39c12;
+        --danger: #e74c3c;
+        --dark: #2c3e50;
+        --light: #ecf0f1;
+        --bg: #f8f9fa;
+    }
 
-        :root {
-            --primary: #2ecc71;
-            --secondary: #27ae60;
-            --accent: #f39c12;
-            --danger: #e74c3c;
-            --dark: #2c3e50;
-            --light: #ecf0f1;
-            --bg: #f8f9fa;
-        }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
+    header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
 
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
+    header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
 
+    header p {
+        opacity: 0.9;
+        font-size: 1.1em;
+    }
+
+    nav {
+        display: flex;
+        background: var(--dark);
+        padding: 0;
+        overflow-x: auto;
+    }
+
+    nav button {
+        flex: 1;
+        padding: 15px 20px;
+        background: transparent;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 1em;
+        white-space: nowrap;
+    }
+
+    nav button:hover {
+        background: rgba(255,255,255,0.1);
+    }
+
+    nav button.active {
+        background: var(--primary);
+    }
+
+    .content {
+        padding: 30px;
+    }
+
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.5s;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .camera-section {
+        text-align: center;
+        padding: 20px;
+        background: var(--bg);
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+
+    .camera-controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(46,204,113,0.3);
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(46,204,113,0.4);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    #captured-image {
+        width: 100%;
+        max-width: 500px;
+        border-radius: 15px;
+        margin: 20px auto;
+        display: none;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        margin: 20px;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .file-input-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1.2em;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(46,204,113,0.3);
+    }
+
+    .inventory-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .inventory-item {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .inventory-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .inventory-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .inventory-item-info {
+        padding: 15px;
+    }
+
+    .inventory-item h3 {
+        color: var(--dark);
+        margin-bottom: 5px;
+    }
+
+    .inventory-item p {
+        color: #7f8c8d;
+        font-size: 0.9em;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        margin-right: 5px;
+        margin-top: 5px;
+    }
+
+    .badge.plant {
+        background: #d4f1d4;
+        color: var(--secondary);
+    }
+
+    .badge.bug {
+        background: #ffe4e1;
+        color: var(--danger);
+    }
+
+    .badge.season {
+        background: #fff4e0;
+        color: var(--accent);
+    }
+
+    .timeline-container {
+        background: var(--bg);
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .month-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .month-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .month-card h4 {
+        color: var(--primary);
+        margin-bottom: 10px;
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 5px;
+    }
+
+    .api-section {
+        background: #f0f8ff;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .api-config {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .api-config input {
+        flex: 1;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+        min-width: 200px;
+    }
+
+    .identification-result {
+        background: #e8f5e9;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+        display: none;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        animation: fadeIn 0.3s;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 600px;
+        margin: 50px auto;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .close-modal {
+        float: right;
+        font-size: 28px;
+        cursor: pointer;
+        color: #999;
+    }
+
+    .close-modal:hover {
+        color: #333;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border-radius: 20px;
+        background: var(--light);
+        color: var(--dark);
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .filter-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .stat-card h3 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .stat-card p {
+        opacity: 0.9;
+    }
+
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .species-selector {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 20px 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .species-selector h4 {
+        margin-bottom: 10px;
+        color: var(--dark);
+    }
+
+    .species-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .species-btn {
+        padding: 10px 20px;
+        background: var(--light);
+        border: 2px solid var(--primary);
+        color: var(--primary);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .species-btn.active {
+        background: var(--primary);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
         header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 1.8em;
         }
-
-        header p {
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-
+        
         nav {
-            display: flex;
-            background: var(--dark);
-            padding: 0;
-            overflow-x: auto;
-        }
-
-        nav button {
-            flex: 1;
-            padding: 15px 20px;
-            background: transparent;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1em;
-            white-space: nowrap;
-        }
-
-        nav button:hover {
-            background: rgba(255,255,255,0.1);
-        }
-
-        nav button.active {
-            background: var(--primary);
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .camera-section {
-            text-align: center;
-            padding: 20px;
-            background: var(--bg);
-            border-radius: 15px;
-            margin-bottom: 30px;
-        }
-
-        .camera-controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
             flex-wrap: wrap;
         }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(46,204,113,0.3);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(46,204,113,0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        #camera-feed {
-            width: 100%;
-            max-width: 500px;
-            border-radius: 15px;
-            margin: 20px auto;
-            display: none;
-        }
-
-        #captured-image {
-            width: 100%;
-            max-width: 500px;
-            border-radius: 15px;
-            margin: 20px auto;
-            display: none;
-        }
-
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .inventory-item {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .inventory-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .inventory-item img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .inventory-item-info {
-            padding: 15px;
-        }
-
-        .inventory-item h3 {
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-
-        .inventory-item p {
-            color: #7f8c8d;
-            font-size: 0.9em;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            margin-right: 5px;
-            margin-top: 5px;
-        }
-
-        .badge.plant {
-            background: #d4f1d4;
-            color: var(--secondary);
-        }
-
-        .badge.bug {
-            background: #ffe4e1;
-            color: var(--danger);
-        }
-
-        .badge.season {
-            background: #fff4e0;
-            color: var(--accent);
-        }
-
-        .timeline-container {
-            background: var(--bg);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .month-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .month-card {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-
-        .month-card h4 {
-            color: var(--primary);
-            margin-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 5px;
-        }
-
-        .api-section {
-            background: #f0f8ff;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
+        
+        nav button {
+            flex: 1 1 50%;
         }
 
         .api-config {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
+            flex-direction: column;
         }
 
         .api-config input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-
-        .identification-result {
-            background: #e8f5e9;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .chart-container {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        canvas {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 1000;
-            animation: fadeIn 0.3s;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 600px;
-            margin: 50px auto;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .close-modal {
-            float: right;
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-        }
-
-        .close-modal:hover {
-            color: #333;
-        }
-
-        .filter-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            background: var(--light);
-            color: var(--dark);
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .filter-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .stat-card h3 {
-            font-size: 2.5em;
             margin-bottom: 10px;
         }
-
-        .stat-card p {
-            opacity: 0.9;
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8em;
-            }
-            
-            nav {
-                flex-wrap: wrap;
-            }
-            
-            nav button {
-                flex: 1 1 50%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🌺 Florida Garden Tracker</h1>
-            <p>Tampa Bay Native Plant & Wildlife Monitor</p>
-        </header>
-
-        <nav>
-            <button class="active" onclick="showTab('capture')">📸 Capture</button>
-            <button onclick="showTab('inventory')">🌿 Inventory</button>
-            <button onclick="showTab('timeline')">📅 Timeline</button>
-            <button onclick="showTab('charts')">📊 Analytics</button>
-            <button onclick="showTab('settings')">⚙️ Settings</button>
-        </nav>
-
-        <div class="content">
-            <!-- Capture Tab -->
-            <div id="capture" class="tab-content active">
-                <div class="camera-section">
-                    <h2>Capture Garden Life</h2>
-                    <p>Take a photo of plants or bugs in your Tampa garden</p>
-                    
-                    <video id="camera-feed" autoplay></video>
-                    <canvas id="captured-image"></canvas>
-                    
-                    <div class="camera-controls">
-                        <button onclick="startCamera()">📷 Start Camera</button>
-                        <button onclick="capturePhoto()">📸 Take Photo</button>
-                        <input type="file" id="file-upload" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
-                        <button onclick="document.getElementById('file-upload').click()">📁 Upload Photo</button>
-                    </div>
-                </div>
-
-                <div class="identification-result" id="identification-result">
-                    <h3>🔍 Identification Results</h3>
-                    <div id="id-content"></div>
-                    <button onclick="saveToInventory()" style="margin-top: 15px;">💾 Save to Inventory</button>
-                </div>
-
-                <div class="api-section">
-                    <h3>🤖 AI Identification Settings</h3>
-                    <p>Configure Google Vision API for automatic species identification</p>
-                    <div class="api-config">
-                        <input type="text" id="google-api-key" placeholder="Enter Google Vision API Key">
-                        <button onclick="saveGoogleApiKey()">Save API Key</button>
-                        <button onclick="identifyWithGoogleVision()">🔍 Identify with Google Vision</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Inventory Tab -->
-            <div id="inventory" class="tab-content">
-                <h2>Garden Inventory</h2>
-                
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3 id="total-plants">0</h3>
-                        <p>Native Plants</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
-                        <h3 id="total-bugs">0</h3>
-                        <p>Insects & Wildlife</p>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
-                        <h3 id="total-entries">0</h3>
-                        <p>Total Entries</p>
-                    </div>
-                </div>
-
-                <div class="filter-buttons">
-                    <button class="filter-btn active" onclick="filterInventory('all')">All</button>
-                    <button class="filter-btn" onclick="filterInventory('plant')">🌿 Plants</button>
-                    <button class="filter-btn" onclick="filterInventory('bug')">🐛 Bugs</button>
-                    <button class="filter-btn" onclick="filterInventory('blooming')">🌺 Currently Blooming</button>
-                </div>
-
-                <div class="inventory-grid" id="inventory-grid">
-                    <!-- Inventory items will be dynamically added here -->
-                </div>
-            </div>
-
-            <!-- Timeline Tab -->
-            <div id="timeline" class="tab-content">
-                <h2>Seasonal Timeline</h2>
-                <p>Track what's blooming and active throughout the year in Tampa</p>
-                
-                <div class="timeline-container">
-                    <h3>🌸 Blooming Calendar</h3>
-                    <div class="month-grid" id="blooming-calendar">
-                        <!-- Monthly data will be added here -->
-                    </div>
-                </div>
-
-                <div class="timeline-container" style="margin-top: 30px;">
-                    <h3>🦋 Wildlife Activity</h3>
-                    <div class="month-grid" id="wildlife-calendar">
-                        <!-- Wildlife activity data will be added here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Tab -->
-            <div id="charts" class="tab-content">
-                <h2>Garden Analytics</h2>
-                
-                <div class="chart-container">
-                    <h3>Species Distribution</h3>
-                    <canvas id="species-chart"></canvas>
-                </div>
-                
-                <div class="chart-container">
-                    <h3>Monthly Activity</h3>
-                    <canvas id="activity-chart"></canvas>
-                </div>
-                
-                <div class="chart-container">
-                    <h3>Blooming Patterns</h3>
-                    <canvas id="blooming-chart"></canvas>
-                </div>
-            </div>
-
-            <!-- Settings Tab -->
-            <div id="settings" class="tab-content">
-                <h2>Settings & Export</h2>
-                
-                <div class="api-section">
-                    <h3>📤 Export Data</h3>
-                    <p>Download your garden data for backup or sharing</p>
-                    <div style="margin-top: 15px;">
-                        <button onclick="exportData()">💾 Export as JSON</button>
-                        <button onclick="exportToCSV()">📊 Export as CSV</button>
-                        <button onclick="clearAllData()" style="background: var(--danger);">🗑️ Clear All Data</button>
-                    </div>
-                </div>
-
-                <div class="api-section" style="margin-top: 20px;">
-                    <h3>🌿 Native Florida Plants Database</h3>
-                    <p>Pre-loaded database of common native Florida plants</p>
-                    <button onclick="showFloridaPlants()">View Plant Database</button>
-                </div>
-
-                <div class="api-section" style="margin-top: 20px;">
-                    <h3>📱 About This App</h3>
-                    <p>Florida Garden Tracker v1.0</p>
-                    <p>Designed for Tampa Bay gardeners to track native plants and local wildlife.</p>
-                    <p>Features: Photo capture, AI identification, seasonal tracking, and data visualization.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for item details -->
-    <div id="item-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div id="modal-body"></div>
-        </div>
-    </div>
-
-    <script>
-        // Check if Chart.js loads properly
-        let chartJsLoaded = false;
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" 
-            onload="chartJsLoaded = true" 
-            onerror="console.warn('Chart.js failed to load. Charts will be disabled.')">
-    </script>
-    <script>
-        // Florida Native Plants Database
-        const floridaNativePlants = [
-            { name: "Coontie", scientific: "Zamia integrifolia", bloom: ["Spring", "Summer"], type: "Cycad" },
-            { name: "Beautyberry", scientific: "Callicarpa americana", bloom: ["Summer", "Fall"], type: "Shrub" },
-            { name: "Firebush", scientific: "Hamelia patens", bloom: ["Spring", "Summer", "Fall"], type: "Shrub" },
-            { name: "Wild Coffee", scientific: "Psychotria nervosa", bloom: ["Spring", "Summer"], type: "Shrub" },
-            { name: "Simpson's Stopper", scientific: "Myrcianthes fragrans", bloom: ["Spring", "Summer"], type: "Tree" },
-            { name: "Blanket Flower", scientific: "Gaillardia pulchella", bloom: ["Spring", "Summer", "Fall"], type: "Wildflower" },
-            { name: "Beach Sunflower", scientific: "Helianthus debilis", bloom: ["Year-round"], type: "Wildflower" },
-            { name: "Coral Honeysuckle", scientific: "Lonicera sempervirens", bloom: ["Spring", "Summer", "Fall"], type: "Vine" },
-            { name: "Passion Vine", scientific: "Passiflora incarnata", bloom: ["Summer", "Fall"], type: "Vine" },
-            { name: "Muhly Grass", scientific: "Muhlenbergia capillaris", bloom: ["Fall"], type: "Grass" },
-            { name: "Saw Palmetto", scientific: "Serenoa repens", bloom: ["Spring"], type: "Palm" },
-            { name: "Cabbage Palm", scientific: "Sabal palmetto", bloom: ["Summer"], type: "Palm" },
-            { name: "Southern Magnolia", scientific: "Magnolia grandiflora", bloom: ["Spring", "Summer"], type: "Tree" },
-            { name: "Live Oak", scientific: "Quercus virginiana", bloom: ["Spring"], type: "Tree" },
-            { name: "Bald Cypress", scientific: "Taxodium distichum", bloom: ["Spring"], type: "Tree" }
-        ];
-
-        // Database initialization
-        let db;
-        let currentStream = null;
-        let currentIdentification = null;
-
-        // Initialize IndexedDB
-        function initDB() {
-            try {
-                const request = indexedDB.open('GardenTrackerDB', 1);
-                
-                request.onerror = function() {
-                    console.error("Database failed to open");
-                    alert("Unable to open database. The app may not save data properly. Try refreshing the page.");
-                };
-                
-                request.onsuccess = function() {
-                    db = request.result;
-                    console.log("Database opened successfully");
-                    loadInventory();
-                    updateStats();
-                    initializeCalendars();
-                };
-                
-                request.onupgradeneeded = function(e) {
-                    db = e.target.result;
-                    
-                    if (!db.objectStoreNames.contains('inventory')) {
-                        const objectStore = db.createObjectStore('inventory', { keyPath: 'id', autoIncrement: true });
-                        objectStore.createIndex('type', 'type', { unique: false });
-                        objectStore.createIndex('date', 'date', { unique: false });
-                    }
-                    
-                    if (!db.objectStoreNames.contains('settings')) {
-                        db.createObjectStore('settings', { keyPath: 'key' });
-                    }
-                };
-            } catch (error) {
-                console.error("Error initializing database:", error);
-                alert("Database initialization failed. Some features may not work properly.");
-            }
-        }
-
-        // Tab navigation
-        function showTab(tabName) {
-            const tabs = document.querySelectorAll('.tab-content');
-            const buttons = document.querySelectorAll('nav button');
-            
-            tabs.forEach(tab => tab.classList.remove('active'));
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
-            if (tabName === 'charts') {
-                updateCharts();
-            }
-        }
-
-        // Camera functions
-        async function startCamera() {
-            try {
-                const video = document.getElementById('camera-feed');
-                currentStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' } 
-                });
-                video.srcObject = currentStream;
-                video.style.display = 'block';
-            } catch (err) {
-                alert('Camera access denied or not available');
-            }
-        }
-
-        function capturePhoto() {
-            const video = document.getElementById('camera-feed');
-            const canvas = document.getElementById('captured-image');
-            const context = canvas.getContext('2d');
-            
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0);
-            
-            canvas.style.display = 'block';
-            video.style.display = 'none';
-            
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-            }
-            
-            // Simulate identification
-            simulateIdentification();
-        }
-
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const canvas = document.getElementById('captured-image');
-                    const context = canvas.getContext('2d');
-                    const img = new Image();
-                    
-                    img.onload = function() {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        context.drawImage(img, 0, 0);
-                        canvas.style.display = 'block';
-                        simulateIdentification();
-                    };
-                    
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Simulated identification (replace with actual API call)
-        function simulateIdentification() {
-            const result = document.getElementById('identification-result');
-            const content = document.getElementById('id-content');
-            
-            // Randomly select a plant or bug for demo
-            const isPlant = Math.random() > 0.5;
-            let identification;
-            
-            if (isPlant) {
-                const plant = floridaNativePlants[Math.floor(Math.random() * floridaNativePlants.length)];
-                identification = {
-                    type: 'plant',
-                    common: plant.name,
-                    scientific: plant.scientific,
-                    category: plant.type,
-                    bloom: plant.bloom,
-                    description: `Native Florida ${plant.type.toLowerCase()}. Blooms in ${plant.bloom.join(', ')}.`,
-                    care: 'Drought-tolerant once established. Prefers full to partial sun.'
-                };
-            } else {
-                const bugs = [
-                    { name: "Zebra Longwing", scientific: "Heliconius charithonia", season: ["Year-round"] },
-                    { name: "Gulf Fritillary", scientific: "Agraulis vanillae", season: ["Spring", "Summer", "Fall"] },
-                    { name: "Green Anole", scientific: "Anolis carolinensis", season: ["Year-round"] },
-                    { name: "Lubber Grasshopper", scientific: "Romalea microptera", season: ["Summer", "Fall"] }
-                ];
-                const bug = bugs[Math.floor(Math.random() * bugs.length)];
-                identification = {
-                    type: 'bug',
-                    common: bug.name,
-                    scientific: bug.scientific,
-                    category: 'Insect',
-                    season: bug.season,
-                    description: `Common in Tampa gardens. Active ${bug.season.join(', ')}.`
-                };
-            }
-            
-            currentIdentification = identification;
-            
-            content.innerHTML = `
-                <p><strong>Common Name:</strong> ${identification.common}</p>
-                <p><strong>Scientific Name:</strong> <em>${identification.scientific}</em></p>
-                <p><strong>Type:</strong> ${identification.category}</p>
-                <p><strong>Description:</strong> ${identification.description}</p>
-                ${identification.care ? `<p><strong>Care Tips:</strong> ${identification.care}</p>` : ''}
-            `;
-            
-            result.style.display = 'block';
-        }
-
-        // Save to inventory
-        function saveToInventory() {
-            if (!currentIdentification) {
-                alert('Please capture and identify an item first');
-                return;
-            }
-            
-            const canvas = document.getElementById('captured-image');
-            const imageData = canvas.toDataURL('image/jpeg', 0.8);
-            
-            const entry = {
-                ...currentIdentification,
-                image: imageData,
-                date: new Date().toISOString(),
-                notes: ''
-            };
-            
-            const transaction = db.transaction(['inventory'], 'readwrite');
-            const objectStore = transaction.objectStore('inventory');
-            const request = objectStore.add(entry);
-            
-            request.onsuccess = function() {
-                alert('Added to inventory!');
-                loadInventory();
-                updateStats();
-                document.getElementById('identification-result').style.display = 'none';
-                currentIdentification = null;
-            };
-        }
-
-        // Load inventory
-        function loadInventory() {
-            const transaction = db.transaction(['inventory'], 'readonly');
-            const objectStore = transaction.objectStore('inventory');
-            const request = objectStore.getAll();
-            
-            request.onsuccess = function() {
-                const items = request.result;
-                displayInventory(items);
-            };
-        }
-
-        // Display inventory
-        function displayInventory(items) {
-            const grid = document.getElementById('inventory-grid');
-            grid.innerHTML = '';
-            
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'inventory-item';
-                div.onclick = () => showItemDetails(item);
-                
-                const currentMonth = new Date().getMonth();
-                const seasons = ['Winter', 'Spring', 'Summer', 'Fall'];
-                const currentSeason = seasons[Math.floor((currentMonth + 1) / 3) % 4];
-                
-                div.innerHTML = `
-                    <img src="${item.image}" alt="${item.common}">
-                    <div class="inventory-item-info">
-                        <h3>${item.common}</h3>
-                        <p><em>${item.scientific}</em></p>
-                        <span class="badge ${item.type}">${item.type === 'plant' ? '🌿' : '🐛'} ${item.type}</span>
-                        ${item.bloom ? `<span class="badge season">🌸 ${item.bloom.join(', ')}</span>` : ''}
-                        ${item.season ? `<span class="badge season">📅 ${item.season.join(', ')}</span>` : ''}
-                    </div>
-                `;
-                
-                grid.appendChild(div);
-            });
-        }
-
-        // Filter inventory
-        function filterInventory(filter) {
-            const buttons = document.querySelectorAll('.filter-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            const transaction = db.transaction(['inventory'], 'readonly');
-            const objectStore = transaction.objectStore('inventory');
-            let request;
-            
-            if (filter === 'all') {
-                request = objectStore.getAll();
-            } else if (filter === 'plant' || filter === 'bug') {
-                const index = objectStore.index('type');
-                request = index.getAll(filter);
-            } else if (filter === 'blooming') {
-                request = objectStore.getAll();
-            }
-            
-            request.onsuccess = function() {
-                let items = request.result;
-                
-                if (filter === 'blooming') {
-                    const currentMonth = new Date().getMonth();
-                    const seasons = ['Winter', 'Spring', 'Summer', 'Fall'];
-                    const currentSeason = seasons[Math.floor((currentMonth + 1) / 3) % 4];
-                    
-                    items = items.filter(item => 
-                        item.bloom && (item.bloom.includes(currentSeason) || item.bloom.includes('Year-round'))
-                    );
-                }
-                
-                displayInventory(items);
-            };
-        }
-
-        // Show item details
-        function showItemDetails(item) {
-            const modal = document.getElementById('item-modal');
-            const modalBody = document.getElementById('modal-body');
-            
-            modalBody.innerHTML = `
-                <img src="${item.image}" style="width: 100%; border-radius: 10px; margin-bottom: 20px;">
-                <h2>${item.common}</h2>
-                <p><strong>Scientific Name:</strong> <em>${item.scientific}</em></p>
-                <p><strong>Type:</strong> ${item.category}</p>
-                <p><strong>Date Added:</strong> ${new Date(item.date).toLocaleDateString()}</p>
-                ${item.description ? `<p><strong>Description:</strong> ${item.description}</p>` : ''}
-                ${item.care ? `<p><strong>Care Tips:</strong> ${item.care}</p>` : ''}
-                ${item.bloom ? `<p><strong>Blooming Season:</strong> ${item.bloom.join(', ')}</p>` : ''}
-                ${item.season ? `<p><strong>Active Season:</strong> ${item.season.join(', ')}</p>` : ''}
-                <button onclick="deleteItem(${item.id})" style="background: var(--danger); margin-top: 20px;">Delete Entry</button>
-            `;
-            
-            modal.style.display = 'block';
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('item-modal').style.display = 'none';
-        }
-
-        // Delete item
-        function deleteItem(id) {
-            if (confirm('Are you sure you want to delete this entry?')) {
-                const transaction = db.transaction(['inventory'], 'readwrite');
-                const objectStore = transaction.objectStore('inventory');
-                const request = objectStore.delete(id);
-                
-                request.onsuccess = function() {
-                    closeModal();
-                    loadInventory();
-                    updateStats();
-                };
-            }
-        }
-
-        // Update statistics
-        function updateStats() {
-            const transaction = db.transaction(['inventory'], 'readonly');
-            const objectStore = transaction.objectStore('inventory');
-            const request = objectStore.getAll();
-            
-            request.onsuccess = function() {
-                const items = request.result;
-                const plants = items.filter(item => item.type === 'plant').length;
-                const bugs = items.filter(item => item.type === 'bug').length;
-                
-                document.getElementById('total-plants').textContent = plants;
-                document.getElementById('total-bugs').textContent = bugs;
-                document.getElementById('total-entries').textContent = items.length;
-            };
-        }
-
-        // Initialize calendars
-        function initializeCalendars() {
-            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                          'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            const bloomingCalendar = document.getElementById('blooming-calendar');
-            const wildlifeCalendar = document.getElementById('wildlife-calendar');
-            
-            months.forEach((month, index) => {
-                // Blooming calendar
-                const bloomCard = document.createElement('div');
-                bloomCard.className = 'month-card';
-                bloomCard.innerHTML = `<h4>${month}</h4><div id="bloom-${index}"></div>`;
-                bloomingCalendar.appendChild(bloomCard);
-                
-                // Wildlife calendar
-                const wildlifeCard = document.createElement('div');
-                wildlifeCard.className = 'month-card';
-                wildlifeCard.innerHTML = `<h4>${month}</h4><div id="wildlife-${index}"></div>`;
-                wildlifeCalendar.appendChild(wildlifeCard);
-            });
-            
-            updateCalendars();
-        }
-
-        // Update calendars with inventory data
-        function updateCalendars() {
-            const transaction = db.transaction(['inventory'], 'readonly');
-            const objectStore = transaction.objectStore('inventory');
-            const request = objectStore.getAll();
-            
-            request.onsuccess = function() {
-                const items = request.result;
-                const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                              'July', 'August', 'September', 'October', 'November', 'December'];
-                
-                // Group by month
-                months.forEach((month, index) => {
-                    const season = getSeason(index);
-                    
-                    // Plants
-                    const bloomingPlants = items.filter(item => 
-                        item.type === 'plant' && item.bloom && 
-                        (item.bloom.includes(season) || item.bloom.includes('Year-round'))
-                    );
-                    
-                    const bloomDiv = document.getElementById(`bloom-${index}`);
-                    if (bloomDiv) {
-                        bloomDiv.innerHTML = bloomingPlants.length > 0 
-                            ? bloomingPlants.map(p => `<p>🌸 ${p.common}</p>`).join('')
-                            : '<p style="color: #999;">No data yet</p>';
-                    }
-                    
-                    // Wildlife
-                    const activeWildlife = items.filter(item => 
-                        item.type === 'bug' && item.season && 
-                        (item.season.includes(season) || item.season.includes('Year-round'))
-                    );
-                    
-                    const wildlifeDiv = document.getElementById(`wildlife-${index}`);
-                    if (wildlifeDiv) {
-                        wildlifeDiv.innerHTML = activeWildlife.length > 0
-                            ? activeWildlife.map(w => `<p>🦋 ${w.common}</p>`).join('')
-                            : '<p style="color: #999;">No data yet</p>';
-                    }
-                });
-            };
-        }
-
-        function getSeason(monthIndex) {
-            if (monthIndex >= 2 && monthIndex <= 4) return 'Spring';
-            if (monthIndex >= 5 && monthIndex <= 7) return 'Summer';
-            if (monthIndex >= 8 && monthIndex <= 10) return 'Fall';
-            return 'Winter';
-        }
-
-        // Update charts
-        function updateCharts() {
-            // Check if Chart.js is loaded
-            if (typeof Chart === 'undefined' || !chartJsLoaded) {
-                console.warn('Chart.js is not available. Showing text statistics instead.');
-                
-                // Show alternative text-based statistics
-                const chartsTab = document.getElementById('charts');
-                if (chartsTab.classList.contains('active')) {
-                    const transaction = db.transaction(['inventory'], 'readonly');
-                    const objectStore = transaction.objectStore('inventory');
-                    const request = objectStore.getAll();
-                    
-                    request.onsuccess = function() {
-                        const items = request.result;
-                        const plants = items.filter(i => i.type === 'plant').length;
-                        const bugs = items.filter(i => i.type === 'bug').length;
-                        
-                        // Create text-based statistics if charts fail
-                        const speciesContainer = document.getElementById('species-chart').parentElement;
-                        speciesContainer.innerHTML = `
-                            <h3>Species Distribution</h3>
-                            <div style="padding: 20px; background: #f0f8ff; border-radius: 10px;">
-                                <p>🌿 Plants: ${plants} entries</p>
-                                <p>🐛 Insects & Wildlife: ${bugs} entries</p>
-                                <p>📊 Total: ${items.length} entries</p>
-                            </div>
-                        `;
-                        
-                        const activityContainer = document.getElementById('activity-chart').parentElement;
-                        activityContainer.innerHTML = `
-                            <h3>Monthly Activity</h3>
-                            <div style="padding: 20px; background: #f0f8ff; border-radius: 10px;">
-                                <p>View your monthly entry statistics in the Timeline tab</p>
-                            </div>
-                        `;
-                        
-                        const bloomContainer = document.getElementById('blooming-chart').parentElement;
-                        bloomContainer.innerHTML = `
-                            <h3>Blooming Patterns</h3>
-                            <div style="padding: 20px; background: #f0f8ff; border-radius: 10px;">
-                                <p>Check the Timeline tab for seasonal blooming information</p>
-                            </div>
-                        `;
-                    };
-                }
-                return;
-            }
-            
-            // Original chart code continues here if Chart.js is loaded
-            const transaction = db.transaction(['inventory'], 'readonly');
-            const objectStore = transaction.objectStore('inventory');
-            const request = objectStore.getAll();
-            
-            request.onsuccess = function() {
-                const items = request.result;
-                
-                // Clear any existing charts
-                const canvases = ['species-chart', 'activity-chart', 'blooming-chart'];
-                canvases.forEach(id => {
-                    const canvas = document.getElementById(id);
-                    const parent = canvas.parentElement;
-                    canvas.remove();
-                    const newCanvas = document.createElement('canvas');
-                    newCanvas.id = id;
-                    parent.appendChild(newCanvas);
-                });
-                
-                // Species Distribution Chart
-                const speciesCtx = document.getElementById('species-chart').getContext('2d');
-                new Chart(speciesCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Plants', 'Insects & Wildlife'],
-                        datasets: [{
-                            data: [
-                                items.filter(i => i.type === 'plant').length,
-                                items.filter(i => i.type === 'bug').length
-                            ],
-                            backgroundColor: ['#2ecc71', '#f39c12']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-                
-                // Monthly Activity Chart
-                const activityCtx = document.getElementById('activity-chart').getContext('2d');
-                const monthlyData = Array(12).fill(0);
-                items.forEach(item => {
-                    const month = new Date(item.date).getMonth();
-                    monthlyData[month]++;
-                });
-                
-                new Chart(activityCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                        datasets: [{
-                            label: 'Entries Added',
-                            data: monthlyData,
-                            backgroundColor: '#3498db'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-                
-                // Blooming Patterns Chart
-                const bloomCtx = document.getElementById('blooming-chart').getContext('2d');
-                const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
-                const bloomData = seasons.map(season => 
-                    items.filter(i => i.bloom && i.bloom.includes(season)).length
-                );
-                
-                new Chart(bloomCtx, {
-                    type: 'radar',
-                    data: {
-                        labels: seasons,
-                        datasets: [{
-                            label: 'Blooming Plants',
-                            data: bloomData,
-                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                            borderColor: '#2ecc71',
-                            pointBackgroundColor: '#2ecc71'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-            };
-        }
-
-        // Export functions
-        function exportData() {
-            const transaction = db.transaction(['inventory'], 'readonly');
-            const objectStore = transaction.objectStore('inventory');
-            const request = objectStore.getAll();
-            
-            request.onsuccess = function() {
-                const data = {
-                    version: '1.0',
-                    exportDate: new Date().toISOString(),
-                    location: 'Tampa, FL',
-                    entries: request.result
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `garden-tracker-${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-            };
-        }
-
-        function exportToCSV() {
-            const transaction = db.transaction(['inventory'], 'readonly');
-            const objectStore = transaction.objectStore('inventory');
-            const request = objectStore.getAll();
-            
-            request.onsuccess = function() {
-                const items = request.result;
-                let csv = 'Common Name,Scientific Name,Type,Category,Date Added,Bloom Season,Active Season\n';
-                
-                items.forEach(item => {
-                    csv += `"${item.common}","${item.scientific}","${item.type}","${item.category}",`;
-                    csv += `"${new Date(item.date).toLocaleDateString()}",`;
-                    csv += `"${item.bloom ? item.bloom.join(', ') : ''}",`;
-                    csv += `"${item.season ? item.season.join(', ') : ''}"\n`;
-                });
-                
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `garden-tracker-${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
-            };
-        }
-
-        function clearAllData() {
-            if (confirm('Are you sure you want to delete all data? This cannot be undone.')) {
-                const transaction = db.transaction(['inventory'], 'readwrite');
-                const objectStore = transaction.objectStore('inventory');
-                const request = objectStore.clear();
-                
-                request.onsuccess = function() {
-                    alert('All data has been cleared');
-                    loadInventory();
-                    updateStats();
-                    updateCalendars();
-                };
-            }
-        }
-
-        // API functions
-        function saveGoogleApiKey() {
-            const apiKey = document.getElementById('google-api-key').value;
-            if (apiKey) {
-                const transaction = db.transaction(['settings'], 'readwrite');
-                const objectStore = transaction.objectStore('settings');
-                objectStore.put({ key: 'googleApiKey', value: apiKey });
-                alert('Google Vision API Key saved!');
-            }
-        }
-
-        async function identifyWithGoogleVision() {
-            // Get the saved Google API key
-            const transaction = db.transaction(['settings'], 'readonly');
-            const objectStore = transaction.objectStore('settings');
-            const request = objectStore.get('googleApiKey');
-            
-            request.onsuccess = async function() {
-                const apiKeyData = request.result;
-                
-                if (!apiKeyData || !apiKeyData.value) {
-                    alert('Please save your Google Vision API key first');
-                    return;
-                }
-                
-                const apiKey = apiKeyData.value;
-                
-                // Get the image from canvas
-                const canvas = document.getElementById('captured-image');
-                if (!canvas || canvas.style.display === 'none') {
-                    alert('Please capture or upload a photo first');
-                    return;
-                }
-                
-                // Convert canvas to base64 (remove data:image/jpeg;base64, prefix)
-                const imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                
-                // Show loading state
-                const resultDiv = document.getElementById('identification-result');
-                const contentDiv = document.getElementById('id-content');
-                resultDiv.style.display = 'block';
-                contentDiv.innerHTML = '<p>🔄 Analyzing image with Google Vision AI... Please wait...</p>';
-                
-                try {
-                    // Call Google Vision API
-                    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            requests: [{
-                                image: {
-                                    content: imageData
-                                },
-                                features: [
-                                    { type: 'LABEL_DETECTION', maxResults: 15 },
-                                    { type: 'WEB_DETECTION', maxResults: 10 },
-                                    { type: 'OBJECT_LOCALIZATION', maxResults: 10 }
-                                ]
-                            }]
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`API error: ${errorData.error?.message || response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    const visionResponse = data.responses[0];
-                    
-                    // Process Vision API results
-                    const identification = processVisionResults(visionResponse);
-                    currentIdentification = identification;
-                    
-                    // Display the results
-                    contentDiv.innerHTML = `
-                        <p><strong>Common Name:</strong> ${identification.common}</p>
-                        <p><strong>Scientific Name:</strong> <em>${identification.scientific}</em></p>
-                        <p><strong>Type:</strong> ${identification.type}</p>
-                        <p><strong>Category:</strong> ${identification.category}</p>
-                        <p><strong>Confidence:</strong> ${identification.confidence}%</p>
-                        ${identification.bloom ? `<p><strong>Blooming Season:</strong> ${identification.bloom.join(', ')}</p>` : ''}
-                        ${identification.season ? `<p><strong>Active Season:</strong> ${identification.season.join(', ')}</p>` : ''}
-                        <p><strong>Description:</strong> ${identification.description}</p>
-                        ${identification.care ? `<p><strong>Care Tips:</strong> ${identification.care}</p>` : ''}
-                        <p><strong>Additional Labels:</strong> ${identification.labels.join(', ')}</p>
-                        <p style="margin-top: 10px; font-size: 0.9em; color: #666;">🔍 Identified using Google Vision AI</p>
-                    `;
-                    
-                } catch (error) {
-                    console.error('Google Vision API Error:', error);
-                    contentDiv.innerHTML = `
-                        <p style="color: red;">❌ Error connecting to Google Vision API</p>
-                        <p>${error.message}</p>
-                        <p>Please check your API key and ensure the Vision API is enabled in your Google Cloud project.</p>
-                        <button onclick="simulateIdentification()" style="margin-top: 10px;">Use Simulated Identification Instead</button>
-                    `;
-                }
-            };
-        }
-
-        function processVisionResults(visionResponse) {
-            const labels = visionResponse.labelAnnotations || [];
-            const webDetection = visionResponse.webDetection || {};
-            const objects = visionResponse.localizedObjectAnnotations || [];
-            
-            // Extract all labels and their scores
-            const labelNames = labels.map(l => l.description.toLowerCase());
-            const topLabel = labels[0]?.description || 'Unknown';
-            const confidence = Math.round((labels[0]?.score || 0) * 100);
-            
-            // Check if it's a plant or animal/insect
-            const plantKeywords = ['plant', 'flower', 'tree', 'leaf', 'garden', 'shrub', 'grass', 'palm', 'fern', 'vine', 'succulent', 'herb'];
-            const insectKeywords = ['insect', 'bug', 'butterfly', 'bee', 'beetle', 'spider', 'ant', 'moth', 'dragonfly', 'grasshopper', 'caterpillar'];
-            const animalKeywords = ['bird', 'lizard', 'frog', 'snake', 'squirrel', 'animal', 'reptile'];
-            
-            let type = 'plant';
-            let category = 'Unknown';
-            
-            if (labelNames.some(label => insectKeywords.some(keyword => label.includes(keyword)))) {
-                type = 'bug';
-                category = 'Insect';
-            } else if (labelNames.some(label => animalKeywords.some(keyword => label.includes(keyword)))) {
-                type = 'bug'; // Using 'bug' type for all wildlife
-                category = 'Wildlife';
-            } else if (labelNames.some(label => plantKeywords.some(keyword => label.includes(keyword)))) {
-                type = 'plant';
-                // Determine plant category
-                if (labelNames.some(l => l.includes('tree'))) category = 'Tree';
-                else if (labelNames.some(l => l.includes('palm'))) category = 'Palm';
-                else if (labelNames.some(l => l.includes('shrub'))) category = 'Shrub';
-                else if (labelNames.some(l => l.includes('flower'))) category = 'Flower';
-                else if (labelNames.some(l => l.includes('grass'))) category = 'Grass';
-                else if (labelNames.some(l => l.includes('vine'))) category = 'Vine';
-                else category = 'Plant';
-            }
-            
-            // Try to find scientific name from web detection
-            let scientificName = 'Species pending identification';
-            let commonName = topLabel;
-            
-            // Check web entities for better identification
-            if (webDetection.webEntities) {
-                const entities = webDetection.webEntities;
-                for (let entity of entities) {
-                    if (entity.description && entity.description.match(/[A-Z][a-z]+ [a-z]+/)) {
-                        // Looks like a scientific name (Genus species format)
-                        scientificName = entity.description;
-                        break;
-                    }
-                }
-                // Get the most relevant common name
-                if (entities[0]?.description) {
-                    commonName = entities[0].description;
-                }
-            }
-            
-            // Check if it matches any Florida native plants
-            const floridaPlant = floridaNativePlants.find(plant => 
-                commonName.toLowerCase().includes(plant.name.toLowerCase()) ||
-                labelNames.some(label => label.includes(plant.name.toLowerCase()))
-            );
-            
-            if (floridaPlant) {
-                commonName = floridaPlant.name;
-                scientificName = floridaPlant.scientific;
-                category = floridaPlant.type;
-            }
-            
-            // Build identification object
-            const identification = {
-                type: type,
-                common: commonName,
-                scientific: scientificName,
-                category: category,
-                confidence: confidence,
-                labels: labels.slice(0, 5).map(l => l.description),
-                description: `Identified with ${confidence}% confidence. ${type === 'plant' ? 'Plant' : 'Wildlife'} found in Tampa gardens.`,
-                care: type === 'plant' ? 'Native Florida plants are drought-tolerant once established. Water regularly until established, then reduce watering.' : null
-            };
-            
-            // Add seasonal information for known Florida plants
-            if (floridaPlant) {
-                identification.bloom = floridaPlant.bloom;
-                identification.description = `Native Florida ${floridaPlant.type.toLowerCase()}. Blooms in ${floridaPlant.bloom.join(', ')}.`;
-                identification.care = 'Native to Florida. Drought-tolerant once established. Thrives in Tampa\'s climate with minimal care.';
-            } else if (type === 'bug') {
-                identification.season = ['Year-round']; // Default for Florida wildlife
-                identification.description = `Common in Florida gardens. Active year-round in Tampa's climate.`;
-            }
-            
-            return identification;
-        }
-
-
-
-        function showFloridaPlants() {
-            const modal = document.getElementById('item-modal');
-            const modalBody = document.getElementById('modal-body');
-            
-            let html = '<h2>Native Florida Plants Database</h2>';
-            html += '<p>Common plants suitable for Tampa Bay gardens:</p>';
-            
-            floridaNativePlants.forEach(plant => {
-                html += `
-                    <div style="padding: 10px; margin: 10px 0; background: #f0f8ff; border-radius: 10px;">
-                        <h4>${plant.name}</h4>
-                        <p><em>${plant.scientific}</em></p>
-                        <p>Type: ${plant.type}</p>
-                        <p>Blooms: ${plant.bloom.join(', ')}</p>
-                    </div>
-                `;
-            });
-            
-            modalBody.innerHTML = html;
-            modal.style.display = 'block';
-        }
-
-        // Initialize app
-        window.onload = function() {
-            try {
-                initDB();
-                console.log("Florida Garden Tracker initialized successfully");
-            } catch (error) {
-                console.error("Error during app initialization:", error);
-                alert("There was an error loading the app. Please refresh the page.");
-            }
-        };
-
-        // Handle window click for modal
-        window.onclick = function(event) {
-            const modal = document.getElementById('item-modal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        };
-
-        // Error handler for uncaught errors
-        window.addEventListener('error', function(event) {
-            console.error('Global error caught:', event.error);
-            // Don't show alerts for every error, just log them
-        });
-    </script>
-</body>
-</html>
+    }
+</style>
