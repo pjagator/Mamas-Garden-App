@@ -115,7 +115,7 @@ async function handleMagicLink() {
     if (!email) { setAuthMsg('Please enter your email.', ''); return; }
     const btn = document.getElementById('magic-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
-    const { error } = await sb.auth.signInWithOtp({ email });
+    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
     btn.disabled = false; btn.textContent = 'Send magic link';
     if (error) setAuthMsg(error.message, '');
     else setAuthMsg('Check your email for a sign-in link!', 'success');
@@ -126,7 +126,7 @@ async function handlePasswordReset() {
     if (!email) { setAuthMsg('Please enter your email.', ''); return; }
     const btn = document.getElementById('reset-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
-    const { error } = await sb.auth.resetPasswordForEmail(email);
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
     btn.disabled = false; btn.textContent = 'Send reset link';
     if (error) setAuthMsg(error.message, '');
     else setAuthMsg('Check your email for a password reset link!', 'success');
