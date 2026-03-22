@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -33,7 +33,7 @@
             <input class="field" type="email" id="signin-email" placeholder="Email" autocomplete="email">
             <input class="field" type="password" id="signin-password" placeholder="Password" autocomplete="current-password">
             <button class="btn-primary" id="signin-btn" onclick="handleSignIn()">Sign in</button>
-            <button class="btn-ghost" onclick="showAuthTab('reset')" style="margin-top:6px;font-size:0.85em;border:none;">Forgot password?</button>
+            <button class="btn-ghost" onclick="showAuthTab('reset')" style="margin-top:var(--space-1);border:none;">Forgot password?</button>
         </div>
 
         <div id="signup-form" style="display:none">
@@ -43,20 +43,20 @@
         </div>
 
         <div id="magic-form" style="display:none">
-            <p style="font-size:0.85em;color:var(--ink-mid);margin-bottom:12px;">Enter your email and we'll send a 6-digit code. No password needed.</p>
+            <p style="font-size:var(--text-sm);color:var(--ink-mid);margin-bottom:var(--space-3);">Enter your email and we'll send a 6-digit code. No password needed.</p>
             <input class="field" type="email" id="magic-email" placeholder="Email" autocomplete="email">
             <button class="btn-primary" id="magic-btn" onclick="handleSendCode()">Send code</button>
             <div id="otp-section" style="display:none;margin-top:12px;">
-                <input class="field" type="text" id="otp-code" placeholder="Enter code from email" autocomplete="one-time-code" inputmode="numeric" maxlength="8" style="text-align:center;font-size:1.2em;letter-spacing:0.2em;">
+                <input class="field" type="text" id="otp-code" placeholder="Enter code from email" autocomplete="one-time-code" inputmode="numeric" maxlength="8" style="text-align:center;font-size:var(--text-xl);letter-spacing:0.2em;">
                 <button class="btn-primary" id="otp-btn" onclick="handleVerifyCode()">Verify code</button>
             </div>
         </div>
 
         <div id="reset-form" style="display:none">
-            <p style="font-size:0.85em;color:var(--ink-mid);margin-bottom:12px;">Enter your email and we'll send a password reset link.</p>
+            <p style="font-size:var(--text-sm);color:var(--ink-mid);margin-bottom:var(--space-3);">Enter your email and we'll send a password reset link.</p>
             <input class="field" type="email" id="reset-email" placeholder="Email" autocomplete="email">
             <button class="btn-primary" id="reset-btn" onclick="handlePasswordReset()">Send reset link</button>
-            <button class="btn-ghost" onclick="showAuthTab('signin')" style="margin-top:6px;font-size:0.85em;border:none;">Back to sign in</button>
+            <button class="btn-ghost" onclick="showAuthTab('signin')" style="margin-top:var(--space-1);border:none;">Back to sign in</button>
         </div>
 
         <p class="auth-msg" id="auth-msg"></p>
@@ -148,7 +148,7 @@
         <div id="tag-filter-dropdown" class="filter-dropdown" style="display:none;"></div>
         <div id="location-filter-dropdown" class="filter-dropdown" style="display:none;"></div>
         <div class="sort-row">
-            <label style="font-size:0.75em;color:var(--ink-light);margin-right:6px;">Sort:</label>
+            <label style="font-size:var(--text-xs);color:var(--ink-light);margin-right:var(--space-1);">Sort:</label>
             <select class="sort-select" onchange="setSort(this.value)">
                 <option value="date-desc">Newest first</option>
                 <option value="date-asc">Oldest first</option>
@@ -271,7 +271,7 @@
         <label class="field-label">Notes</label>
         <textarea class="field" id="manual-notes" rows="3" placeholder="Observations, location in garden, care tips..."></textarea>
 
-        <button class="btn-primary" onclick="saveManualEntry()" style="margin-top:16px">Save entry</button>
+        <button class="btn-primary" onclick="saveManualEntry()" style="margin-top:var(--space-4)">Save entry</button>
     </div>
 </div>
 
@@ -286,6 +286,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
