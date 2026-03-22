@@ -706,6 +706,79 @@ small a { color: var(--green-mid); }
 .detail-notes-text { font-size: 0.9em; color: var(--ink-mid); line-height: 1.6; }
 .detail-delete { margin-top: 20px; }
 
+/* ── Care profile section ───────────────────────────────────── */
+.care-profile-section {
+    margin-top: 18px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+
+.care-profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.care-profile-title {
+    font-family: var(--font-display);
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--green-deep);
+    margin: 0;
+}
+
+.care-toggle {
+    font-size: 0.8em;
+    color: var(--ink-light);
+    transition: transform 0.2s;
+}
+
+.care-profile-body {
+    margin-top: 12px;
+}
+
+.care-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--cream-dark);
+}
+
+.care-item:last-of-type {
+    border-bottom: none;
+}
+
+.care-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.care-label {
+    font-size: 0.78em;
+    font-weight: 600;
+    color: var(--green-deep);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
+}
+
+.care-value {
+    font-size: 0.88em;
+    color: var(--ink);
+    line-height: 1.5;
+}
+
+.care-note {
+    font-size: 0.82em;
+    color: var(--ink-mid);
+    margin-top: 3px;
+    line-height: 1.4;
+}
+
 /* Natives list */
 .native-item { padding: 12px 0; border-bottom: 1px solid var(--cream-dark); }
 .native-item:last-child { border-bottom: none; }

@@ -310,12 +310,17 @@ async function saveSelectedId() {
     try {
         const imageUrl = await uploadImage(canvas);
         const entry = buildEntry(result, imageUrl, notes);
-        const { error } = await sb.from('inventory').insert(entry);
+        const { data: inserted, error } = await sb.from('inventory').insert(entry).select().single();
         if (error) throw error;
 
         alert(`${result.common} added to your garden!`);
         removeImage();
         await loadInventory();
+
+        // Generate care profile in background (non-blocking)
+        if (inserted && inserted.type === 'plant') {
+            generateCareProfile(inserted.id, inserted.common, inserted.scientific, inserted.type, inserted.category);
+        }
     } catch (err) {
         alert('Error saving: ' + err.message);
     } finally {
@@ -382,7 +387,7 @@ async function saveManualEntry() {
 
     try {
         const entry = buildEntry(result, null, notes);
-        const { error } = await sb.from('inventory').insert(entry);
+        const { data: inserted, error } = await sb.from('inventory').insert(entry).select().single();
         if (error) throw error;
 
         if (nativeMatch) alert(`Saved! ${result.common} is a Florida native plant.`);
@@ -390,6 +395,11 @@ async function saveManualEntry() {
 
         closeModal('manual-modal');
         await loadInventory();
+
+        // Generate care profile in background (non-blocking)
+        if (inserted && inserted.type === 'plant') {
+            generateCareProfile(inserted.id, inserted.common, inserted.scientific, inserted.type, inserted.category);
+        }
     } catch (err) {
         alert('Error saving: ' + err.message);
     } finally {
@@ -509,6 +519,7 @@ function showItemDetail(item) {
         ${nativeBadge}
         ${rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
         ${item.notes ? `<div class="detail-notes"><div class="detail-notes-label">Notes</div><div class="detail-notes-text">${item.notes}</div></div>` : ''}
+        ${renderCareProfile(item)}
         <div class="detail-delete">
             <button class="btn-danger" onclick="deleteItem('${item.id}', '${item.image_url || ''}')">Delete entry</button>
         </div>`;
@@ -605,6 +616,218 @@ function showNativesDB() {
             <div class="native-item-detail">${p.type} · Blooms: ${p.bloom.join(', ')}</div>
         </div>`).join('');
     openModal('natives-modal');
+}
+
+// ── Care profile generation ───────────────────────────────────
+async function generateCareProfile(itemId, common, scientific, type, category) {
+    if (type !== 'plant') return null;
+
+    try {
+        const response = await fetch(
+            SUPABASE_URL + '/functions/v1/garden-assistant',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({
+                    action: 'care_profile',
+                    data: { common, scientific, type, category }
+                }),
+            }
+        );
+
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+        if (!result.care_profile) return null;
+
+        const { error } = await sb.from('inventory')
+            .update({ care_profile: result.care_profile })
+            .eq('id', itemId)
+            .eq('user_id', currentUser.id);
+
+        if (error) console.error('Failed to save care profile:', error);
+
+        // Update local cache
+        const idx = allInventory.findIndex(i => i.id === itemId);
+        if (idx !== -1) allInventory[idx].care_profile = result.care_profile;
+
+        return result.care_profile;
+    } catch (err) {
+        console.error('Care profile generation failed:', err);
+        return null;
+    }
+}
+
+async function refreshCareProfile(itemId) {
+    const item = allInventory.find(i => i.id === itemId);
+    if (!item) return;
+
+    const section = document.getElementById('care-profile-section');
+    if (section) {
+        section.innerHTML = `
+            <div class="care-profile-header" style="margin-bottom:12px;">
+                <h3 class="care-profile-title">Care Profile</h3>
+            </div>
+            <div class="spinner-wrap" style="padding:16px 0;">
+                <div class="spinner"></div>
+                <p class="spinner-label">Generating care profile...</p>
+            </div>`;
+    }
+
+    const profile = await generateCareProfile(item.id, item.common, item.scientific, item.type, item.category);
+    if (profile) {
+        showItemDetail(item);
+    } else {
+        if (section) {
+            section.innerHTML = `
+                <div class="care-profile-header">
+                    <h3 class="care-profile-title">Care Profile</h3>
+                </div>
+                <p style="color:var(--terra);font-size:0.85em;">Failed to generate care profile. Try again later.</p>
+                <button class="btn-secondary" onclick="refreshCareProfile('${itemId}')" style="margin-top:8px;font-size:0.85em;">Retry</button>`;
+        }
+    }
+}
+
+function renderCareProfile(item) {
+    if (item.type !== 'plant') return '';
+
+    const cp = item.care_profile;
+
+    if (!cp) {
+        return `
+            <div id="care-profile-section" class="care-profile-section">
+                <div class="care-profile-header">
+                    <h3 class="care-profile-title">Care Profile</h3>
+                </div>
+                <p style="color:var(--ink-light);font-size:0.85em;margin-bottom:8px;">No care profile yet.</p>
+                <button class="btn-secondary" onclick="refreshCareProfile('${item.id}')" style="font-size:0.85em;">Generate care profile</button>
+            </div>`;
+    }
+
+    const sections = [];
+
+    // Watering
+    if (cp.watering) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">💧</span>
+                <div>
+                    <div class="care-label">Watering</div>
+                    <div class="care-value">${cp.watering.frequency || ''}</div>
+                    ${cp.watering.notes ? `<div class="care-note">${cp.watering.notes}</div>` : ''}
+                </div>
+            </div>`);
+    }
+
+    // Sun
+    if (cp.sun) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">☀️</span>
+                <div>
+                    <div class="care-label">Sun</div>
+                    <div class="care-value">${cp.sun}</div>
+                </div>
+            </div>`);
+    }
+
+    // Soil
+    if (cp.soil) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">🪴</span>
+                <div>
+                    <div class="care-label">Soil</div>
+                    <div class="care-value">${cp.soil}</div>
+                </div>
+            </div>`);
+    }
+
+    // Fertilizing
+    if (cp.fertilizing) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">🧪</span>
+                <div>
+                    <div class="care-label">Fertilizing</div>
+                    <div class="care-value">${cp.fertilizing.schedule || ''}</div>
+                    ${cp.fertilizing.type ? `<div class="care-note">Type: ${cp.fertilizing.type}</div>` : ''}
+                </div>
+            </div>`);
+    }
+
+    // Pruning
+    if (cp.pruning) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">✂️</span>
+                <div>
+                    <div class="care-label">Pruning</div>
+                    <div class="care-value">${cp.pruning.timing || ''}</div>
+                    ${cp.pruning.method ? `<div class="care-note">${cp.pruning.method}</div>` : ''}
+                </div>
+            </div>`);
+    }
+
+    // Mature size
+    if (cp.mature_size) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">📏</span>
+                <div>
+                    <div class="care-label">Mature Size</div>
+                    <div class="care-value">Height: ${cp.mature_size.height || 'N/A'} · Spread: ${cp.mature_size.spread || 'N/A'}</div>
+                </div>
+            </div>`);
+    }
+
+    // Pests
+    if (cp.pests && cp.pests.length) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">🐛</span>
+                <div>
+                    <div class="care-label">Pests & Diseases</div>
+                    <div class="care-value">${cp.pests.join(', ')}</div>
+                </div>
+            </div>`);
+    }
+
+    // Companions
+    if (cp.companions && cp.companions.length) {
+        sections.push(`
+            <div class="care-item">
+                <span class="care-icon">🌱</span>
+                <div>
+                    <div class="care-label">Companion Plants</div>
+                    <div class="care-value">${cp.companions.join(', ')}</div>
+                </div>
+            </div>`);
+    }
+
+    return `
+        <div id="care-profile-section" class="care-profile-section">
+            <div class="care-profile-header" onclick="toggleCareProfile()">
+                <h3 class="care-profile-title">Care Profile</h3>
+                <span class="care-toggle" id="care-toggle-icon">▼</span>
+            </div>
+            <div class="care-profile-body" id="care-profile-body">
+                ${sections.join('')}
+                <button class="btn-secondary" onclick="refreshCareProfile('${item.id}')" style="margin-top:12px;font-size:0.85em;width:100%;">Refresh care info</button>
+            </div>
+        </div>`;
+}
+
+function toggleCareProfile() {
+    const body = document.getElementById('care-profile-body');
+    const icon = document.getElementById('care-toggle-icon');
+    if (!body) return;
+    const isHidden = body.style.display === 'none';
+    body.style.display = isHidden ? 'block' : 'none';
+    if (icon) icon.textContent = isHidden ? '▼' : '▶';
 }
 
 // ── Modal helpers ──────────────────────────────────────────────
