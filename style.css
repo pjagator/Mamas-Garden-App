@@ -706,6 +706,49 @@ small a { color: var(--green-mid); }
 .detail-notes-text { font-size: 0.9em; color: var(--ink-mid); line-height: 1.6; }
 .detail-delete { margin-top: 20px; }
 
+/* ── Plant status section ────────────────────────────────────── */
+.plant-status-section {
+    margin-top: 18px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+
+.plant-status-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.plant-status-body {
+    margin-top: 12px;
+}
+
+.plant-status-body .field {
+    margin-bottom: 8px;
+}
+
+.plant-status-body .field-label {
+    margin-top: 8px;
+}
+
+.tag.health-good {
+    background: #d4edda;
+    color: #155724;
+}
+
+.tag.health-bad {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.tag.health-neutral {
+    background: var(--cream-dark);
+    color: var(--ink-mid);
+}
+
 /* ── Care profile section ───────────────────────────────────── */
 .care-profile-section {
     margin-top: 18px;

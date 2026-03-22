@@ -478,6 +478,8 @@ function renderInventory() {
         const tags = [];
         if (item.is_native) tags.push('<span class="tag native" style="font-size:0.68em;padding:2px 7px;">⭐ Native</span>');
         if (item.bloom)     tags.push(`<span class="tag season" style="font-size:0.68em;padding:2px 7px;">🌸 ${item.bloom.slice(0,2).join(', ')}</span>`);
+        if (item.location)  tags.push(`<span class="tag" style="font-size:0.68em;padding:2px 7px;background:var(--cream-dark);color:var(--ink-mid);">${item.location === 'front' ? 'Front' : item.location === 'back' ? 'Back' : item.location === 'side' ? 'Side' : 'Pot'}</span>`);
+        if (item.health && (item.health === 'stressed' || item.health === 'sick')) tags.push(`<span class="tag health-bad" style="font-size:0.68em;padding:2px 7px;">${item.health}</span>`);
 
         card.innerHTML = `
             ${imgEl}
@@ -500,25 +502,38 @@ function showItemDetail(item) {
 
     const rows = [
         ['Type', item.category || item.type],
+        ['Location', item.location ? (item.location === 'front' ? 'Front garden' : item.location === 'back' ? 'Back garden' : item.location) : null],
         ['Added', new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })],
         item.confidence ? ['ID confidence', item.confidence + '%'] : null,
         item.bloom   ? ['Blooming season', item.bloom.join(', ')] : null,
         item.season  ? ['Active season',   item.season.join(', ')] : null,
         item.care    ? ['Care',            item.care]              : null,
         item.source  ? ['Identified via',  item.source]           : null,
-    ].filter(Boolean);
+    ].filter(r => r && r[1]);
 
     const nativeBadge = item.is_native
         ? '<span class="tag native" style="display:inline-block;margin-bottom:12px;">⭐ Florida Native</span>'
         : '';
+
+    const statusBadges = [];
+    if (item.health) {
+        const hClass = item.health === 'thriving' || item.health === 'healthy' ? 'health-good'
+            : item.health === 'stressed' || item.health === 'sick' ? 'health-bad' : 'health-neutral';
+        statusBadges.push(`<span class="tag ${hClass}">${item.health}</span>`);
+    }
+    if (item.flowering === 'yes') statusBadges.push('<span class="tag season">flowering</span>');
+    if (item.flowering === 'budding') statusBadges.push('<span class="tag season">budding</span>');
+    if (item.height) statusBadges.push(`<span class="tag" style="background:var(--cream-dark);color:var(--ink-mid);">${item.height}</span>`);
 
     body.innerHTML = `
         ${imgEl}
         <div class="detail-name">${item.common}</div>
         <div class="detail-sci">${item.scientific || ''}</div>
         ${nativeBadge}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${statusBadges.join('')}</div>
         ${rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
         ${item.notes ? `<div class="detail-notes"><div class="detail-notes-label">Notes</div><div class="detail-notes-text">${item.notes}</div></div>` : ''}
+        ${item.type === 'plant' ? renderPlantStatus(item) : ''}
         ${renderCareProfile(item)}
         <div class="detail-delete">
             <button class="btn-danger" onclick="deleteItem('${item.id}', '${item.image_url || ''}')">Delete entry</button>
@@ -616,6 +631,103 @@ function showNativesDB() {
             <div class="native-item-detail">${p.type} · Blooms: ${p.bloom.join(', ')}</div>
         </div>`).join('');
     openModal('natives-modal');
+}
+
+// ── Plant status tracking ─────────────────────────────────────
+function renderPlantStatus(item) {
+    return `
+        <div class="plant-status-section">
+            <div class="plant-status-header" onclick="togglePlantStatus()">
+                <h3 class="care-profile-title">Plant Status</h3>
+                <span class="care-toggle" id="status-toggle-icon">▶</span>
+            </div>
+            <div class="plant-status-body" id="plant-status-body" style="display:none;">
+                <label class="field-label">Health</label>
+                <select class="field" id="status-health">
+                    <option value="">-- Select --</option>
+                    <option value="thriving" ${item.health === 'thriving' ? 'selected' : ''}>Thriving</option>
+                    <option value="healthy" ${item.health === 'healthy' ? 'selected' : ''}>Healthy</option>
+                    <option value="stressed" ${item.health === 'stressed' ? 'selected' : ''}>Stressed</option>
+                    <option value="sick" ${item.health === 'sick' ? 'selected' : ''}>Sick</option>
+                    <option value="dormant" ${item.health === 'dormant' ? 'selected' : ''}>Dormant</option>
+                    <option value="new" ${item.health === 'new' ? 'selected' : ''}>Newly planted</option>
+                </select>
+
+                <label class="field-label">Flowering</label>
+                <select class="field" id="status-flowering">
+                    <option value="">-- Select --</option>
+                    <option value="yes" ${item.flowering === 'yes' ? 'selected' : ''}>Yes, flowering</option>
+                    <option value="budding" ${item.flowering === 'budding' ? 'selected' : ''}>Budding</option>
+                    <option value="no" ${item.flowering === 'no' ? 'selected' : ''}>Not flowering</option>
+                    <option value="fruiting" ${item.flowering === 'fruiting' ? 'selected' : ''}>Fruiting</option>
+                </select>
+
+                <label class="field-label">Height</label>
+                <input class="field" id="status-height" placeholder="e.g. 3 feet, 18 inches" value="${item.height || ''}">
+
+                <label class="field-label">Location</label>
+                <select class="field" id="status-location">
+                    <option value="">-- Select --</option>
+                    <option value="front" ${item.location === 'front' ? 'selected' : ''}>Front garden</option>
+                    <option value="back" ${item.location === 'back' ? 'selected' : ''}>Back garden</option>
+                    <option value="side" ${item.location === 'side' ? 'selected' : ''}>Side yard</option>
+                    <option value="pot" ${item.location === 'pot' ? 'selected' : ''}>Container / Pot</option>
+                </select>
+
+                <label class="field-label">Features / observations</label>
+                <textarea class="field" id="status-features" rows="3" placeholder="e.g. Attracting pollinators, new growth, needs staking...">${item.features || ''}</textarea>
+
+                <button class="btn-primary" id="save-status-btn" onclick="savePlantStatus('${item.id}')" style="margin-top:10px;">Save status</button>
+            </div>
+        </div>`;
+}
+
+function togglePlantStatus() {
+    const body = document.getElementById('plant-status-body');
+    const icon = document.getElementById('status-toggle-icon');
+    if (!body) return;
+    const isHidden = body.style.display === 'none';
+    body.style.display = isHidden ? 'block' : 'none';
+    if (icon) icon.textContent = isHidden ? '▼' : '▶';
+}
+
+async function savePlantStatus(itemId) {
+    const health    = document.getElementById('status-health').value || null;
+    const flowering = document.getElementById('status-flowering').value || null;
+    const height    = document.getElementById('status-height').value.trim() || null;
+    const location  = document.getElementById('status-location').value || null;
+    const features  = document.getElementById('status-features').value.trim() || null;
+
+    const btn = document.getElementById('save-status-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const { error } = await sb.from('inventory')
+            .update({ health, flowering, height, location, features })
+            .eq('id', itemId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Update local cache
+        const idx = allInventory.findIndex(i => i.id === itemId);
+        if (idx !== -1) {
+            Object.assign(allInventory[idx], { health, flowering, height, location, features });
+        }
+
+        btn.textContent = 'Saved!';
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Save status';
+        }, 1500);
+
+        renderInventory();
+    } catch (err) {
+        alert('Error saving status: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Save status';
+    }
 }
 
 // ── Care profile generation ───────────────────────────────────
