@@ -24,7 +24,8 @@ const NATIVE_PLANTS = [
 
 // ── Preset tags and locations ──────────────────────────────────
 const PRESET_TAGS = ['Grass', 'Vine', 'Shrub', 'Wildflower', 'Tree', 'Palm', 'Cycad', 'Fern', 'Herb'];
-const PRESET_LOCATIONS = ['Hammock', 'Sandhill'];
+const LOCATION_ZONES = ['Front', 'Back', 'Side', 'Pot'];
+const LOCATION_HABITATS = ['Hammock', 'Sandhill'];
 
 // ── State ──────────────────────────────────────────────────────
 let currentUser     = null;
@@ -788,10 +789,13 @@ function renderPlantStatus(item) {
                 <input class="field" id="status-height" placeholder="e.g. 3 feet, 18 inches" value="${item.height || ''}">
 
                 <label class="field-label">Location</label>
-                <div class="tag-chips-row" style="margin-bottom:6px;">
-                    ${PRESET_LOCATIONS.map(loc => `<button class="tag-chip ${item.location === loc ? 'active' : ''}" onclick="setLocationChip('${item.id}', '${loc}')">${loc}</button>`).join('')}
+                <div class="tag-chips-row" style="margin-bottom:4px;">
+                    ${LOCATION_ZONES.map(z => `<button class="tag-chip loc-zone-chip ${parseLocation(item.location).zone === z ? 'active' : ''}" data-val="${z}" onclick="setLocationZone('${item.id}', '${z}')">${z}</button>`).join('')}
                 </div>
-                <input class="field" id="status-location" placeholder="Or type a location..." value="${item.location && !PRESET_LOCATIONS.includes(item.location) ? item.location : ''}" style="margin-bottom:0;">
+                <label class="field-label" style="margin-top:6px;">Habitat</label>
+                <div class="tag-chips-row">
+                    ${LOCATION_HABITATS.map(h => `<button class="tag-chip loc-habitat-chip ${parseLocation(item.location).habitat === h ? 'active' : ''}" data-val="${h}" onclick="setLocationHabitat('${item.id}', '${h}')">${h}</button>`).join('')}
+                </div>
 
                 <label class="field-label">Features / observations</label>
                 <textarea class="field" id="status-features" rows="3" placeholder="e.g. Attracting pollinators, new growth, needs staking...">${item.features || ''}</textarea>
@@ -810,19 +814,40 @@ function togglePlantStatus() {
     if (icon) icon.textContent = isHidden ? '▼' : '▶';
 }
 
-function setLocationChip(itemId, loc) {
+// Parse location string like "Front, Hammock" into { zone, habitat }
+function parseLocation(loc) {
+    if (!loc) return { zone: '', habitat: '' };
+    const parts = loc.split(',').map(s => s.trim());
+    let zone = '', habitat = '';
+    for (const p of parts) {
+        if (LOCATION_ZONES.includes(p)) zone = p;
+        else if (LOCATION_HABITATS.includes(p)) habitat = p;
+    }
+    return { zone, habitat };
+}
+
+function buildLocation(zone, habitat) {
+    return [zone, habitat].filter(Boolean).join(', ');
+}
+
+function setLocationZone(itemId, zone) {
     const idx = allInventory.findIndex(i => i.id === itemId);
     if (idx === -1) return;
-    // Toggle: if already selected, clear it
-    const newLoc = allInventory[idx].location === loc ? '' : loc;
-    allInventory[idx].location = newLoc;
-    // Clear text input and re-render
-    const input = document.getElementById('status-location');
-    if (input) input.value = '';
+    const parsed = parseLocation(allInventory[idx].location);
+    parsed.zone = parsed.zone === zone ? '' : zone;
+    allInventory[idx].location = buildLocation(parsed.zone, parsed.habitat);
     // Update chips visually
-    document.querySelectorAll('#plant-status-body .tag-chip').forEach(chip => {
-        chip.classList.toggle('active', chip.textContent.trim() === newLoc);
-    });
+    document.querySelectorAll('.loc-zone-chip').forEach(c => c.classList.toggle('active', c.dataset.val === parsed.zone));
+}
+
+function setLocationHabitat(itemId, habitat) {
+    const idx = allInventory.findIndex(i => i.id === itemId);
+    if (idx === -1) return;
+    const parsed = parseLocation(allInventory[idx].location);
+    parsed.habitat = parsed.habitat === habitat ? '' : habitat;
+    allInventory[idx].location = buildLocation(parsed.zone, parsed.habitat);
+    // Update chips visually
+    document.querySelectorAll('.loc-habitat-chip').forEach(c => c.classList.toggle('active', c.dataset.val === parsed.habitat));
 }
 
 async function savePlantStatus(itemId) {
@@ -830,11 +855,8 @@ async function savePlantStatus(itemId) {
     const flowering = document.getElementById('status-flowering').value || null;
     const height    = document.getElementById('status-height').value.trim() || null;
     const features  = document.getElementById('status-features').value.trim() || null;
-    // Location: text input overrides chip selection
-    const locInput  = document.getElementById('status-location').value.trim();
     const idx       = allInventory.findIndex(i => i.id === itemId);
-    const chipLoc   = idx !== -1 ? allInventory[idx].location : '';
-    const location  = locInput || chipLoc || null;
+    const location  = idx !== -1 ? (allInventory[idx].location || null) : null;
 
     const btn = document.getElementById('save-status-btn');
     btn.disabled = true;
