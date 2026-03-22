@@ -193,7 +193,7 @@ async function identifySpecies() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> Identifying...';
 
-    const imageData = canvas.toDataURL('image/jpeg', 0.82).split(',')[1];
+    const imageData = canvas.toDataURL('image/jpeg', 0.4).split(',')[1];
 
     document.getElementById('id-results').style.display = 'block';
     document.getElementById('id-cards').innerHTML = `
