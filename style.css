@@ -442,6 +442,45 @@ label.btn-capture:active { transform: scale(0.98); }
 }
 
 .tag.native { background: gold; color: #5a4000; }
+.tag.plant-tag { background: var(--green-light); color: var(--green-deep); }
+.tag.location-tag { background: var(--cream-dark); color: var(--ink-mid); }
+
+/* Tag editor */
+.tag-editor-section {
+    margin-top: 18px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+
+.tag-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag-chip {
+    font-size: 0.78em;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--cream-dark);
+    background: var(--white);
+    color: var(--ink-mid);
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.tag-chip.active {
+    background: var(--green-deep);
+    color: var(--white);
+    border-color: var(--green-deep);
+}
+
+.tag-chip:active { transform: scale(0.95); }
 .tag.plant  { background: var(--green-light); color: var(--green-deep); }
 .tag.bug    { background: #fde8e8; color: var(--terra); }
 .tag.season { background: var(--cream-dark); color: var(--ink-mid); }

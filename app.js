@@ -22,6 +22,9 @@ const NATIVE_PLANTS = [
     { name: "Bald Cypress",        scientific: "Taxodium distichum",      aliases: ["bald cypress", "taxodium"],               bloom: ["Spring"],                       type: "Tree" },
 ];
 
+// ── Preset tags ───────────────────────────────────────────────
+const PRESET_TAGS = ['Grass', 'Vine', 'Shrub', 'Wildflower', 'Tree', 'Palm', 'Cycad', 'Fern', 'Herb'];
+
 // ── State ──────────────────────────────────────────────────────
 let currentUser     = null;
 let allInventory    = [];
@@ -370,6 +373,11 @@ async function saveSelectedId() {
 }
 
 function buildEntry(result, imageUrl, notes) {
+    // Auto-populate tags from category
+    const autoTags = [];
+    if (result.category && PRESET_TAGS.includes(result.category)) {
+        autoTags.push(result.category);
+    }
     return {
         user_id:     currentUser.id,
         common:      result.common || '',
@@ -385,6 +393,7 @@ function buildEntry(result, imageUrl, notes) {
         source:      result.source || 'Claude AI',
         image_url:   imageUrl || null,
         notes:       notes || '',
+        tags:        autoTags,
     };
 }
 
@@ -517,8 +526,9 @@ function renderInventory() {
 
         const tags = [];
         if (item.is_native) tags.push('<span class="tag native" style="font-size:0.68em;padding:2px 7px;">⭐ Native</span>');
+        if (item.tags && item.tags.length) tags.push(...item.tags.slice(0,2).map(t => `<span class="tag plant-tag" style="font-size:0.68em;padding:2px 7px;">${t}</span>`));
         if (item.bloom)     tags.push(`<span class="tag season" style="font-size:0.68em;padding:2px 7px;">🌸 ${item.bloom.slice(0,2).join(', ')}</span>`);
-        if (item.location)  tags.push(`<span class="tag" style="font-size:0.68em;padding:2px 7px;background:var(--cream-dark);color:var(--ink-mid);">${item.location === 'front' ? 'Front' : item.location === 'back' ? 'Back' : item.location === 'side' ? 'Side' : 'Pot'}</span>`);
+        if (item.location)  tags.push(`<span class="tag location-tag" style="font-size:0.68em;padding:2px 7px;">${item.location}</span>`);
         if (item.health && (item.health === 'stressed' || item.health === 'sick')) tags.push(`<span class="tag health-bad" style="font-size:0.68em;padding:2px 7px;">${item.health}</span>`);
 
         card.innerHTML = `
@@ -573,6 +583,7 @@ function showItemDetail(item) {
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${statusBadges.join('')}</div>
         ${rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
         ${item.notes ? `<div class="detail-notes"><div class="detail-notes-label">Notes</div><div class="detail-notes-text">${item.notes}</div></div>` : ''}
+        ${renderTagEditor(item)}
         ${item.type === 'plant' ? renderPlantStatus(item) : ''}
         ${renderCareProfile(item)}
         <div class="detail-delete">
@@ -671,6 +682,76 @@ function showNativesDB() {
             <div class="native-item-detail">${p.type} · Blooms: ${p.bloom.join(', ')}</div>
         </div>`).join('');
     openModal('natives-modal');
+}
+
+// ── Tag editor ────────────────────────────────────────────────
+function renderTagEditor(item) {
+    const currentTags = item.tags || [];
+    const presetChips = PRESET_TAGS.map(t => {
+        const active = currentTags.includes(t);
+        return `<button class="tag-chip ${active ? 'active' : ''}" onclick="toggleTag('${item.id}', '${t}')">${t}</button>`;
+    }).join('');
+
+    const customTags = currentTags.filter(t => !PRESET_TAGS.includes(t));
+    const customChips = customTags.map(t =>
+        `<span class="tag-chip active">${t} <button onclick="removeTag('${item.id}', '${t}')" style="background:none;border:none;color:inherit;cursor:pointer;padding:0 0 0 4px;font-size:1.1em;">&times;</button></span>`
+    ).join('');
+
+    return `
+        <div class="tag-editor-section">
+            <div class="care-profile-title" style="margin-bottom:8px;">Tags</div>
+            <div class="tag-chips-row">${presetChips}</div>
+            ${customChips ? `<div class="tag-chips-row" style="margin-top:6px;">${customChips}</div>` : ''}
+            <div style="display:flex;gap:6px;margin-top:8px;">
+                <input class="field" id="custom-tag-input" placeholder="Custom tag..." style="margin-bottom:0;flex:1;padding:8px 12px;">
+                <button class="btn-secondary" onclick="addCustomTag('${item.id}')" style="padding:8px 14px;white-space:nowrap;">Add</button>
+            </div>
+        </div>`;
+}
+
+async function toggleTag(itemId, tag) {
+    const idx = allInventory.findIndex(i => i.id === itemId);
+    if (idx === -1) return;
+    const item = allInventory[idx];
+    let tags = [...(item.tags || [])];
+    if (tags.includes(tag)) tags = tags.filter(t => t !== tag);
+    else tags.push(tag);
+
+    const { error } = await sb.from('inventory').update({ tags }).eq('id', itemId).eq('user_id', currentUser.id);
+    if (error) { alert('Error: ' + error.message); return; }
+    allInventory[idx].tags = tags;
+    renderInventory();
+    showItemDetail(allInventory[idx]);
+}
+
+async function removeTag(itemId, tag) {
+    const idx = allInventory.findIndex(i => i.id === itemId);
+    if (idx === -1) return;
+    const tags = (allInventory[idx].tags || []).filter(t => t !== tag);
+
+    const { error } = await sb.from('inventory').update({ tags }).eq('id', itemId).eq('user_id', currentUser.id);
+    if (error) { alert('Error: ' + error.message); return; }
+    allInventory[idx].tags = tags;
+    renderInventory();
+    showItemDetail(allInventory[idx]);
+}
+
+async function addCustomTag(itemId) {
+    const input = document.getElementById('custom-tag-input');
+    const tag = input.value.trim();
+    if (!tag) return;
+    const idx = allInventory.findIndex(i => i.id === itemId);
+    if (idx === -1) return;
+    const tags = [...(allInventory[idx].tags || [])];
+    if (tags.includes(tag)) { input.value = ''; return; }
+    tags.push(tag);
+
+    const { error } = await sb.from('inventory').update({ tags }).eq('id', itemId).eq('user_id', currentUser.id);
+    if (error) { alert('Error: ' + error.message); return; }
+    allInventory[idx].tags = tags;
+    input.value = '';
+    renderInventory();
+    showItemDetail(allInventory[idx]);
 }
 
 // ── Plant status tracking ─────────────────────────────────────
