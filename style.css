@@ -228,6 +228,92 @@ select.field { cursor: pointer; }
     min-height: 100vh;
 }
 
+/* ── Welcome screen ─────────────────────────────────────────── */
+#welcome-screen {
+    background: var(--cream);
+    min-height: calc(100vh - var(--nav-height));
+    padding: 0 0 calc(var(--nav-height) + 24px);
+}
+
+.welcome-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--nav-height));
+    padding: 48px 28px calc(var(--nav-height) + 24px);
+    text-align: center;
+}
+
+.welcome-greeting {
+    font-family: var(--font-body);
+    font-size: 0.88em;
+    font-weight: 300;
+    color: var(--ink-light);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+}
+
+.welcome-quote-block {
+    max-width: 340px;
+    margin-bottom: 36px;
+}
+
+.welcome-quote {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.35em;
+    line-height: 1.55;
+    color: var(--green-deep);
+    margin: 0;
+    quotes: none;
+}
+
+.welcome-attribution {
+    margin-top: 14px;
+    font-family: var(--font-body);
+    font-size: 0.82em;
+    font-weight: 400;
+    color: var(--ink-mid);
+    letter-spacing: 0.02em;
+}
+
+.welcome-fact-block {
+    max-width: 340px;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 32px;
+    text-align: left;
+}
+
+.welcome-fact-label {
+    font-family: var(--font-body);
+    font-size: 0.7em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--terra);
+    margin-bottom: 8px;
+}
+
+.welcome-fact {
+    font-family: var(--font-body);
+    font-size: 0.88em;
+    line-height: 1.6;
+    color: var(--ink-mid);
+}
+
+.welcome-enter-btn {
+    max-width: 260px;
+    background: var(--green-deep);
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.04em;
+}
+
 /* ── Screens ─────────────────────────────────────────────────── */
 .screen {
     display: none;

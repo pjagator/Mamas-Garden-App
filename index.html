@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -66,8 +66,24 @@
 <!-- ── Main App ──────────────────────────────────────────────── -->
 <div id="app" style="display:none">
 
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="screen active-screen">
+        <div class="welcome-container">
+            <p class="welcome-greeting" id="welcome-greeting"></p>
+            <div class="welcome-quote-block">
+                <blockquote class="welcome-quote" id="welcome-quote-text"></blockquote>
+                <p class="welcome-attribution" id="welcome-quote-attr"></p>
+            </div>
+            <div class="welcome-fact-block">
+                <p class="welcome-fact-label">Garden Note</p>
+                <p class="welcome-fact" id="welcome-fact-text"></p>
+            </div>
+            <button class="btn-primary welcome-enter-btn" onclick="dismissWelcome()">Start exploring</button>
+        </div>
+    </div>
+
     <!-- Capture Tab -->
-    <div id="tab-capture" class="screen active-screen">
+    <div id="tab-capture" class="screen">
         <div class="screen-header">
             <h2 class="screen-title">Capture</h2>
             <p class="screen-sub">Tampa Bay · <span id="current-season"></span></p>
@@ -193,7 +209,7 @@
 
     <!-- Bottom nav -->
     <nav class="bottom-nav">
-        <button class="nav-btn active" onclick="showScreen('capture', this)">
+        <button class="nav-btn" onclick="showScreen('capture', this)">
             <span class="nav-icon">📷</span>
             <span class="nav-label">Capture</span>
         </button>
@@ -270,6 +286,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
