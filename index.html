@@ -26,7 +26,7 @@
         <div class="auth-tabs">
             <button class="auth-tab active" id="tab-signin" onclick="showAuthTab('signin')">Sign in</button>
             <button class="auth-tab" id="tab-signup" onclick="showAuthTab('signup')">Sign up</button>
-            <button class="auth-tab" id="tab-magic" onclick="showAuthTab('magic')">Magic link</button>
+            <button class="auth-tab" id="tab-magic" onclick="showAuthTab('magic')">Email code</button>
         </div>
 
         <div id="signin-form">
@@ -43,9 +43,13 @@
         </div>
 
         <div id="magic-form" style="display:none">
-            <p style="font-size:0.85em;color:var(--ink-mid);margin-bottom:12px;">Enter your email and we'll send you a sign-in link. No password needed.</p>
+            <p style="font-size:0.85em;color:var(--ink-mid);margin-bottom:12px;">Enter your email and we'll send a 6-digit code. No password needed.</p>
             <input class="field" type="email" id="magic-email" placeholder="Email" autocomplete="email">
-            <button class="btn-primary" id="magic-btn" onclick="handleMagicLink()">Send magic link</button>
+            <button class="btn-primary" id="magic-btn" onclick="handleSendCode()">Send code</button>
+            <div id="otp-section" style="display:none;margin-top:12px;">
+                <input class="field" type="text" id="otp-code" placeholder="Enter 6-digit code" autocomplete="one-time-code" inputmode="numeric" maxlength="6" style="text-align:center;font-size:1.2em;letter-spacing:0.3em;">
+                <button class="btn-primary" id="otp-btn" onclick="handleVerifyCode()">Verify code</button>
+            </div>
         </div>
 
         <div id="reset-form" style="display:none">

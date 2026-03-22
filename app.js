@@ -110,15 +110,30 @@ async function handleSignUp() {
     else setAuthMsg('Check your email to confirm your account, then sign in.', 'success');
 }
 
-async function handleMagicLink() {
+let otpEmail = '';
+
+async function handleSendCode() {
     const email = document.getElementById('magic-email').value.trim();
     if (!email) { setAuthMsg('Please enter your email.', ''); return; }
     const btn = document.getElementById('magic-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
-    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
-    btn.disabled = false; btn.textContent = 'Send magic link';
+    const { error } = await sb.auth.signInWithOtp({ email });
+    btn.disabled = false; btn.textContent = 'Send code';
+    if (error) { setAuthMsg(error.message, ''); return; }
+    otpEmail = email;
+    document.getElementById('otp-section').style.display = 'block';
+    document.getElementById('otp-code').focus();
+    setAuthMsg('Code sent! Check your email.', 'success');
+}
+
+async function handleVerifyCode() {
+    const code = document.getElementById('otp-code').value.trim();
+    if (!code || code.length !== 6) { setAuthMsg('Please enter the 6-digit code.', ''); return; }
+    const btn = document.getElementById('otp-btn');
+    btn.disabled = true; btn.textContent = 'Verifying...';
+    const { error } = await sb.auth.verifyOtp({ email: otpEmail, token: code, type: 'email' });
+    btn.disabled = false; btn.textContent = 'Verify code';
     if (error) setAuthMsg(error.message, '');
-    else setAuthMsg('Check your email for a sign-in link!', 'success');
 }
 
 async function handlePasswordReset() {
