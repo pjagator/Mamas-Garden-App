@@ -32,6 +32,9 @@ let currentUser     = null;
 let allInventory    = [];
 let currentFilter   = 'all';
 let currentSearch   = '';
+let activeTagFilters = [];
+let activeLocationFilter = '';
+let currentSort     = 'date-desc';
 let pendingIdResults = [];
 let selectedIdIndex  = null;
 
@@ -485,14 +488,79 @@ function handleSearch(val) {
 
 function setFilter(filter, btnEl) {
     currentFilter = filter;
-    document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-row .chip').forEach(b => b.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
     renderInventory();
+}
+
+function toggleTagFilter(tag) {
+    const idx = activeTagFilters.indexOf(tag);
+    if (idx === -1) activeTagFilters.push(tag);
+    else activeTagFilters.splice(idx, 1);
+    renderTagFilterDropdown();
+    renderInventory();
+}
+
+function setLocationFilter(loc) {
+    activeLocationFilter = activeLocationFilter === loc ? '' : loc;
+    renderLocationFilterDropdown();
+    renderInventory();
+}
+
+function setSort(sort) {
+    currentSort = sort;
+    renderInventory();
+}
+
+function getAllTags() {
+    const tags = new Set();
+    allInventory.forEach(i => (i.tags || []).forEach(t => tags.add(t)));
+    return [...tags].sort();
+}
+
+function getAllLocations() {
+    const locs = new Set();
+    allInventory.forEach(i => { if (i.location) locs.add(i.location); });
+    return [...locs].sort();
+}
+
+function renderTagFilterDropdown() {
+    const el = document.getElementById('tag-filter-dropdown');
+    if (!el) return;
+    const tags = getAllTags();
+    if (!tags.length) { el.innerHTML = '<p style="font-size:0.8em;color:var(--ink-light);padding:8px;">No tags yet</p>'; return; }
+    el.innerHTML = tags.map(t =>
+        `<button class="chip ${activeTagFilters.includes(t) ? 'active' : ''}" onclick="toggleTagFilter('${t}')" style="font-size:0.78em;">${t}</button>`
+    ).join('');
+}
+
+function renderLocationFilterDropdown() {
+    const el = document.getElementById('location-filter-dropdown');
+    if (!el) return;
+    const locs = getAllLocations();
+    if (!locs.length) { el.innerHTML = '<p style="font-size:0.8em;color:var(--ink-light);padding:8px;">No locations yet</p>'; return; }
+    el.innerHTML = locs.map(l =>
+        `<button class="chip ${activeLocationFilter === l ? 'active' : ''}" onclick="setLocationFilter('${l}')" style="font-size:0.78em;">${l}</button>`
+    ).join('');
+}
+
+function toggleFilterDropdown(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isOpen = el.style.display !== 'none';
+    // Close all dropdowns first
+    document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
+    if (!isOpen) {
+        el.style.display = 'flex';
+        if (id === 'tag-filter-dropdown') renderTagFilterDropdown();
+        if (id === 'location-filter-dropdown') renderLocationFilterDropdown();
+    }
 }
 
 function renderInventory() {
     let items = [...allInventory];
 
+    // Type/status filters
     if (currentFilter === 'plant')   items = items.filter(i => i.type === 'plant');
     if (currentFilter === 'bug')     items = items.filter(i => i.type === 'bug');
     if (currentFilter === 'native')  items = items.filter(i => i.is_native);
@@ -501,14 +569,34 @@ function renderInventory() {
         items = items.filter(i => i.bloom && (i.bloom.includes(season) || i.bloom.includes('Year-round')));
     }
 
+    // Tag filters (AND: item must have all selected tags)
+    if (activeTagFilters.length) {
+        items = items.filter(i => activeTagFilters.every(t => (i.tags || []).includes(t)));
+    }
+
+    // Location filter
+    if (activeLocationFilter) {
+        items = items.filter(i => i.location === activeLocationFilter);
+    }
+
+    // Search
     if (currentSearch) {
         items = items.filter(i =>
             (i.common      || '').toLowerCase().includes(currentSearch) ||
             (i.scientific  || '').toLowerCase().includes(currentSearch) ||
             (i.category    || '').toLowerCase().includes(currentSearch) ||
-            (i.notes       || '').toLowerCase().includes(currentSearch)
+            (i.notes       || '').toLowerCase().includes(currentSearch) ||
+            (i.tags        || []).some(t => t.toLowerCase().includes(currentSearch)) ||
+            (i.location    || '').toLowerCase().includes(currentSearch)
         );
     }
+
+    // Sort
+    if (currentSort === 'name-az') items.sort((a, b) => (a.common || '').localeCompare(b.common || ''));
+    else if (currentSort === 'name-za') items.sort((a, b) => (b.common || '').localeCompare(a.common || ''));
+    else if (currentSort === 'date-asc') items.sort((a, b) => new Date(a.date) - new Date(b.date));
+    else if (currentSort === 'location') items.sort((a, b) => (a.location || '').localeCompare(b.location || ''));
+    // default: date-desc (already sorted from DB)
 
     const grid = document.getElementById('garden-grid');
     if (!items.length) {

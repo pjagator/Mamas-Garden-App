@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -125,7 +125,21 @@
             <button class="chip" onclick="setFilter('plant', this)">🌿 Plants</button>
             <button class="chip" onclick="setFilter('bug', this)">🐛 Insects</button>
             <button class="chip" onclick="setFilter('native', this)">⭐ Natives</button>
-            <button class="chip" onclick="setFilter('blooming', this)">🌸 Blooming now</button>
+            <button class="chip" onclick="setFilter('blooming', this)">🌸 Blooming</button>
+            <button class="chip" onclick="toggleFilterDropdown('tag-filter-dropdown')">Tags ▾</button>
+            <button class="chip" onclick="toggleFilterDropdown('location-filter-dropdown')">Location ▾</button>
+        </div>
+        <div id="tag-filter-dropdown" class="filter-dropdown" style="display:none;"></div>
+        <div id="location-filter-dropdown" class="filter-dropdown" style="display:none;"></div>
+        <div class="sort-row">
+            <label style="font-size:0.75em;color:var(--ink-light);margin-right:6px;">Sort:</label>
+            <select class="sort-select" onchange="setSort(this.value)">
+                <option value="date-desc">Newest first</option>
+                <option value="date-asc">Oldest first</option>
+                <option value="name-az">Name A-Z</option>
+                <option value="name-za">Name Z-A</option>
+                <option value="location">Location</option>
+            </select>
         </div>
 
         <div class="garden-grid" id="garden-grid">
@@ -256,6 +270,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

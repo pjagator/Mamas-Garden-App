@@ -561,6 +561,33 @@ label.btn-capture:active { transform: scale(0.98); }
 
 .chip.active { background: var(--green-deep); color: var(--white); border-color: var(--green-deep); }
 
+.filter-dropdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 20px 12px;
+    background: var(--white);
+    border-bottom: 1px solid var(--cream-dark);
+}
+
+.sort-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 20px 0;
+}
+
+.sort-select {
+    font-family: var(--font-body);
+    font-size: 0.8em;
+    padding: 4px 8px;
+    border: 1px solid var(--cream-dark);
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--ink-mid);
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
 .garden-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
