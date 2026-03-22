@@ -193,8 +193,6 @@ async function identifySpecies() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> Identifying...';
 
-    const imageData = canvas.toDataURL('image/jpeg', 0.4).split(',')[1];
-
     document.getElementById('id-results').style.display = 'block';
     document.getElementById('id-cards').innerHTML = `
         <div class="spinner-wrap">
@@ -203,14 +201,16 @@ async function identifySpecies() {
         </div>`;
 
     try {
+        // Upload image to temp storage first, pass URL to edge function
+        const tempUrl = await uploadTempImage(canvas);
+
         const { data, error } = await sb.functions.invoke('identify-species', {
-            body: { imageData }
+            body: { imageUrl: tempUrl }
         });
 
         if (error) throw new Error(error.message);
         if (!data?.identifications?.length) throw new Error('No species identified. Try a clearer photo.');
 
-        // Cross-check each result against native DB to fill in any missing bloom/care data
         const top3 = data.identifications.slice(0, 3).map(r => {
             const nativeMatch = matchNative(r.common, r.scientific);
             return {
@@ -239,97 +239,21 @@ async function identifySpecies() {
     }
 }
 
-function renderIdCards(results) {
-    const container = document.getElementById('id-cards');
-    container.innerHTML = '';
-
-    results.forEach((r, i) => {
-        const card = document.createElement('div');
-        card.className = 'id-card';
-        card.dataset.index = i;
-
-        const confClass = confidenceClass(r.confidence);
-        const tags = [];
-        if (r.isNative) tags.push('<span class="tag native">⭐ FL Native</span>');
-        tags.push(`<span class="tag ${r.type}">${r.type === 'plant' ? '🌿 Plant' : '🐛 Insect'}</span>`);
-        if (r.bloom) tags.push(`<span class="tag season">🌸 ${r.bloom.join(', ')}</span>`);
-        if (r.season && r.type === 'bug') tags.push(`<span class="tag season">📅 ${r.season.join(', ')}</span>`);
-
-        card.innerHTML = `
-            <div class="id-card-top">
-                <div>
-                    <div class="id-card-name">${r.common}</div>
-                    <div class="id-card-sci">${r.scientific}</div>
-                </div>
-                <span class="confidence-pill ${confClass}">${r.confidence}%</span>
-            </div>
-            <div class="id-card-tags">${tags.join('')}</div>`;
-
-        card.onclick = () => selectIdResult(i);
-        container.appendChild(card);
+async function uploadTempImage(canvas) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob(async blob => {
+            const path = `temp/${currentUser.id}/${Date.now()}.jpg`;
+            const { error } = await sb.storage
+                .from('garden-images')
+                .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+            if (error) { reject(error); return; }
+            const { data: { publicUrl } } = sb.storage
+                .from('garden-images')
+                .getPublicUrl(path);
+            resolve(publicUrl);
+        }, 'image/jpeg', 0.5);
     });
-
-    // Save button row (hidden until selection)
-    const saveRow = document.createElement('div');
-    saveRow.className = 'id-save-row';
-    saveRow.id = 'id-save-row';
-    saveRow.innerHTML = `<button class="btn-primary" onclick="saveSelectedId()">💾 Save to garden</button>`;
-    container.appendChild(saveRow);
 }
-
-function selectIdResult(index) {
-    selectedIdIndex = index;
-    document.querySelectorAll('.id-card').forEach((c, i) => {
-        c.classList.toggle('selected', i === index);
-    });
-    document.getElementById('id-save-row').style.display = 'block';
-}
-
-async function saveSelectedId() {
-    if (selectedIdIndex === null) { alert('Select one of the results first.'); return; }
-    const result = pendingIdResults[selectedIdIndex];
-    const canvas = document.getElementById('preview-canvas');
-
-    const btn = document.querySelector('#id-save-row .btn-primary');
-    btn.disabled = true;
-    btn.textContent = 'Uploading...';
-
-    try {
-        const imageUrl = await uploadImage(canvas);
-        const entry = buildEntry(result, imageUrl);
-        const { error } = await sb.from('inventory').insert(entry);
-        if (error) throw error;
-        alert(`${result.common} saved to your garden!`);
-        removeImage();
-        await loadInventory();
-    } catch (err) {
-        alert('Error saving: ' + err.message);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '💾 Save to garden';
-    }
-}
-
-function buildEntry(result, imageUrl = null, notes = '') {
-    return {
-        user_id:     currentUser.id,
-        common:      result.common,
-        scientific:  result.scientific || '',
-        type:        result.type,
-        category:    result.category  || '',
-        confidence:  result.confidence || null,
-        description: result.description || null,
-        care:        result.care || null,
-        bloom:       result.bloom  || null,
-        season:      result.season || null,
-        is_native:   result.isNative || false,
-        source:      result.source || 'Manual',
-        image_url:   imageUrl,
-        notes:       notes || '',
-        date:        new Date().toISOString()
-    };
-}
-
 // ── Manual entry ───────────────────────────────────────────────
 function openManualEntry() {
     // Reset fields
