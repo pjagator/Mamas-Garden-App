@@ -128,7 +128,7 @@ async function handleSendCode() {
 
 async function handleVerifyCode() {
     const code = document.getElementById('otp-code').value.trim();
-    if (!code || code.length !== 6) { setAuthMsg('Please enter the 6-digit code.', ''); return; }
+    if (!code || code.length < 6) { setAuthMsg('Please enter the code from your email.', ''); return; }
     const btn = document.getElementById('otp-btn');
     btn.disabled = true; btn.textContent = 'Verifying...';
     const { error } = await sb.auth.verifyOtp({ email: otpEmail, token: code, type: 'email' });
