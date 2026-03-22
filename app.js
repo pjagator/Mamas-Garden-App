@@ -66,7 +66,6 @@ sb.auth.onAuthStateChange((event, session) => {
         document.getElementById('settings-email').textContent = currentUser.email;
         document.getElementById('current-season').textContent = getCurrentSeason();
         loadInventory();
-        loadAPIKeys();
         renderTimeline();
     } else {
         document.getElementById('auth-screen').classList.remove('hidden');
@@ -185,14 +184,10 @@ async function uploadImage(canvas) {
     });
 }
 
-// ── Species identification ─────────────────────────────────────
+// ── Species identification via Supabase Edge Function ──────────
 async function identifySpecies() {
     const canvas = document.getElementById('preview-canvas');
     if (canvas.style.display === 'none') { alert('Please take or upload a photo first.'); return; }
-
-    const plantKey  = localStorage.getItem('plantIdKey');
-    const insectKey = localStorage.getItem('insectIdKey');
-    if (!plantKey || !insectKey) { alert('Add your API keys in Settings first.'); return; }
 
     const btn = document.getElementById('identify-btn');
     btn.disabled = true;
@@ -204,30 +199,32 @@ async function identifySpecies() {
     document.getElementById('id-cards').innerHTML = `
         <div class="spinner-wrap">
             <div class="spinner"></div>
-            <p class="spinner-label">Consulting Plant.id and Insect.id...</p>
+            <p class="spinner-label">Analyzing with Claude AI...</p>
         </div>`;
 
     try {
-        const [plantResults, insectResults] = await Promise.allSettled([
-            fetchPlantIdResults(imageData, plantKey),
-            fetchInsectIdResults(imageData, insectKey)
-        ]);
+        const { data, error } = await sb.functions.invoke('identify-species', {
+            body: { imageData }
+        });
 
-        const combined = [];
-        if (plantResults.status  === 'fulfilled') combined.push(...(plantResults.value  || []));
-        if (insectResults.status === 'fulfilled') combined.push(...(insectResults.value || []));
+        if (error) throw new Error(error.message);
+        if (!data?.identifications?.length) throw new Error('No species identified. Try a clearer photo.');
 
-        // Sort by confidence, dedupe by scientific name, take top 3
-        const seen = new Set();
-        const top3 = combined
-            .sort((a, b) => b.confidence - a.confidence)
-            .filter(r => { if (seen.has(r.scientific)) return false; seen.add(r.scientific); return true; })
-            .slice(0, 3);
+        // Cross-check each result against native DB to fill in any missing bloom/care data
+        const top3 = data.identifications.slice(0, 3).map(r => {
+            const nativeMatch = matchNative(r.common, r.scientific);
+            return {
+                ...r,
+                common:   nativeMatch?.name || r.common,
+                bloom:    r.bloom || nativeMatch?.bloom || null,
+                category: r.category || nativeMatch?.type || (r.type === 'plant' ? 'Plant' : 'Insect'),
+                isNative: r.isNative || !!nativeMatch,
+                source:   'Claude AI'
+            };
+        });
 
-        if (!top3.length) throw new Error('No species identified. Try a clearer photo.');
-
-        pendingIdResults  = top3;
-        selectedIdIndex   = null;
+        pendingIdResults = top3;
+        selectedIdIndex  = null;
         renderIdCards(top3);
 
     } catch (err) {
@@ -240,62 +237,6 @@ async function identifySpecies() {
         btn.disabled = false;
         btn.innerHTML = '<span class="btn-icon">🔍</span> Identify species';
     }
-}
-
-async function fetchPlantIdResults(imageData, apiKey) {
-    const res = await fetch('https://api.plant.id/v3/identification', {
-        method: 'POST',
-        headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            images: [imageData],
-            plant_details: ['common_names', 'scientific_name', 'watering', 'taxonomy'],
-            plant_language: 'en',
-            modifiers: ['crops_fast', 'similar_images']
-        })
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.suggestions || []).slice(0, 3).map(s => {
-        const commonName    = s.plant_details?.common_names?.[0] || s.plant_name || 'Unknown plant';
-        const scientificName = s.plant_details?.scientific_name || s.plant_name || '';
-        const nativeMatch   = matchNative(commonName, scientificName);
-        return {
-            type:        'plant',
-            common:      nativeMatch?.name || commonName,
-            scientific:  scientificName,
-            category:    nativeMatch?.type || 'Plant',
-            confidence:  Math.round((s.probability || 0) * 100),
-            bloom:       nativeMatch?.bloom || null,
-            isNative:    !!nativeMatch,
-            care:        s.plant_details?.watering?.max ? `Water up to ${s.plant_details.watering.max}× per week` : null,
-            source:      'Plant.id'
-        };
-    });
-}
-
-async function fetchInsectIdResults(imageData, apiKey) {
-    const res = await fetch('https://api.insect.id/v2/identification', {
-        method: 'POST',
-        headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: [imageData], similar_images: true, modifiers: ['crops_fast'] })
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.suggestions || []).slice(0, 3).map(s => {
-        const commonName    = s.insect_details?.common_names?.[0] || s.name || 'Unknown insect';
-        const scientificName = s.insect_details?.scientific_name || s.name || '';
-        return {
-            type:       'bug',
-            common:     commonName,
-            scientific: scientificName,
-            category:   'Insect / Wildlife',
-            confidence: Math.round((s.probability || 0) * 100),
-            season:     ['Year-round'],
-            isNative:   false,
-            care:       null,
-            source:     'Insect.id'
-        };
-    });
 }
 
 function renderIdCards(results) {
@@ -611,28 +552,6 @@ function renderTimeline() {
     });
 }
 
-// ── API keys ───────────────────────────────────────────────────
-function saveAPIKeys() {
-    const plantKey  = document.getElementById('plantid-key').value.trim();
-    const insectKey = document.getElementById('insectid-key').value.trim();
-    if (!plantKey || !insectKey) {
-        document.getElementById('keys-feedback').textContent = 'Please enter both keys.';
-        document.getElementById('keys-feedback').style.color = 'var(--terra)';
-        return;
-    }
-    localStorage.setItem('plantIdKey', plantKey);
-    localStorage.setItem('insectIdKey', insectKey);
-    document.getElementById('keys-feedback').textContent = 'Keys saved to this device.';
-    document.getElementById('keys-feedback').style.color = 'var(--green-mid)';
-    setTimeout(() => document.getElementById('keys-feedback').textContent = '', 3000);
-}
-
-function loadAPIKeys() {
-    const plantKey  = localStorage.getItem('plantIdKey');
-    const insectKey = localStorage.getItem('insectIdKey');
-    if (plantKey)  document.getElementById('plantid-key').value  = plantKey;
-    if (insectKey) document.getElementById('insectid-key').value = insectKey;
-}
 
 // ── Export ─────────────────────────────────────────────────────
 async function exportJSON() {
