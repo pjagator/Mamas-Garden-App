@@ -4,7 +4,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Native plant database ──────────────────────────────────────
-// Each entry includes aliases used for fuzzy matching against API results
 const NATIVE_PLANTS = [
     { name: "Coontie",             scientific: "Zamia integrifolia",       aliases: ["coontie", "florida arrowroot", "zamia"], bloom: ["Spring","Summer"],              type: "Cycad" },
     { name: "Beautyberry",         scientific: "Callicarpa americana",     aliases: ["beautyberry", "callicarpa"],             bloom: ["Summer","Fall"],               type: "Shrub" },
@@ -25,10 +24,10 @@ const NATIVE_PLANTS = [
 
 // ── State ──────────────────────────────────────────────────────
 let currentUser     = null;
-let allInventory    = [];          // cached full list for client-side search/filter
+let allInventory    = [];
 let currentFilter   = 'all';
 let currentSearch   = '';
-let pendingIdResults = [];         // top-3 from API, awaiting user selection
+let pendingIdResults = [];
 let selectedIdIndex  = null;
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -47,8 +46,6 @@ function confidenceClass(pct) {
     return 'low';
 }
 
-// Match an API-returned name/scientific string against the native plant DB
-// Returns the native plant entry or null
 function matchNative(commonName = '', scientificName = '') {
     const haystack = (commonName + ' ' + scientificName).toLowerCase();
     return NATIVE_PLANTS.find(p => {
@@ -129,7 +126,6 @@ function handlePhoto(event) {
     const reader = new FileReader();
     reader.onload = e => renderPreview(e.target.result);
     reader.readAsDataURL(file);
-    // Reset results when new photo is loaded
     resetIdResults();
 }
 
@@ -184,6 +180,23 @@ async function uploadImage(canvas) {
     });
 }
 
+// ── Temp image upload for identification ───────────────────────
+async function uploadTempImage(canvas) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob(async blob => {
+            const path = `${currentUser.id}/temp_${Date.now()}.jpg`;
+            const { error } = await sb.storage
+                .from('garden-images')
+                .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+            if (error) { reject(error); return; }
+            const { data: { publicUrl } } = sb.storage
+                .from('garden-images')
+                .getPublicUrl(path);
+            resolve(publicUrl);
+        }, 'image/jpeg', 0.5);
+    });
+}
+
 // ── Species identification via Supabase Edge Function ──────────
 async function identifySpecies() {
     const canvas = document.getElementById('preview-canvas');
@@ -201,7 +214,6 @@ async function identifySpecies() {
         </div>`;
 
     try {
-        // Upload image to temp storage first, pass URL to edge function
         const tempUrl = await uploadTempImage(canvas);
 
         const { data, error } = await sb.functions.invoke('identify-species', {
@@ -239,24 +251,92 @@ async function identifySpecies() {
     }
 }
 
-async function uploadTempImage(canvas) {
-    return new Promise((resolve, reject) => {
-        canvas.toBlob(async blob => {
-            const path = `${currentUser.id}/temp_${Date.now()}.jpg`;
-            const { error } = await sb.storage
-                .from('garden-images')
-                .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
-            if (error) { reject(error); return; }
-            const { data: { publicUrl } } = sb.storage
-                .from('garden-images')
-                .getPublicUrl(path);
-            resolve(publicUrl);
-        }, 'image/jpeg', 0.5);
+// ── Identification result cards ────────────────────────────────
+function renderIdCards(results) {
+    const container = document.getElementById('id-cards');
+    container.innerHTML = results.map((r, i) => `
+        <div class="id-card ${i === 0 ? 'selected' : ''}" onclick="selectIdCard(${i})">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+                <div>
+                    <div class="id-card-name">${r.common}</div>
+                    <div class="id-card-sci">${r.scientific || ''}</div>
+                </div>
+                <span class="confidence-badge ${confidenceClass(r.confidence)}">${r.confidence}%</span>
+            </div>
+            <div class="id-card-desc">${r.description || ''}</div>
+            <div class="id-card-tags">
+                ${r.isNative ? '<span class="tag native">⭐ Native</span>' : ''}
+                <span class="tag">${r.category || r.type}</span>
+                ${r.bloom ? `<span class="tag season">🌸 ${r.bloom.join(', ')}</span>` : ''}
+            </div>
+        </div>
+    `).join('');
+
+    selectedIdIndex = 0;
+
+    container.innerHTML += `
+        <textarea id="id-notes" class="id-notes" placeholder="Add notes (optional)..." rows="2"></textarea>
+        <button class="btn-primary" onclick="saveSelectedId()" style="width:100%;margin-top:8px;">
+            <span class="btn-icon">💾</span> Save to garden
+        </button>`;
+}
+
+function selectIdCard(index) {
+    selectedIdIndex = index;
+    document.querySelectorAll('.id-card').forEach((card, i) => {
+        card.classList.toggle('selected', i === index);
     });
 }
+
+async function saveSelectedId() {
+    if (selectedIdIndex === null || !pendingIdResults.length) return;
+
+    const result = pendingIdResults[selectedIdIndex];
+    const notes = (document.getElementById('id-notes')?.value || '').trim();
+    const canvas = document.getElementById('preview-canvas');
+
+    const btn = document.querySelector('#id-results .btn-primary');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const imageUrl = await uploadImage(canvas);
+        const entry = buildEntry(result, imageUrl, notes);
+        const { error } = await sb.from('inventory').insert(entry);
+        if (error) throw error;
+
+        alert(`${result.common} added to your garden!`);
+        removeImage();
+        await loadInventory();
+    } catch (err) {
+        alert('Error saving: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-icon">💾</span> Save to garden';
+    }
+}
+
+function buildEntry(result, imageUrl, notes) {
+    return {
+        user_id:     currentUser.id,
+        common:      result.common || '',
+        scientific:  result.scientific || '',
+        type:        result.type || 'plant',
+        category:    result.category || '',
+        confidence:  result.confidence || null,
+        description: result.description || '',
+        care:        result.care || null,
+        bloom:       result.bloom || null,
+        season:      result.season || null,
+        is_native:   result.isNative || false,
+        source:      result.source || 'Claude AI',
+        image_url:   imageUrl || null,
+        notes:       notes || '',
+    };
+}
+
 // ── Manual entry ───────────────────────────────────────────────
 function openManualEntry() {
-    // Reset fields
     ['manual-common','manual-scientific','manual-category','manual-notes'].forEach(id => {
         document.getElementById(id).value = '';
     });
@@ -275,7 +355,6 @@ async function saveManualEntry() {
     const notes      = document.getElementById('manual-notes').value.trim();
     const bloom      = [...document.querySelectorAll('.bloom-check:checked')].map(cb => cb.value);
 
-    // Try to auto-match against native DB
     const nativeMatch = matchNative(common, scientific);
 
     const result = {
@@ -345,7 +424,6 @@ function setFilter(filter, btnEl) {
 function renderInventory() {
     let items = [...allInventory];
 
-    // Filter
     if (currentFilter === 'plant')   items = items.filter(i => i.type === 'plant');
     if (currentFilter === 'bug')     items = items.filter(i => i.type === 'bug');
     if (currentFilter === 'native')  items = items.filter(i => i.is_native);
@@ -354,7 +432,6 @@ function renderInventory() {
         items = items.filter(i => i.bloom && (i.bloom.includes(season) || i.bloom.includes('Year-round')));
     }
 
-    // Search
     if (currentSearch) {
         items = items.filter(i =>
             (i.common      || '').toLowerCase().includes(currentSearch) ||
@@ -475,7 +552,6 @@ function renderTimeline() {
         container.appendChild(block);
     });
 }
-
 
 // ── Export ─────────────────────────────────────────────────────
 async function exportJSON() {
