@@ -242,7 +242,7 @@ async function identifySpecies() {
 async function uploadTempImage(canvas) {
     return new Promise((resolve, reject) => {
         canvas.toBlob(async blob => {
-            const path = `temp/${currentUser.id}/${Date.now()}.jpg`;
+            const path = `${currentUser.id}/temp_${Date.now()}.jpg`;
             const { error } = await sb.storage
                 .from('garden-images')
                 .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
