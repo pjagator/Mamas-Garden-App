@@ -216,12 +216,20 @@ async function identifySpecies() {
     try {
         const tempUrl = await uploadTempImage(canvas);
 
-        const { data, error } = await sb.functions.invoke('identify-species', {
-            body: { imageUrl: tempUrl }
-        });
-
-        if (error) throw new Error(error.message);
-        if (!data?.identifications?.length) throw new Error('No species identified. Try a clearer photo.');
+      const fnResponse = await fetch(
+    SUPABASE_URL + '/functions/v1/identify-species',
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ imageUrl: tempUrl }),
+    }
+);
+const data = await fnResponse.json();
+if (data.error) throw new Error(data.error);
+if (!data?.identifications?.length) throw new Error('No species identified. Try a clearer photo.');
 
         const top3 = data.identifications.slice(0, 3).map(r => {
             const nativeMatch = matchNative(r.common, r.scientific);
