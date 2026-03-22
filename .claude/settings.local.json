@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -f src/App.css src/assets/hero.png src/assets/vite.svg src/assets/react.svg)",
+      "Bash(mkdir -p src/lib src/hooks src/components)",
+      "Bash(npx vite:*)",
+      "Bash(npm run:*)",
+      "Bash(node -e \":*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)"
+    ]
+  }
+}
