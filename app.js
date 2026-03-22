@@ -818,9 +818,13 @@ function showItemDetail(item) {
         ? `<img class="detail-img" src="${item.image_url}" alt="${item.common}">`
         : `<div style="width:100%;height:160px;background:var(--cream-dark);border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;justify-content:center;font-size:48px;">${item.type === 'plant' ? '🌿' : '🐛'}</div>`;
 
+    const linkedPlantName = item.linked_plant_id === 'ground' ? 'Ground'
+        : item.linked_plant_id ? (allInventory.find(p => p.id === item.linked_plant_id)?.common || null) : null;
+
     const rows = [
         ['Type', item.category || item.type],
         ['Location', item.location || null],
+        linkedPlantName ? ['Found on', linkedPlantName] : null,
         ['Added', new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })],
         item.confidence ? ['ID confidence', item.confidence + '%'] : null,
         item.bloom   ? ['Blooming season', item.bloom.join(', ')] : null,
@@ -852,7 +856,9 @@ function showItemDetail(item) {
         ${rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
         ${item.notes ? `<div class="detail-notes"><div class="detail-notes-label">Notes</div><div class="detail-notes-text">${item.notes}</div></div>` : ''}
         ${renderTagEditor(item)}
+        ${item.type === 'bug' ? renderBugPlantLink(item) : ''}
         ${item.type === 'plant' ? renderPlantStatus(item) : ''}
+        ${item.type === 'plant' ? renderLinkedBugs(item) : ''}
         ${renderCareProfile(item)}
         <div class="detail-delete">
             <button class="btn-danger" onclick="deleteItem('${item.id}', '${item.image_url || ''}')">Delete entry</button>
@@ -1020,6 +1026,91 @@ async function addCustomTag(itemId) {
     input.value = '';
     renderInventory();
     showItemDetail(allInventory[idx]);
+}
+
+// ── Bug ↔ Plant linking ───────────────────────────────────────
+function renderBugPlantLink(item) {
+    const plants = allInventory.filter(i => i.type === 'plant');
+    const currentVal = item.linked_plant_id || '';
+    const linkedPlant = currentVal === 'ground' ? null : plants.find(p => p.id === currentVal);
+    const displayText = currentVal === 'ground' ? 'Ground'
+        : linkedPlant ? linkedPlant.common : '';
+
+    let optionsHtml = '<option value="">-- None --</option>';
+    optionsHtml += `<option value="ground" ${currentVal === 'ground' ? 'selected' : ''}>Ground</option>`;
+    plants.sort((a, b) => a.common.localeCompare(b.common)).forEach(p => {
+        optionsHtml += `<option value="${p.id}" ${currentVal === p.id ? 'selected' : ''}>${p.common}</option>`;
+    });
+
+    return `
+        <div class="plant-status-section">
+            <div class="plant-status-header" onclick="toggleBugPlantLink()">
+                <h3 class="care-profile-title">Found On</h3>
+                <span style="font-size:0.82em;color:var(--ink-mid);">${displayText ? displayText + ' ' : ''}<span class="care-toggle" id="bug-link-toggle-icon">▶</span></span>
+            </div>
+            <div id="bug-plant-link-body" style="display:none;">
+                <label class="field-label">Plant or location</label>
+                <select class="field" id="bug-plant-select">
+                    ${optionsHtml}
+                </select>
+                <button class="btn-primary" id="save-bug-link-btn" onclick="saveBugPlantLink('${item.id}')" style="margin-top:8px;">Save</button>
+            </div>
+        </div>`;
+}
+
+function toggleBugPlantLink() {
+    const body = document.getElementById('bug-plant-link-body');
+    const icon = document.getElementById('bug-link-toggle-icon');
+    if (!body) return;
+    const isHidden = body.style.display === 'none';
+    body.style.display = isHidden ? 'block' : 'none';
+    if (icon) icon.textContent = isHidden ? '▼' : '▶';
+}
+
+async function saveBugPlantLink(itemId) {
+    const val = document.getElementById('bug-plant-select').value || null;
+    const btn = document.getElementById('save-bug-link-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const { error } = await sb.from('inventory')
+            .update({ linked_plant_id: val })
+            .eq('id', itemId)
+            .eq('user_id', currentUser.id);
+        if (error) throw error;
+
+        const idx = allInventory.findIndex(i => i.id === itemId);
+        if (idx !== -1) allInventory[idx].linked_plant_id = val;
+
+        btn.textContent = 'Saved!';
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Save';
+        }, 1500);
+        renderInventory();
+    } catch (err) {
+        alert('Error saving: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Save';
+    }
+}
+
+function renderLinkedBugs(item) {
+    const bugs = allInventory.filter(i => i.type === 'bug' && i.linked_plant_id === item.id);
+    if (!bugs.length) return '';
+
+    return `
+        <div class="plant-status-section">
+            <div class="detail-notes-label" style="margin-bottom:8px;">Insects found on this plant</div>
+            ${bugs.map(b => `
+                <div class="linked-bug-row" onclick="showItemDetail(allInventory.find(i=>i.id==='${b.id}'))">
+                    <span class="linked-bug-icon">🐛</span>
+                    <span class="linked-bug-name">${b.common}</span>
+                    ${b.scientific ? `<span class="linked-bug-sci">${b.scientific}</span>` : ''}
+                </div>
+            `).join('')}
+        </div>`;
 }
 
 // ── Plant status tracking ─────────────────────────────────────
