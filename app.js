@@ -73,8 +73,11 @@ sb.auth.onAuthStateChange((event, session) => {
 function showAuthTab(tab) {
     document.getElementById('signin-form').style.display = tab === 'signin' ? 'block' : 'none';
     document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('magic-form').style.display  = tab === 'magic'  ? 'block' : 'none';
+    document.getElementById('reset-form').style.display  = tab === 'reset'  ? 'block' : 'none';
     document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
     document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('tab-magic').classList.toggle('active', tab === 'magic');
     setAuthMsg('', '');
 }
 
@@ -105,6 +108,28 @@ async function handleSignUp() {
     btn.disabled = false; btn.textContent = 'Create account';
     if (error) setAuthMsg(error.message, '');
     else setAuthMsg('Check your email to confirm your account, then sign in.', 'success');
+}
+
+async function handleMagicLink() {
+    const email = document.getElementById('magic-email').value.trim();
+    if (!email) { setAuthMsg('Please enter your email.', ''); return; }
+    const btn = document.getElementById('magic-btn');
+    btn.disabled = true; btn.textContent = 'Sending...';
+    const { error } = await sb.auth.signInWithOtp({ email });
+    btn.disabled = false; btn.textContent = 'Send magic link';
+    if (error) setAuthMsg(error.message, '');
+    else setAuthMsg('Check your email for a sign-in link!', 'success');
+}
+
+async function handlePasswordReset() {
+    const email = document.getElementById('reset-email').value.trim();
+    if (!email) { setAuthMsg('Please enter your email.', ''); return; }
+    const btn = document.getElementById('reset-btn');
+    btn.disabled = true; btn.textContent = 'Sending...';
+    const { error } = await sb.auth.resetPasswordForEmail(email);
+    btn.disabled = false; btn.textContent = 'Send reset link';
+    if (error) setAuthMsg(error.message, '');
+    else setAuthMsg('Check your email for a password reset link!', 'success');
 }
 
 async function handleSignOut() {

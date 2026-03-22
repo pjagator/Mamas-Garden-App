@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1c3a2b">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🌿</text></svg>">
     <title>Tampa Garden</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,18 +26,33 @@
         <div class="auth-tabs">
             <button class="auth-tab active" id="tab-signin" onclick="showAuthTab('signin')">Sign in</button>
             <button class="auth-tab" id="tab-signup" onclick="showAuthTab('signup')">Sign up</button>
+            <button class="auth-tab" id="tab-magic" onclick="showAuthTab('magic')">Magic link</button>
         </div>
 
         <div id="signin-form">
             <input class="field" type="email" id="signin-email" placeholder="Email" autocomplete="email">
             <input class="field" type="password" id="signin-password" placeholder="Password" autocomplete="current-password">
             <button class="btn-primary" id="signin-btn" onclick="handleSignIn()">Sign in</button>
+            <button class="btn-ghost" onclick="showAuthTab('reset')" style="margin-top:6px;font-size:0.85em;border:none;">Forgot password?</button>
         </div>
 
         <div id="signup-form" style="display:none">
             <input class="field" type="email" id="signup-email" placeholder="Email" autocomplete="email">
             <input class="field" type="password" id="signup-password" placeholder="Password (min 6 characters)" autocomplete="new-password">
             <button class="btn-primary" id="signup-btn" onclick="handleSignUp()">Create account</button>
+        </div>
+
+        <div id="magic-form" style="display:none">
+            <p style="font-size:0.85em;color:var(--ink-mid);margin-bottom:12px;">Enter your email and we'll send you a sign-in link. No password needed.</p>
+            <input class="field" type="email" id="magic-email" placeholder="Email" autocomplete="email">
+            <button class="btn-primary" id="magic-btn" onclick="handleMagicLink()">Send magic link</button>
+        </div>
+
+        <div id="reset-form" style="display:none">
+            <p style="font-size:0.85em;color:var(--ink-mid);margin-bottom:12px;">Enter your email and we'll send a password reset link.</p>
+            <input class="field" type="email" id="reset-email" placeholder="Email" autocomplete="email">
+            <button class="btn-primary" id="reset-btn" onclick="handlePasswordReset()">Send reset link</button>
+            <button class="btn-ghost" onclick="showAuthTab('signin')" style="margin-top:6px;font-size:0.85em;border:none;">Back to sign in</button>
         </div>
 
         <p class="auth-msg" id="auth-msg"></p>
