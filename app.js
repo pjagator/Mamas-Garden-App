@@ -22,8 +22,9 @@ const NATIVE_PLANTS = [
     { name: "Bald Cypress",        scientific: "Taxodium distichum",      aliases: ["bald cypress", "taxodium"],               bloom: ["Spring"],                       type: "Tree" },
 ];
 
-// ── Preset tags ───────────────────────────────────────────────
+// ── Preset tags and locations ──────────────────────────────────
 const PRESET_TAGS = ['Grass', 'Vine', 'Shrub', 'Wildflower', 'Tree', 'Palm', 'Cycad', 'Fern', 'Herb'];
+const PRESET_LOCATIONS = ['Hammock', 'Sandhill'];
 
 // ── State ──────────────────────────────────────────────────────
 let currentUser     = null;
@@ -552,7 +553,7 @@ function showItemDetail(item) {
 
     const rows = [
         ['Type', item.category || item.type],
-        ['Location', item.location ? (item.location === 'front' ? 'Front garden' : item.location === 'back' ? 'Back garden' : item.location) : null],
+        ['Location', item.location || null],
         ['Added', new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })],
         item.confidence ? ['ID confidence', item.confidence + '%'] : null,
         item.bloom   ? ['Blooming season', item.bloom.join(', ')] : null,
@@ -787,13 +788,10 @@ function renderPlantStatus(item) {
                 <input class="field" id="status-height" placeholder="e.g. 3 feet, 18 inches" value="${item.height || ''}">
 
                 <label class="field-label">Location</label>
-                <select class="field" id="status-location">
-                    <option value="">-- Select --</option>
-                    <option value="front" ${item.location === 'front' ? 'selected' : ''}>Front garden</option>
-                    <option value="back" ${item.location === 'back' ? 'selected' : ''}>Back garden</option>
-                    <option value="side" ${item.location === 'side' ? 'selected' : ''}>Side yard</option>
-                    <option value="pot" ${item.location === 'pot' ? 'selected' : ''}>Container / Pot</option>
-                </select>
+                <div class="tag-chips-row" style="margin-bottom:6px;">
+                    ${PRESET_LOCATIONS.map(loc => `<button class="tag-chip ${item.location === loc ? 'active' : ''}" onclick="setLocationChip('${item.id}', '${loc}')">${loc}</button>`).join('')}
+                </div>
+                <input class="field" id="status-location" placeholder="Or type a location..." value="${item.location && !PRESET_LOCATIONS.includes(item.location) ? item.location : ''}" style="margin-bottom:0;">
 
                 <label class="field-label">Features / observations</label>
                 <textarea class="field" id="status-features" rows="3" placeholder="e.g. Attracting pollinators, new growth, needs staking...">${item.features || ''}</textarea>
@@ -812,12 +810,31 @@ function togglePlantStatus() {
     if (icon) icon.textContent = isHidden ? '▼' : '▶';
 }
 
+function setLocationChip(itemId, loc) {
+    const idx = allInventory.findIndex(i => i.id === itemId);
+    if (idx === -1) return;
+    // Toggle: if already selected, clear it
+    const newLoc = allInventory[idx].location === loc ? '' : loc;
+    allInventory[idx].location = newLoc;
+    // Clear text input and re-render
+    const input = document.getElementById('status-location');
+    if (input) input.value = '';
+    // Update chips visually
+    document.querySelectorAll('#plant-status-body .tag-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.textContent.trim() === newLoc);
+    });
+}
+
 async function savePlantStatus(itemId) {
     const health    = document.getElementById('status-health').value || null;
     const flowering = document.getElementById('status-flowering').value || null;
     const height    = document.getElementById('status-height').value.trim() || null;
-    const location  = document.getElementById('status-location').value || null;
     const features  = document.getElementById('status-features').value.trim() || null;
+    // Location: text input overrides chip selection
+    const locInput  = document.getElementById('status-location').value.trim();
+    const idx       = allInventory.findIndex(i => i.id === itemId);
+    const chipLoc   = idx !== -1 ? allInventory[idx].location : '';
+    const location  = locInput || chipLoc || null;
 
     const btn = document.getElementById('save-status-btn');
     btn.disabled = true;
