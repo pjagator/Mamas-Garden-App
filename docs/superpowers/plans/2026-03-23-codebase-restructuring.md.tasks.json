@@ -1,0 +1,18 @@
+{
+  "planPath": "docs/superpowers/plans/2026-03-23-codebase-restructuring.md",
+  "tasks": [
+    {"id": 1, "nativeId": "9", "subject": "Task 1: Create directories and scaffold", "status": "pending"},
+    {"id": 2, "nativeId": "10", "subject": "Task 2: Split style.css into css/base.css", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "nativeId": "11", "subject": "Task 3: Split style.css into css/components.css", "status": "pending", "blockedBy": [1]},
+    {"id": 4, "nativeId": "12", "subject": "Task 4: Split style.css into css/screens.css", "status": "pending", "blockedBy": [1]},
+    {"id": 5, "nativeId": "13", "subject": "Task 5: Update index.html and commit CSS split", "status": "pending", "blockedBy": [2, 3, 4]},
+    {"id": 6, "nativeId": "14", "subject": "Task 6: Create js/app.js entry point", "status": "pending", "blockedBy": [5]},
+    {"id": 7, "nativeId": "15", "subject": "Task 7: Create js/auth.js", "status": "pending", "blockedBy": [5]},
+    {"id": 8, "nativeId": "16", "subject": "Task 8: Create js/capture.js", "status": "pending", "blockedBy": [5]},
+    {"id": 9, "nativeId": "17", "subject": "Task 9: Create js/inventory.js", "status": "pending", "blockedBy": [5]},
+    {"id": 10, "nativeId": "18", "subject": "Task 10: Create js/features.js", "status": "pending", "blockedBy": [5]},
+    {"id": 11, "nativeId": "19", "subject": "Task 11: Atomic JS commit", "status": "pending", "blockedBy": [6, 7, 8, 9, 10]},
+    {"id": 12, "nativeId": "20", "subject": "Task 12: Update documentation", "status": "pending", "blockedBy": [11]}
+  ],
+  "lastUpdated": "2026-03-23T00:00:00Z"
+}
