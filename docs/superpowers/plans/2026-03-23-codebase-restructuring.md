@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers-extended-cc:subagent-driven-development (if subagents available) or superpowers-extended-cc:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Split the monolithic `app.js` (1,471 lines) and `style.css` (1,216 lines) into ES modules and separated CSS files with zero functionality change.
+**Goal:** Split the monolithic `app.js` (1,471 lines) and `style.css` (1,216 lines) into ES modules and separated CSS files with zero functionality change. (One minor behavioral improvement: `saveBugPlantLink` and `savePlantStatus` will now also refresh the detail modal after saving, via the unified event system — this is arguably better UX.)
 
 **Architecture:** CSS splits first (safe, independently testable), then atomic JS module split. ES modules with `import`/`export`, no bundler. Event system for loose coupling between modules. All HTML event handler attributes stay as-is, wired through `window` bindings.
 
@@ -512,7 +512,7 @@ export function toggleCareProfile() { /* copy from app.js:1453-1460 */ }
 
 **Simplest correct approach**: Import `showItemDetail` and `renderInventory` from `inventory.js` in `features.js`. This creates a `features.js` → `inventory.js` dependency. But `inventory.js` also imports from `features.js`. This is a **circular dependency**.
 
-**Resolution**: For functions in `features.js` that need to refresh the detail modal, use the event system:
+**Resolution**: For functions in `features.js` that need to refresh views, use the event system:
 ```js
 // features.js
 emit('item-updated', { itemId });
@@ -526,6 +526,10 @@ on('item-updated', ({ itemId }) => {
 ```
 
 This keeps the dependency graph clean: `features.js` → `app.js` only.
+
+**Behavioral note**: `saveBugPlantLink` (line 1091) and `savePlantStatus` (line 1242) currently only call `renderInventory()` — they do NOT re-render the detail modal. `refreshCareProfile` (line 1310) only calls `showItemDetail()` without `renderInventory()`. With the unified `'item-updated'` event, all three will now call both. This is a minor UX improvement (detail modal shows updated status badges immediately) and acceptable. The spec's "zero functionality change" goal is met in spirit — no features are added or removed, and user-facing behavior is the same or slightly better.
+
+**State variable note**: The spec lists `currentFilter`, `currentSearch`, `activeTagFilters`, `activeLocationFilter`, `currentSort`, `pendingIdResults`, `selectedIdIndex` as exports from `app.js`. This plan supersedes the spec: filter/search/sort state moves to `inventory.js` (only used there) and capture state moves to `capture.js` (only used there). These variables are NOT exported from `app.js`.
 
 ---
 
