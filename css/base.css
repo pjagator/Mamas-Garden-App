@@ -1,0 +1,226 @@
+/* ── Reset & base ─────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+    --green-deep:   #1c3a2b;
+    --green-mid:    #2d5a3d;
+    --green-sage:   #7a9e7e;
+    --green-light:  #c8dfc9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #ece5d6;
+    --terra:        #c4622d;
+    --terra-light:  #e8a882;
+    --ink:          #1a1a1a;
+    --ink-mid:      #4a4a4a;
+    --ink-light:    #9a9a9a;
+    --white:        #ffffff;
+    --shadow-sm:    0 2px 8px rgba(28,58,43,0.10);
+    --shadow-md:    0 6px 24px rgba(28,58,43,0.14);
+    --shadow-lg:    0 16px 48px rgba(28,58,43,0.18);
+    --radius:       16px;
+    --radius-sm:    10px;
+    --nav-height:   72px;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body:    'DM Sans', -apple-system, sans-serif;
+
+    /* ── Typography scale (ratio ≈ 1.125 – major second) ──── */
+    --text-xs:      0.75rem;    /* 12px – tags, nav labels, fine print */
+    --text-sm:      0.875rem;   /* 14px – captions, hints, badges, meta */
+    --text-base:    1rem;       /* 16px – body text, inputs, buttons */
+    --text-lg:      1.125rem;   /* 18px – card titles, section labels */
+    --text-xl:      1.25rem;    /* 20px – results headings, season titles */
+    --text-2xl:     1.5rem;     /* 24px – modal titles, detail names */
+    --text-3xl:     1.875rem;   /* 30px – screen titles, stat numbers */
+
+    /* ── Spacing scale (4px base unit) ──── */
+    --space-1:      4px;
+    --space-2:      8px;
+    --space-3:      12px;
+    --space-4:      16px;
+    --space-5:      20px;
+    --space-6:      24px;
+    --space-8:      32px;
+    --space-12:     48px;
+}
+
+html { height: 100%; }
+
+body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100%;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Fields & buttons ────────────────────────────────────────── */
+.field {
+    width: 100%;
+    display: block;
+    padding: var(--space-3) var(--space-4);
+    border: 1.5px solid var(--cream-dark);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--ink);
+    background: var(--white);
+    margin-bottom: var(--space-2);
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+}
+
+.field:focus { outline: none; border-color: var(--green-sage); }
+
+textarea.field { resize: vertical; min-height: 80px; }
+
+select.field { cursor: pointer; }
+
+.field-label {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--ink-mid);
+    margin-bottom: var(--space-1);
+    margin-top: var(--space-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.btn-primary {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-3);
+    background: var(--green-deep);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    letter-spacing: 0.02em;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.btn-primary:active { transform: scale(0.98); background: var(--green-mid); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-5);
+    background: var(--white);
+    color: var(--green-deep);
+    border: 1.5px solid var(--green-light);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.btn-secondary:active { background: var(--cream); transform: scale(0.98); }
+
+.btn-ghost {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-3);
+    background: transparent;
+    color: var(--ink-mid);
+    border: 1.5px dashed var(--cream-dark);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: transform 150ms ease, background-color 150ms ease;
+    margin-top: var(--space-2);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.btn-ghost:active { background: var(--cream); transform: scale(0.98); }
+
+.btn-danger {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-3);
+    background: transparent;
+    color: var(--terra);
+    border: 1.5px solid var(--terra-light);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: transform 150ms ease, background-color 150ms ease;
+    margin-bottom: var(--space-2);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.btn-danger:active { background: #fdf0eb; transform: scale(0.98); }
+
+.btn-row { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+/* ── Divider ─────────────────────────────────────────────────── */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    color: var(--ink-light);
+    font-size: var(--text-sm);
+}
+
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cream-dark);
+}
+
+/* ── Utility text & checkbox ─────────────────────────────────── */
+small { font-size: var(--text-xs); color: var(--ink-light); display: block; margin-top: -6px; margin-bottom: var(--space-1); }
+small a { color: var(--green-mid); }
+
+.checkbox-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.checkbox-row label { font-size: var(--text-sm); color: var(--ink-mid); display: flex; align-items: center; gap: var(--space-1); cursor: pointer; min-height: 44px; -webkit-user-select: none; user-select: none; }
+
+/* ── Loading spinner ─────────────────────────────────────────── */
+.spinner-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-6) 0;
+}
+.spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--cream-dark);
+    border-top-color: var(--green-mid);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto var(--space-3);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-label { font-size: var(--text-sm); color: var(--ink-light); margin-top: var(--space-3); }
+
+/* ── iOS font-size fix ───────────────────────────────────────── */
+@supports (-webkit-touch-callout: none) {
+    input[type="file"], input[type="text"], input[type="email"], input[type="password"] { font-size: var(--text-base); }
+    .field { font-size: var(--text-base); }
+}
