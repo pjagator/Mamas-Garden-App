@@ -1,6 +1,6 @@
 // ── Inventory, timeline, export, settings ─────────────────────
 import { sb, getCurrentUser, getAllInventory, setAllInventory, getCurrentSeason, openModal, closeModal, emit, NATIVE_PLANTS, LOCATION_ZONES, LOCATION_HABITATS } from './app.js';
-import { renderTagEditor, renderBugPlantLink, renderLinkedBugs, renderPlantStatus, renderCareProfile } from './features.js';
+import { renderTagEditor, renderBugPlantLink, renderLinkedBugs, renderPlantStatus, renderCareProfile, renderHealthHistory } from './features.js';
 
 // Module-local state
 let currentFilter = 'all';
@@ -227,6 +227,7 @@ export function showItemDetail(item) {
         ${item.type === 'bug' ? renderBugPlantLink(item) : ''}
         ${item.type === 'plant' ? renderPlantStatus(item) : ''}
         ${item.type === 'plant' ? renderLinkedBugs(item) : ''}
+        ${item.type === 'plant' ? renderHealthHistory(item) : ''}
         ${renderCareProfile(item)}
         <div class="detail-delete">
             <button class="btn-danger" onclick="deleteItem('${item.id}', '${item.image_url || ''}')">Delete entry</button>

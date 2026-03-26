@@ -923,3 +923,118 @@ async function runDiagnosis(logId, itemId, imageUrl, common, scientific, health,
         alert("Couldn't analyze the photo. Your health check was still saved.");
     }
 }
+
+// ── Health history (detail modal) ────────────────────────────
+let _healthHistoryOffset = 0;
+const HEALTH_PAGE_SIZE = 10;
+
+export function renderHealthHistory(item) {
+    if (item.type !== 'plant') return '';
+
+    return `
+        <div class="health-history-section">
+            <div class="health-history-header" onclick="toggleHealthHistory('${item.id}')">
+                <h3 class="care-profile-title">Health History</h3>
+                <span class="care-toggle" id="health-history-toggle">▶</span>
+            </div>
+            <div id="health-history-body" class="health-history-body" style="display:none;">
+                <div id="health-history-list">Loading...</div>
+            </div>
+        </div>`;
+}
+
+export async function toggleHealthHistory(itemId) {
+    const body = document.getElementById('health-history-body');
+    const icon = document.getElementById('health-history-toggle');
+    if (!body) return;
+    const isHidden = body.style.display === 'none';
+    body.style.display = isHidden ? 'block' : 'none';
+    if (icon) icon.textContent = isHidden ? '▼' : '▶';
+
+    if (isHidden) {
+        _healthHistoryOffset = 0;
+        try {
+            await loadHealthHistoryPage(itemId, true);
+        } catch (err) {
+            console.error('Failed to load health history:', err);
+            const list = document.getElementById('health-history-list');
+            if (list) list.innerHTML = '<div class="health-empty">Could not load health history.</div>';
+        }
+    }
+}
+
+async function loadHealthHistoryPage(itemId, replace) {
+    const list = document.getElementById('health-history-list');
+    if (!list) return;
+
+    const { data, error } = await sb.from('health_logs')
+        .select('*')
+        .eq('inventory_id', itemId)
+        .eq('user_id', getCurrentUser().id)
+        .order('logged_at', { ascending: false })
+        .range(_healthHistoryOffset, _healthHistoryOffset + HEALTH_PAGE_SIZE - 1);
+
+    if (error) {
+        console.error('Failed to load health history:', error);
+        list.innerHTML = '<div class="health-empty">Could not load health history.</div>';
+        return;
+    }
+
+    if (data.length === 0 && _healthHistoryOffset === 0) {
+        list.innerHTML = '<div class="health-empty">No health checks yet. Use the 💓 icon on the card to log one.</div>';
+        return;
+    }
+
+    const html = data.map(log => {
+        const date = new Date(log.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const hClass = (log.health === 'thriving' || log.health === 'healthy') ? 'health-good'
+            : (log.health === 'stressed' || log.health === 'sick') ? 'health-bad' : 'health-neutral';
+
+        let badges = `<span class="tag ${hClass}">${log.health}</span>`;
+        if (log.flowering) badges += `<span class="tag season">${log.flowering}</span>`;
+
+        let photo = '';
+        if (log.image_url) {
+            photo = `<img class="health-log-photo" src="${log.image_url}" alt="Health check photo" onclick="window.open('${log.image_url}', '_blank')">`;
+        }
+
+        let diagnosis = '';
+        if (log.diagnosis) {
+            const d = log.diagnosis;
+            diagnosis = `
+                <div class="health-diagnosis-card severity-${d.severity || 'mild'}">
+                    <div class="diagnosis-label">Diagnosis</div>
+                    <div class="diagnosis-cause">${d.cause || ''}</div>
+                    <div class="diagnosis-action">${d.action || ''}</div>
+                    ${d.details ? `<div class="diagnosis-details" style="margin-top:4px;font-size:var(--text-xs);color:var(--ink-light);">${d.details}</div>` : ''}
+                </div>`;
+        }
+
+        return `
+            <div class="health-log-entry">
+                <div class="health-log-date">${date}</div>
+                <div class="health-log-badges">${badges}</div>
+                ${log.notes ? `<div class="health-log-notes">${log.notes}</div>` : ''}
+                ${photo}
+                ${diagnosis}
+            </div>`;
+    }).join('');
+
+    if (replace) {
+        list.innerHTML = html;
+    } else {
+        const existing = list.querySelector('.health-show-more');
+        if (existing) existing.remove();
+        list.insertAdjacentHTML('beforeend', html);
+    }
+
+    if (data.length === HEALTH_PAGE_SIZE) {
+        _healthHistoryOffset += HEALTH_PAGE_SIZE;
+        list.insertAdjacentHTML('beforeend',
+            `<div class="health-show-more" onclick="loadMoreHealthHistory('${itemId}')">Show more</div>`);
+    }
+}
+
+export async function loadMoreHealthHistory(itemId) {
+    await loadHealthHistoryPage(itemId, false);
+}

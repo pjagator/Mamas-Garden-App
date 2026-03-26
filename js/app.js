@@ -275,7 +275,7 @@ export async function loadInventory() {
 import { showAuthTab, handleSignIn, handleSignUp, handleSendCode, handleVerifyCode, handlePasswordReset, handleSignOut } from './auth.js';
 import { handlePhoto, removeImage, identifySpecies, renderIdCards, selectIdCard, saveSelectedId, openManualEntry, saveManualEntry } from './capture.js';
 import { updateStats, handleSearch, setFilter, toggleTagFilter, setLocationFilter, setSort, toggleFilterDropdown, renderInventory, showItemDetail, showLinkedBug, deleteItem, renderTimeline, exportJSON, exportCSV, clearAllData, showNativesDB } from './inventory.js';
-import { toggleTag, removeTag, addCustomTag, toggleBugPlantLink, saveBugPlantLink, togglePlantStatus, setLocationZone, setLocationHabitat, savePlantStatus, refreshCareProfile, toggleCareProfile, parseLocation, buildLocation, loadReminders, toggleReminderDone, addCustomReminder, removeReminder, toggleRemindersSection } from './features.js';
+import { toggleTag, removeTag, addCustomTag, toggleBugPlantLink, saveBugPlantLink, togglePlantStatus, setLocationZone, setLocationHabitat, savePlantStatus, refreshCareProfile, toggleCareProfile, parseLocation, buildLocation, loadReminders, toggleReminderDone, addCustomReminder, removeReminder, toggleRemindersSection, toggleHealthHistory, loadMoreHealthHistory } from './features.js';
 
 // ── Auth state change handler ──────────────────────────────────
 sb.auth.onAuthStateChange((event, session) => {
@@ -318,6 +318,7 @@ Object.assign(window, {
     handleSearch, setFilter, toggleTagFilter, setLocationFilter, setSort, toggleFilterDropdown, showItemDetail, showLinkedBug, deleteItem, exportJSON, exportCSV, clearAllData, showNativesDB,
     // Features
     toggleTag, removeTag, addCustomTag, toggleBugPlantLink, saveBugPlantLink, togglePlantStatus, setLocationZone, setLocationHabitat, savePlantStatus, refreshCareProfile, toggleCareProfile,
+    toggleHealthHistory, loadMoreHealthHistory,
     // Reminders
     toggleReminderDone, addCustomReminder, removeReminder, toggleRemindersSection,
     // Modal
