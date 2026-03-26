@@ -26,7 +26,7 @@ js/app.js        -- Entry point. Supabase client, shared state (getters/setters)
 js/auth.js       -- All auth flows: sign in, sign up, OTP, password reset, sign out.
 js/capture.js    -- Photo capture, canvas preview, image upload, species ID via edge function, ID result cards, manual entry, save flow.
 js/inventory.js  -- Garden grid rendering, search/filter/sort, item detail modal, delete, timeline, export, native DB modal, clear data.
-js/features.js   -- Tag editor, bug-plant linking, plant status tracking, care profile generation/display, seasonal care reminders.
+js/features.js   -- Tag editor, bug-plant linking, plant status tracking, care profile generation/display, seasonal care reminders, health check logging/history/diagnosis.
 ```
 
 ### Frontend (CSS in `css/`)
@@ -44,7 +44,7 @@ index.html    -- HTML structure: welcome screen, 4 tab screens, 3 modals, bottom
 ### Edge functions
 ```
 supabase/functions/identify-species/  -- Species ID from photos via Claude Sonnet
-supabase/functions/garden-assistant/  -- Care profile generation + seasonal reminders via Claude Haiku
+supabase/functions/garden-assistant/  -- Care profile generation + seasonal reminders via Claude Haiku, plant health diagnosis via Claude Sonnet
 ```
 
 ### Documentation
@@ -124,6 +124,22 @@ RLS enabled: users can only read/write/delete their own rows.
 | `done` | boolean | `false` | Whether the user has checked it off |
 | `plant_hash` | text | `''` | Hash of plant list at generation time (staleness detection) |
 | `created_at` | timestamptz | `now()` | Date created |
+
+RLS enabled: users can only read/write/delete their own rows.
+
+### Table: `health_logs`
+
+| Column | Type | Default | Notes |
+|--------|------|---------|-------|
+| `id` | uuid | `gen_random_uuid()` | Primary key |
+| `user_id` | uuid | NOT NULL | FK to `auth.users(id)` ON DELETE CASCADE |
+| `inventory_id` | uuid | NOT NULL | FK to `inventory(id)` ON DELETE CASCADE |
+| `health` | text | NOT NULL | thriving, healthy, stressed, sick, dormant, new |
+| `flowering` | text | | yes, budding, no, fruiting |
+| `notes` | text | `''` | Free text |
+| `image_url` | text | | Photo in Supabase Storage |
+| `diagnosis` | jsonb | | AI diagnosis result (cause, severity, action, details) |
+| `logged_at` | timestamptz | `now()` | Timestamp |
 
 RLS enabled: users can only read/write/delete their own rows.
 

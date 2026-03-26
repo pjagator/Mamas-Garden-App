@@ -236,6 +236,9 @@
 - Hidden when inventory has no plants
 - HTML escaping via `escapeHtml()` prevents XSS in reminder content
 
+### Plant Health Tracking
+- **Plant Health Tracking** -- Quick-log health checks from pulse icon on plant cards. Bottom sheet with health/flowering status pills, optional photo. Health history timeline in detail modal with pagination. AI-powered diagnosis via Claude Sonnet for stressed/sick plants with photos. Data stored in `health_logs` table.
+
 ### Timeline
 - Seasonal view: Spring, Summer, Fall, Winter
 - Lists blooming plants (🌸) and active insects (🦋) per season
