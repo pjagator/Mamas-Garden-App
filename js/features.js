@@ -498,3 +498,255 @@ export function toggleCareProfile() {
     body.style.display = isHidden ? 'block' : 'none';
     if (icon) icon.textContent = isHidden ? '▼' : '▶';
 }
+
+// ── Seasonal care reminders ───────────────────────────────────
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function getMonthKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getPlantHash() {
+    return getAllInventory()
+        .filter(i => i.type === 'plant')
+        .map(i => i.common)
+        .sort()
+        .join(',');
+}
+
+let _remindersCache = [];
+
+export async function loadReminders() {
+    const plants = getAllInventory().filter(i => i.type === 'plant');
+    const section = document.getElementById('reminders-section');
+    if (!section) return;
+
+    if (plants.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = '';
+    const monthKey = getMonthKey();
+    const plantHash = getPlantHash();
+
+    // Load existing reminders for this month
+    const { data: existing, error } = await sb.from('reminders')
+        .select('*')
+        .eq('user_id', getCurrentUser().id)
+        .eq('month_key', monthKey)
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('Failed to load reminders:', error);
+        return;
+    }
+
+    const aiReminders = (existing || []).filter(r => r.source === 'ai');
+    const customReminders = (existing || []).filter(r => r.source === 'custom');
+
+    // Check if AI reminders need regeneration
+    const needsRegen = aiReminders.length === 0 || (aiReminders[0] && aiReminders[0].plant_hash !== plantHash);
+
+    if (needsRegen) {
+        // Show loading state
+        const list = document.getElementById('reminders-list');
+        if (list) list.innerHTML = '<div class="reminders-loading">Generating your monthly reminders...</div>';
+
+        // Delete old AI reminders
+        if (aiReminders.length > 0) {
+            await sb.from('reminders')
+                .delete()
+                .eq('user_id', getCurrentUser().id)
+                .eq('month_key', monthKey)
+                .eq('source', 'ai');
+        }
+
+        // Generate new ones
+        const newAiReminders = await generateReminders(monthKey, plantHash, plants);
+        _remindersCache = [...newAiReminders, ...customReminders];
+    } else {
+        _remindersCache = existing || [];
+    }
+
+    renderReminders(_remindersCache);
+}
+
+async function generateReminders(monthKey, plantHash, plants) {
+    const month = MONTHS[new Date().getMonth()];
+    const plantData = plants.map(p => ({ common: p.common, scientific: p.scientific, category: p.category }));
+
+    try {
+        const response = await fetch(
+            SUPABASE_URL + '/functions/v1/garden-assistant',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({
+                    action: 'reminders',
+                    data: { month, plants: plantData }
+                }),
+            }
+        );
+
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        const reminders = result.reminders || [];
+        const userId = getCurrentUser().id;
+
+        // Insert into DB
+        const rows = reminders.map(r => ({
+            user_id: userId,
+            month_key: monthKey,
+            icon: r.icon || '',
+            title: r.title,
+            detail: r.detail || '',
+            plant: r.plant || 'General',
+            source: 'ai',
+            done: false,
+            plant_hash: plantHash,
+        }));
+
+        if (rows.length > 0) {
+            const { data: inserted, error } = await sb.from('reminders')
+                .insert(rows)
+                .select();
+
+            if (error) {
+                console.error('Failed to save reminders:', error);
+                return [];
+            }
+            return inserted || [];
+        }
+        return [];
+    } catch (err) {
+        console.error('Reminder generation failed:', err);
+        const list = document.getElementById('reminders-list');
+        if (list) list.innerHTML = '<div class="reminders-loading">Could not generate reminders. Try again later.</div>';
+        return [];
+    }
+}
+
+function renderReminders(reminders) {
+    const list = document.getElementById('reminders-list');
+    if (!list) return;
+
+    if (reminders.length === 0) {
+        list.innerHTML = '<div class="reminders-loading">No reminders yet.</div>';
+        return;
+    }
+
+    // Sort: unchecked first, then checked
+    const sorted = [...reminders].sort((a, b) => {
+        if (a.done !== b.done) return a.done ? 1 : -1;
+        return 0;
+    });
+
+    list.innerHTML = sorted.map(r => {
+        const doneClass = r.done ? ' done' : '';
+        const checkmark = r.done ? '✓' : '';
+        const isCustom = r.source === 'custom';
+        const plantTag = r.plant && r.plant !== 'General' ? `<span class="reminder-plant-tag">${escapeHtml(r.plant)}</span>` : '';
+        const deleteBtn = isCustom ? `<button class="reminder-delete" onclick="removeReminder('${r.id}')" aria-label="Delete reminder">&times;</button>` : '';
+
+        return `<div class="reminder-item${doneClass}">
+            <button class="reminder-check" onclick="toggleReminderDone('${r.id}')">${checkmark}</button>
+            <div class="reminder-content">
+                <div class="reminder-icon-title">
+                    ${r.icon ? `<span class="reminder-icon">${r.icon}</span>` : ''}
+                    <span class="reminder-title-text">${escapeHtml(r.title)}</span>
+                </div>
+                ${r.detail ? `<div class="reminder-detail">${escapeHtml(r.detail)}</div>` : ''}
+                ${plantTag}
+            </div>
+            ${deleteBtn}
+        </div>`;
+    }).join('');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+export async function toggleReminderDone(id) {
+    const reminder = _remindersCache.find(r => r.id === id);
+    if (!reminder) return;
+
+    const newDone = !reminder.done;
+
+    const { error } = await sb.from('reminders')
+        .update({ done: newDone })
+        .eq('id', id)
+        .eq('user_id', getCurrentUser().id);
+
+    if (error) {
+        console.error('Failed to update reminder:', error);
+        return;
+    }
+
+    reminder.done = newDone;
+    renderReminders(_remindersCache);
+}
+
+export async function addCustomReminder() {
+    const input = document.getElementById('custom-reminder-input');
+    if (!input) return;
+
+    const title = input.value.trim();
+    if (!title) return;
+
+    const { data, error } = await sb.from('reminders')
+        .insert({
+            user_id: getCurrentUser().id,
+            month_key: getMonthKey(),
+            icon: '📝',
+            title,
+            detail: '',
+            plant: '',
+            source: 'custom',
+            done: false,
+            plant_hash: '',
+        })
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Failed to add custom reminder:', error);
+        return;
+    }
+
+    input.value = '';
+    _remindersCache.push(data);
+    renderReminders(_remindersCache);
+}
+
+export async function removeReminder(id) {
+    const reminder = _remindersCache.find(r => r.id === id);
+    if (!reminder || reminder.source !== 'custom') return;
+
+    const { error } = await sb.from('reminders')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', getCurrentUser().id);
+
+    if (error) {
+        console.error('Failed to delete reminder:', error);
+        return;
+    }
+
+    _remindersCache = _remindersCache.filter(r => r.id !== id);
+    renderReminders(_remindersCache);
+}
+
+export function toggleRemindersSection() {
+    const section = document.getElementById('reminders-section');
+    if (!section) return;
+    section.classList.toggle('collapsed');
+}

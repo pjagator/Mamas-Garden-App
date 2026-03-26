@@ -12,9 +12,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/base.css?v=10">
-    <link rel="stylesheet" href="css/components.css?v=10">
-    <link rel="stylesheet" href="css/screens.css?v=10">
+    <link rel="stylesheet" href="css/base.css?v=11">
+    <link rel="stylesheet" href="css/components.css?v=11">
+    <link rel="stylesheet" href="css/screens.css?v=11">
 </head>
 <body>
 
@@ -131,6 +131,20 @@
                 <div class="stat"><span id="stat-plants">0</span><label>Plants</label></div>
                 <div class="stat"><span id="stat-bugs">0</span><label>Insects</label></div>
                 <div class="stat"><span id="stat-natives">0</span><label>Natives</label></div>
+            </div>
+        </div>
+
+        <div id="reminders-section" class="reminders-section" style="display:none;">
+            <div class="reminders-header" onclick="toggleRemindersSection()">
+                <h3 class="reminders-title">This Month in Your Garden</h3>
+                <span id="reminders-chevron" class="reminders-chevron">&#9660;</span>
+            </div>
+            <div id="reminders-body" class="reminders-body">
+                <div id="reminders-list" class="reminders-list"></div>
+                <div class="reminders-add-row">
+                    <input type="text" id="custom-reminder-input" class="custom-reminder-input" placeholder="Add your own reminder..." maxlength="100">
+                    <button class="btn-add-reminder" onclick="addCustomReminder()" aria-label="Add reminder">+</button>
+                </div>
             </div>
         </div>
 
@@ -288,6 +302,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="module" src="js/app.js?v=10"></script>
+<script type="module" src="js/app.js?v=11"></script>
 </body>
 </html>
