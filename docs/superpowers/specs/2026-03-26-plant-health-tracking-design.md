@@ -30,6 +30,29 @@ Add health check logging with history timeline and AI-powered diagnosis for stre
 
 RLS: users read/write/delete own rows only. Deleting a plant cascades to its logs.
 
+### Migration SQL
+
+```sql
+create table health_logs (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  inventory_id uuid references inventory(id) on delete cascade not null,
+  health text not null,
+  flowering text,
+  notes text default '',
+  image_url text,
+  diagnosis jsonb,
+  logged_at timestamptz default now()
+);
+
+alter table health_logs enable row level security;
+
+create policy "Users can read own health logs" on health_logs for select using (auth.uid() = user_id);
+create policy "Users can insert own health logs" on health_logs for insert with check (auth.uid() = user_id);
+create policy "Users can update own health logs" on health_logs for update using (auth.uid() = user_id);
+create policy "Users can delete own health logs" on health_logs for delete using (auth.uid() = user_id);
+```
+
 No changes to the `inventory` table. Existing `health` and `flowering` columns remain as "current" snapshot, updated on each log save.
 
 ## UI: Quick-Log Bottom Sheet
@@ -45,7 +68,7 @@ Bottom sheet contains:
 
 When stressed/sick selected: prompt appears "Want to snap a photo for diagnosis?" with camera button.
 
-Styling: bottom-sheet slide-up pattern (matching existing modals). Forest green pills, terracotta for stressed/sick. 44px minimum touch targets.
+Styling: Uses the existing `openModal()`/`closeModal()` system with a new modal ID. Same `modal-overlay` + `modal-sheet` pattern, not a new UI component. Forest green pills, terracotta for stressed/sick. 44px minimum touch targets.
 
 ## UI: Health History in Detail Modal
 
@@ -60,15 +83,15 @@ New collapsible section "Health History" in item detail modal, below Care Profil
   - Thumbnail photo if present (tappable for full size)
   - Diagnosis summary if present (expandable card)
 - Empty state: "No health checks yet. Use the pulse icon on the card to log one."
-- Show last 10 entries with "Show more" link for older ones
+- Show last 10 entries initially. "Show more" fetches next 10 using Supabase `.range()` and appends to the list. Client tracks current offset.
 
 ## AI Diagnosis Flow
 
 1. User selects stressed/sick, taps camera button
-2. Photo captured via existing camera/gallery picker
+2. Photo captured via a dedicated `<input type="file" accept="image/*">` in the health log modal (not reusing capture.js DOM elements, which are coupled to the Capture screen). Image is drawn to an offscreen canvas, resized, and converted to blob — same technique as capture.js but self-contained in features.js.
 3. Upload to Supabase Storage: `{user_id}/health_{timestamp}.jpg`
 4. Health log saved immediately (with image_url, without diagnosis)
-5. Bottom sheet closes. Toast: "Health check saved. Analyzing photo..."
+5. Modal closes. Status message via `alert()` (matching existing app pattern): "Health check saved. Analyzing photo..."
 6. Call garden-assistant edge function with action `"diagnose"`:
    ```json
    {
@@ -92,22 +115,34 @@ New collapsible section "Health History" in item detail modal, below Care Profil
    }
    ```
 8. Update health_log row with diagnosis. Emit `'item-updated'` to refresh detail modal if open.
-9. If diagnosis fails, health log is still saved. Toast: "Couldn't analyze the photo. Your health check was still saved."
+9. If diagnosis fails, health log is still saved. Alert: "Couldn't analyze the photo. Your health check was still saved."
 
 ## Edge Function Changes
 
 `garden-assistant` gets a new `"diagnose"` action branch:
-- **Model:** Claude Sonnet (claude-sonnet-4-20250514) — needs vision for photo analysis
-- **Input:** image URL (fetched + base64 converted in edge function, chunked approach), plant name, status, notes
+- **Model switching:** The edge function currently hardcodes Claude Haiku for `care_profile` and `reminders`. The `diagnose` action requires **Claude Sonnet** (`claude-sonnet-4-20250514`) for vision capability. The edge function must select the model conditionally based on action:
+  - `care_profile`, `reminders` → Haiku (`claude-haiku-4-5-20251001`)
+  - `diagnose` → Sonnet (`claude-sonnet-4-20250514`)
+- **Input:** image URL (fetched + base64 converted in edge function using 8KB chunked approach), plant name, status, notes
+- **Claude API message format:** Uses vision content block:
+  ```json
+  {
+    "role": "user",
+    "content": [
+      { "type": "image", "source": { "type": "base64", "media_type": "image/jpeg", "data": "<base64>" } },
+      { "type": "text", "text": "This Firebush (Hamelia patens) in a Tampa Bay garden appears stressed. Notes: Leaves yellowing. Analyze and suggest cause, severity, and treatment." }
+    ]
+  }
+  ```
 - **Output:** JSON with cause, severity, action, details
-- **Error handling:** Returns error JSON, does not throw. Client handles gracefully.
+- **Error handling:** Returns `{ error: "..." }` JSON, does not throw. Client handles gracefully.
 
 ## File Changes
 
 | File | Changes |
 |------|---------|
-| `js/features.js` | `openHealthLog()`, `saveHealthLog()`, `renderHealthHistory()`, `toggleHealthHistory()`, photo capture + diagnosis flow |
-| `js/app.js` | Import and window-bind new functions |
+| `js/features.js` | `openHealthLog()`, `saveHealthLog()`, `renderHealthHistory()`, `toggleHealthHistory()`, photo capture + diagnosis flow. Window-bind: `openHealthLog`, `saveHealthLog`, `toggleHealthHistory`. (`renderHealthHistory` is internal, called from `showItemDetail`.) |
+| `js/app.js` | Import `openHealthLog`, `saveHealthLog`, `renderHealthHistory`, `toggleHealthHistory` from features.js. Add `openHealthLog`, `saveHealthLog`, `toggleHealthHistory` to `Object.assign(window, {...})`. |
 | `js/inventory.js` | Pulse icon on plant cards, Health History section in detail modal |
 | `css/components.css` | Health log bottom sheet, status pills, timeline entries, diagnosis card |
 | `css/screens.css` | Bottom sheet slide-up animation |
