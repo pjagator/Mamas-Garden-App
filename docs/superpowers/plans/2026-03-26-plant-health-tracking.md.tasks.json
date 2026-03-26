@@ -1,0 +1,14 @@
+{
+  "planPath": "docs/superpowers/plans/2026-03-26-plant-health-tracking.md",
+  "tasks": [
+    {"id": 5, "subject": "Task 1: Database Migration", "status": "pending"},
+    {"id": 6, "subject": "Task 2: Edge Function — Diagnose Action", "status": "pending"},
+    {"id": 7, "subject": "Task 3: Health Log Modal — HTML + CSS", "status": "pending", "blockedBy": [5, 6]},
+    {"id": 8, "subject": "Task 4: Health Log Functions in features.js", "status": "pending", "blockedBy": [7]},
+    {"id": 9, "subject": "Task 5: Health History in Detail Modal", "status": "pending", "blockedBy": [8]},
+    {"id": 10, "subject": "Task 6: Pulse Icon + App.js Wiring", "status": "pending", "blockedBy": [8]},
+    {"id": 11, "subject": "Task 7: Manual Testing", "status": "pending", "blockedBy": [9, 10]},
+    {"id": 12, "subject": "Task 8: Documentation Updates", "status": "pending", "blockedBy": [11]}
+  ],
+  "lastUpdated": "2026-03-26T18:45:00Z"
+}
