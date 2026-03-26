@@ -174,7 +174,8 @@ export function renderInventory() {
                 <div class="garden-card-name">${item.common}</div>
                 <div class="garden-card-sci">${item.scientific || ''}</div>
                 <div class="garden-card-tags">${tags.join('')}</div>
-            </div>`;
+            </div>
+            ${item.type === 'plant' ? `<button class="health-pulse-btn" onclick="event.stopPropagation();openHealthLog('${item.id}')" aria-label="Health check">💓</button>` : ''}`;
         grid.appendChild(card);
     });
 }
