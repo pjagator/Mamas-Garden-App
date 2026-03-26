@@ -12,9 +12,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/base.css?v=11">
-    <link rel="stylesheet" href="css/components.css?v=11">
-    <link rel="stylesheet" href="css/screens.css?v=11">
+    <link rel="stylesheet" href="css/base.css?v=12">
+    <link rel="stylesheet" href="css/components.css?v=12">
+    <link rel="stylesheet" href="css/screens.css?v=12">
 </head>
 <body>
 
@@ -301,7 +301,51 @@
     </div>
 </div>
 
+<!-- Health log modal -->
+<div class="modal-overlay" id="health-log-modal" onclick="closeModal('health-log-modal')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal('health-log-modal')">✕</button>
+        <h2 class="modal-title" id="health-log-title">Health Check</h2>
+        <input type="hidden" id="health-log-item-id">
+
+        <label class="field-label">How is it doing?</label>
+        <div class="health-pills" id="health-pills">
+            <button class="health-pill" data-value="thriving" onclick="document.querySelectorAll('#health-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active');document.getElementById('health-photo-prompt').style.display='none'">Thriving</button>
+            <button class="health-pill" data-value="healthy" onclick="document.querySelectorAll('#health-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active');document.getElementById('health-photo-prompt').style.display='none'">Healthy</button>
+            <button class="health-pill health-pill-warn" data-value="stressed" onclick="document.querySelectorAll('#health-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active');document.getElementById('health-photo-prompt').style.display='block'">Stressed</button>
+            <button class="health-pill health-pill-warn" data-value="sick" onclick="document.querySelectorAll('#health-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active');document.getElementById('health-photo-prompt').style.display='block'">Sick</button>
+            <button class="health-pill" data-value="dormant" onclick="document.querySelectorAll('#health-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active');document.getElementById('health-photo-prompt').style.display='none'">Dormant</button>
+            <button class="health-pill" data-value="new" onclick="document.querySelectorAll('#health-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active');document.getElementById('health-photo-prompt').style.display='none'">New</button>
+        </div>
+
+        <div id="health-photo-prompt" style="display:none;">
+            <p class="health-photo-text">Want to snap a photo for diagnosis?</p>
+            <label class="btn-secondary health-camera-btn">
+                📷 Take photo
+                <input type="file" accept="image/*" capture="environment" id="health-photo-input" onchange="window._healthPhotoSelected(event)" style="display:none;">
+            </label>
+            <div id="health-photo-preview" style="display:none;">
+                <img id="health-photo-img" class="health-photo-thumb">
+                <button class="health-photo-remove" onclick="window._healthRemovePhoto()">✕</button>
+            </div>
+        </div>
+
+        <label class="field-label">Flowering</label>
+        <div class="health-pills health-pills-sm" id="flowering-pills">
+            <button class="health-pill health-pill-sm" data-value="yes" onclick="document.querySelectorAll('#flowering-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active')">Flowering</button>
+            <button class="health-pill health-pill-sm" data-value="budding" onclick="document.querySelectorAll('#flowering-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active')">Budding</button>
+            <button class="health-pill health-pill-sm" data-value="no" onclick="document.querySelectorAll('#flowering-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active')">No</button>
+            <button class="health-pill health-pill-sm" data-value="fruiting" onclick="document.querySelectorAll('#flowering-pills .health-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active')">Fruiting</button>
+        </div>
+
+        <label class="field-label">Quick note</label>
+        <input class="field" id="health-log-notes" placeholder="Quick note (optional)">
+
+        <button class="btn-primary" id="health-log-save-btn" onclick="saveHealthLog()" style="margin-top:var(--space-4)">Save health check</button>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="module" src="js/app.js?v=11"></script>
+<script type="module" src="js/app.js?v=12"></script>
 </body>
 </html>
