@@ -22,6 +22,8 @@ Deno.serve(async (req) => {
       result = await generateCareProfile(data, anthropicKey);
     } else if (action === "reminders") {
       result = await generateReminders(data, anthropicKey);
+    } else if (action === "diagnose") {
+      result = await diagnosePlant(data, anthropicKey);
     } else {
       throw new Error("Unknown action: " + action);
     }
@@ -168,4 +170,78 @@ Be specific to Tampa Bay's subtropical climate. Include a mix of tasks: pruning,
   const parsed = JSON.parse(clean);
 
   return { reminders: parsed.reminders || [] };
+}
+
+async function diagnosePlant(
+  data: { imageUrl: string; common: string; scientific: string; health: string; notes: string },
+  anthropicKey: string
+) {
+  const { imageUrl, common, scientific, health, notes } = data;
+
+  if (!imageUrl) throw new Error("No image URL provided for diagnosis");
+
+  // Fetch image and convert to base64 (8KB chunked approach)
+  const imgResponse = await fetch(imageUrl);
+  if (!imgResponse.ok) throw new Error("Could not fetch image: " + imgResponse.status);
+  const imgBuffer = await imgResponse.arrayBuffer();
+
+  const bytes = new Uint8Array(imgBuffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 8192) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+  }
+  const base64 = btoa(binary);
+
+  const prompt = `You are a Tampa Bay, Florida (USDA Zone 9b/10a) gardening expert and plant pathologist.
+
+This ${common} (${scientific || "unknown species"}) appears ${health}. ${notes ? "The gardener notes: " + notes : ""}
+
+Analyze the photo and diagnose what might be wrong. Return ONLY a JSON object with exactly these fields:
+{
+  "cause": "Most likely cause of the issue (e.g. 'Iron chlorosis from alkaline soil')",
+  "severity": "mild" or "moderate" or "severe",
+  "action": "Specific recommended treatment for Tampa Bay climate and conditions",
+  "details": "2-3 sentence explanation of the diagnosis, what signs you see, and why the recommended action should help"
+}
+
+Be specific to Tampa Bay's subtropical climate, sandy alkaline soil, humidity, and common local pests/diseases. Return ONLY the JSON object, no other text.`;
+
+  const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": anthropicKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      messages: [{
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: "image/jpeg",
+              data: base64,
+            },
+          },
+          { type: "text", text: prompt },
+        ],
+      }],
+    }),
+  });
+
+  if (!claudeResponse.ok) {
+    const errText = await claudeResponse.text();
+    throw new Error("Claude API error: " + errText);
+  }
+
+  const claudeResult = await claudeResponse.json();
+  const text = claudeResult.content[0].text.trim();
+  const clean = text.replace(/```json|```/g, "").trim();
+  const diagnosis = JSON.parse(clean);
+
+  return { diagnosis };
 }
