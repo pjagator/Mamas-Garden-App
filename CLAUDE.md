@@ -13,6 +13,7 @@ A mobile-first web app for tracking native plants and wildlife in a Tampa Bay, F
 - **Backend**: Supabase (auth, Postgres with RLS, Storage, Edge Functions on Deno)
 - **Species ID**: Claude Sonnet (claude-sonnet-4-20250514) via `identify-species` edge function -- handles both plants and insects from photos
 - **Care Profiles**: Claude Haiku (claude-haiku-4-5-20251001) via `garden-assistant` edge function -- generates Tampa Bay-specific plant care data
+- **Seasonal Reminders**: Claude Haiku via `garden-assistant` edge function (action: `"reminders"`) -- generates monthly care tasks based on user's plant inventory
 - **Hosting**: GitHub Pages (push to main = deploy)
 
 ## Architecture
@@ -25,13 +26,13 @@ js/app.js        -- Entry point. Supabase client, shared state (getters/setters)
 js/auth.js       -- All auth flows: sign in, sign up, OTP, password reset, sign out.
 js/capture.js    -- Photo capture, canvas preview, image upload, species ID via edge function, ID result cards, manual entry, save flow.
 js/inventory.js  -- Garden grid rendering, search/filter/sort, item detail modal, delete, timeline, export, native DB modal, clear data.
-js/features.js   -- Tag editor, bug-plant linking, plant status tracking, care profile generation/display.
+js/features.js   -- Tag editor, bug-plant linking, plant status tracking, care profile generation/display, seasonal care reminders.
 ```
 
 ### Frontend (CSS in `css/`)
 ```
 css/base.css       -- Reset, :root custom properties (colors, typography, spacing), fields, buttons, spinner, utilities.
-css/components.css -- Cards, tags, badges, detail view, care profile, plant status, linked bugs, filter chips.
+css/components.css -- Cards, tags, badges, detail view, care profile, plant status, linked bugs, filter chips, seasonal reminders.
 css/screens.css    -- Auth, welcome, capture, garden, timeline, settings, modals, bottom nav.
 ```
 
@@ -43,7 +44,7 @@ index.html    -- HTML structure: welcome screen, 4 tab screens, 3 modals, bottom
 ### Edge functions
 ```
 supabase/functions/identify-species/  -- Species ID from photos via Claude Sonnet
-supabase/functions/garden-assistant/  -- Care profile generation via Claude Haiku
+supabase/functions/garden-assistant/  -- Care profile generation + seasonal reminders via Claude Haiku
 ```
 
 ### Documentation
@@ -105,6 +106,24 @@ LEARNING-PLAN.md        -- 10-lesson curriculum for professional app polish (2 o
 | `height` | text | | Free text |
 | `features` | text | | Free text observations |
 | `linked_plant_id` | uuid/text | | FK to inventory(id) or `'ground'` for bugs |
+
+RLS enabled: users can only read/write/delete their own rows.
+
+### Table: `reminders`
+
+| Column | Type | Default | Notes |
+|--------|------|---------|-------|
+| `id` | uuid | `gen_random_uuid()` | Primary key |
+| `user_id` | uuid | NOT NULL | FK to `auth.users(id)` ON DELETE CASCADE |
+| `month_key` | text | NOT NULL | e.g. `"2026-03"` |
+| `icon` | text | `''` | Emoji icon for the reminder |
+| `title` | text | NOT NULL | Short task description |
+| `detail` | text | `''` | 1-2 sentence explanation |
+| `plant` | text | `''` | Which plant this applies to, or empty for general |
+| `source` | text | `'ai'` | `'ai'` or `'custom'` |
+| `done` | boolean | `false` | Whether the user has checked it off |
+| `plant_hash` | text | `''` | Hash of plant list at generation time (staleness detection) |
+| `created_at` | timestamptz | `now()` | Date created |
 
 RLS enabled: users can only read/write/delete their own rows.
 

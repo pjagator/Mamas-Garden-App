@@ -1,9 +1,9 @@
 # PROJECT-STATE.md — Full Codebase Audit
 
-**Generated**: 2026-03-23
+**Generated**: 2026-03-26
 **Repo**: https://github.com/pjagator/Mamas-Garden-App
-**Total files**: 18 (excluding `.git/`)
-**Total lines**: ~4,900
+**Total files**: 19 (excluding `.git/`)
+**Total lines**: ~5,500
 
 ---
 
@@ -17,27 +17,33 @@
 | `js/auth.js` | 83 | Auth flows: sign in, sign up, magic link OTP, password reset, sign out. Internal: setAuthMsg, otpEmail. |
 | `js/capture.js` | 300 | Photo capture via camera/gallery, canvas preview (max 900px), image upload (temp 0.5 quality, final 0.82 quality), species ID via edge function, ID result cards, manual entry modal, save flow with care profile generation. |
 | `js/inventory.js` | 320 | Garden grid rendering (2-column), search/filter/sort, item detail modal orchestration, delete, timeline, JSON/CSV export, native DB modal, clear all data. Module-local filter/search/sort state. |
-| `js/features.js` | 500 | Tag editor (preset + custom), bug-plant linking, plant status tracking (health/flowering/height/location/features), care profile generation + display. Uses event system to avoid circular dependencies with inventory.js. |
+| `js/features.js` | 752 | Tag editor (preset + custom), bug-plant linking, plant status tracking (health/flowering/height/location/features), care profile generation + display, seasonal care reminders (load/generate/render/check-off/add-custom/delete). Uses event system to avoid circular dependencies with inventory.js. |
 
 ### Core Application Files — CSS (in `css/`)
 
 | File | Lines | Purpose |
 |------|-------|---------|
 | `css/base.css` | 226 | Design system: reset, :root custom properties (colors, typography scale, spacing scale, shadows, radii, fonts), body, fields, 5 button variants, divider, checkbox row, spinner (deduplicated), iOS font-size fix. |
-| `css/components.css` | 402 | Reusable components: ID result cards (deduplicated), confidence badges, tags (all variants), tag editor, filter chips, garden cards, detail view, plant status, linked bugs, care profile, natives list. |
+| `css/components.css` | 629 | Reusable components: ID result cards (deduplicated), confidence badges, tags (all variants), tag editor, filter chips, garden cards, detail view, plant status, linked bugs, care profile, natives list, seasonal care reminders (checklist, checkboxes, add-row). |
 | `css/screens.css` | 532 | Screen layouts: auth, welcome, app shell, screens base + animations, bottom nav, capture tab, garden tab (stats/search/grid), timeline, settings, modals (overlay + sheet + slide-up animation), 360px breakpoint. |
 
 ### HTML
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | 293 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=10`. |
+| `index.html` | 305 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=11`. |
 
 ### Edge Functions
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `supabase/functions/garden-assistant/index.ts` | 108 | Deno edge function for care profile generation. Accepts `{ action: "care_profile", data: { common, scientific, type, category } }`. Calls Claude Haiku (claude-haiku-4-5-20251001) with a Tampa Bay-specific gardening prompt. Returns structured JSON care profile with watering, sun, soil, fertilizing, pruning, pests, companions, and mature size. Plants only — returns null for bugs. CORS enabled, JWT verification disabled. |
+| `supabase/functions/garden-assistant/index.ts` | 171 | Deno edge function for care profiles and seasonal reminders. Two actions: `"care_profile"` (accepts plant data, returns structured care JSON) and `"reminders"` (accepts month + plant list, returns 3-5 monthly care tasks). Both call Claude Haiku (claude-haiku-4-5-20251001) with Tampa Bay-specific prompts. CORS enabled, JWT verification disabled. |
+
+### Database Migrations
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `supabase/migrations/create_reminders_table.sql` | 17 | Creates `reminders` table with RLS policies for seasonal care reminders feature. Run in Supabase SQL Editor. |
 
 ### Documentation
 
@@ -96,6 +102,26 @@
 | `linked_plant_id` | uuid or text | | FK → `inventory(id)` ON DELETE SET NULL, or `'ground'` |
 
 **RLS**: Enabled. Users can only read/write/delete rows where `user_id` = their own ID.
+
+### Table: `reminders`
+
+| Column | Type | Default | Notes |
+|--------|------|---------|-------|
+| `id` | uuid | `gen_random_uuid()` | Primary key |
+| `user_id` | uuid | NOT NULL | FK → `auth.users(id)` ON DELETE CASCADE |
+| `month_key` | text | NOT NULL | e.g. `"2026-03"` |
+| `icon` | text | `''` | Emoji icon for the reminder |
+| `title` | text | NOT NULL | Short task description |
+| `detail` | text | `''` | 1-2 sentence explanation |
+| `plant` | text | `''` | Which plant this applies to, or empty for general |
+| `source` | text | `'ai'` | `'ai'` (Claude-generated) or `'custom'` (user-added) |
+| `done` | boolean | `false` | Whether the user has checked it off |
+| `plant_hash` | text | `''` | Sorted comma-joined plant names at generation time (staleness detection) |
+| `created_at` | timestamptz | `now()` | Date created |
+
+**RLS**: Enabled. Users can only read/write/delete rows where `user_id` = their own ID.
+
+**Migration file**: `supabase/migrations/create_reminders_table.sql`
 
 ### Storage: `garden-images` bucket
 
@@ -197,6 +223,19 @@
 - "Refresh care info" button to regenerate
 - Shows loading spinner during generation
 
+### Seasonal Care Reminders
+- Collapsible "This Month in Your Garden" section at top of Garden tab (between stats header and search bar)
+- AI-generated via Claude Haiku: 3-5 monthly care tasks personalized to the user's plant inventory
+- Called via `garden-assistant` edge function with `action: "reminders"`, passing current month + plant list
+- Stored in Supabase `reminders` table (syncs across devices)
+- **Check off**: Each reminder has a checkbox. Checked items get strikethrough + muted style and sort to the bottom. State persists in DB.
+- **Add custom**: Inline input with "+" button to add user-created reminders (stored with `source: 'custom'`)
+- **Delete custom**: Custom reminders can be removed; AI-generated ones can only be checked off
+- **Staleness detection**: Reminders regenerate when the month changes or when the plant inventory changes (tracked via `plant_hash` column)
+- **Collapsible**: Header toggles section open/closed with chevron rotation
+- Hidden when inventory has no plants
+- HTML escaping via `escapeHtml()` prevents XSS in reminder content
+
 ### Timeline
 - Seasonal view: Spring, Summer, Fall, Winter
 - Lists blooming plants (🌸) and active insects (🦋) per season
@@ -254,13 +293,13 @@
 | API | Model/Endpoint | Used For | Called From |
 |-----|---------------|----------|------------|
 | Anthropic Claude API | claude-sonnet-4-20250514 | Species identification from photos (plants + insects) | `identify-species` edge function |
-| Anthropic Claude API | claude-haiku-4-5-20251001 | Care profile generation (Tampa Bay-specific) | `garden-assistant` edge function |
+| Anthropic Claude API | claude-haiku-4-5-20251001 | Care profile generation + seasonal reminders (Tampa Bay-specific) | `garden-assistant` edge function |
 
 ### Services
 | Service | Used For |
 |---------|----------|
 | Supabase Auth | Email/password auth, magic link OTP, password reset |
-| Supabase Postgres | `inventory` table with RLS |
+| Supabase Postgres | `inventory` and `reminders` tables with RLS |
 | Supabase Storage | `garden-images` bucket for plant/insect photos |
 | Supabase Edge Functions | `identify-species`, `garden-assistant` (Deno runtime) |
 | GitHub Pages | Static hosting (push to main = deploy) |
@@ -305,7 +344,7 @@ From CLAUDE-CODE-PROMPT.md roadmap:
 | Plant Care Dashboard | **Done** | Care profiles generate and display in item detail modal |
 | Planting Guide / Recommendations | **Not started** | New tab with seasonal recommendations |
 | Visual Garden Map | **Not started** | Canvas-based garden layout with drag-and-drop |
-| Seasonal Care Reminders | **Not started** | Monthly care task cards |
+| Seasonal Care Reminders | **Done** | Collapsible checklist at top of Garden tab, AI-generated + user-custom, synced via Supabase `reminders` table |
 | Plant Health Tracking (history) | **Partially done** | Current health status saves, but no health *history* log table or timeline. The `health_logs` table from the spec was never created. |
 
 From LEARNING-PLAN.md:
@@ -343,7 +382,7 @@ From LEARNING-PLAN.md:
 | Live URL | GitHub Pages | `https://pjagator.github.io/Mamas-Garden-App/` |
 
 ### Cache Busting
-- `style.css?v=9` and `app.js?v=9` in `index.html` — manually incremented on deploys
+- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=11`)
 
 ### No Build Step
 - No bundler, no transpilation, no minification

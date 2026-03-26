@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
 
     if (action === "care_profile") {
       result = await generateCareProfile(data, anthropicKey);
+    } else if (action === "reminders") {
+      result = await generateReminders(data, anthropicKey);
     } else {
       throw new Error("Unknown action: " + action);
     }
@@ -105,4 +107,65 @@ Be specific to Tampa Bay's subtropical climate, sandy soil, summer rains, and hu
   const careProfile = JSON.parse(clean);
 
   return { care_profile: careProfile };
+}
+
+async function generateReminders(
+  data: { month: string; plants: Array<{ common: string; scientific: string; category: string }> },
+  anthropicKey: string
+) {
+  const { month, plants } = data;
+
+  if (!plants || plants.length === 0) {
+    return { reminders: [] };
+  }
+
+  const plantList = plants
+    .map((p) => `- ${p.common} (${p.scientific || "unknown"}, ${p.category || "unknown"})`)
+    .join("\n");
+
+  const prompt = `You are a Tampa Bay, Florida (USDA Zone 9b/10a) gardening expert. It is currently ${month}. A gardener has these plants in their garden:
+
+${plantList}
+
+Generate 3-5 timely, specific care reminders for this month. Each reminder should reference a specific plant from the list when applicable, or be a general garden task for Tampa Bay in ${month}. Make them friendly and encouraging — this is a garden journal, not a chore list.
+
+Return a JSON object with exactly this structure:
+{
+  "reminders": [
+    {
+      "icon": "relevant emoji (e.g. ✂️ for pruning, 💧 for watering, 🌸 for blooming, 🐛 for pests, 🌱 for planting)",
+      "title": "Short task title (under 60 chars)",
+      "detail": "1-2 sentence friendly explanation of what to do and why",
+      "plant": "Name of the specific plant this applies to, or 'General' for garden-wide tasks"
+    }
+  ]
+}
+
+Be specific to Tampa Bay's subtropical climate. Include a mix of tasks: pruning, watering adjustments, pest watch, bloom expectations, or seasonal prep. Return ONLY the JSON object, no other text.`;
+
+  const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": anthropicKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!claudeResponse.ok) {
+    const errText = await claudeResponse.text();
+    throw new Error("Claude API error: " + errText);
+  }
+
+  const claudeResult = await claudeResponse.json();
+  const text = claudeResult.content[0].text.trim();
+  const clean = text.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(clean);
+
+  return { reminders: parsed.reminders || [] };
 }

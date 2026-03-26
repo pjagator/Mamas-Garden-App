@@ -160,8 +160,8 @@ Database changes:
 ## Priority Order
 
 Build in this order:
-1. Plant Care Dashboard (highest value, builds on existing data)
-2. Seasonal Care Reminders (quick win, high engagement)
+1. ~~Plant Care Dashboard (highest value, builds on existing data)~~ **DONE**
+2. ~~Seasonal Care Reminders (quick win, high engagement)~~ **DONE** — collapsible checklist at top of Garden tab, AI + custom reminders, synced via Supabase `reminders` table
 3. Plant Health Tracking (extends existing detail view)
 4. Planting Guide and Recommendations (new tab)
 5. Visual Garden Map (most complex, build last)
