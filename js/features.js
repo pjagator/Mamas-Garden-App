@@ -1,5 +1,5 @@
 // ── Features: tags, bug-plant linking, plant status, care profiles ──
-import { sb, getCurrentUser, getAllInventory, emit, SUPABASE_URL, SUPABASE_ANON_KEY, PRESET_TAGS, LOCATION_ZONES, LOCATION_HABITATS, openModal } from './app.js';
+import { sb, getCurrentUser, getAllInventory, emit, SUPABASE_URL, SUPABASE_ANON_KEY, PRESET_TAGS, LOCATION_ZONES, LOCATION_HABITATS, openModal, closeModal } from './app.js';
 
 // ── Tag editor ────────────────────────────────────────────────
 export function renderTagEditor(item) {
@@ -749,4 +749,177 @@ export function toggleRemindersSection() {
     const section = document.getElementById('reminders-section');
     if (!section) return;
     section.classList.toggle('collapsed');
+}
+
+// ── Health log (quick check-in) ──────────────────────────────
+let _healthPhotoFile = null;
+
+export function openHealthLog(itemId) {
+    const item = getAllInventory().find(i => i.id === itemId);
+    if (!item) return;
+
+    document.getElementById('health-log-item-id').value = itemId;
+    document.getElementById('health-log-title').textContent = item.common;
+    document.getElementById('health-log-notes').value = '';
+    document.getElementById('health-photo-prompt').style.display = 'none';
+    document.getElementById('health-photo-preview').style.display = 'none';
+    _healthPhotoFile = null;
+
+    // Pre-select current health
+    document.querySelectorAll('#health-pills .health-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.value === item.health);
+    });
+
+    // Show/hide photo prompt based on current health selection
+    if (item.health === 'stressed' || item.health === 'sick') {
+        document.getElementById('health-photo-prompt').style.display = 'block';
+    }
+
+    // Pre-select current flowering
+    document.querySelectorAll('#flowering-pills .health-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.value === item.flowering);
+    });
+
+    openModal('health-log-modal');
+}
+
+// Photo handling for health log
+window._healthPhotoSelected = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    _healthPhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('health-photo-img').src = e.target.result;
+        document.getElementById('health-photo-preview').style.display = 'inline-block';
+    };
+    reader.readAsDataURL(file);
+};
+
+window._healthRemovePhoto = function() {
+    _healthPhotoFile = null;
+    document.getElementById('health-photo-input').value = '';
+    document.getElementById('health-photo-preview').style.display = 'none';
+};
+
+export async function saveHealthLog() {
+    const itemId = document.getElementById('health-log-item-id').value;
+    const item = getAllInventory().find(i => i.id === itemId);
+    if (!item) return;
+
+    const healthPill = document.querySelector('#health-pills .health-pill.active');
+    const flowerPill = document.querySelector('#flowering-pills .health-pill.active');
+    const health = healthPill ? healthPill.dataset.value : null;
+    const flowering = flowerPill ? flowerPill.dataset.value : null;
+    const notes = document.getElementById('health-log-notes').value.trim();
+
+    if (!health) { alert('Please select a health status.'); return; }
+
+    const btn = document.getElementById('health-log-save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        // Upload photo if provided
+        let imageUrl = null;
+        if (_healthPhotoFile) {
+            const timestamp = Date.now();
+            const path = `${getCurrentUser().id}/health_${timestamp}.jpg`;
+
+            // Resize image using offscreen canvas
+            const bitmap = await createImageBitmap(_healthPhotoFile);
+            const canvas = document.createElement('canvas');
+            const maxW = 900;
+            const scale = Math.min(1, maxW / bitmap.width);
+            canvas.width = bitmap.width * scale;
+            canvas.height = bitmap.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+
+            const { error: uploadErr } = await sb.storage.from('garden-images').upload(path, blob, {
+                contentType: 'image/jpeg', upsert: false
+            });
+            if (uploadErr) throw uploadErr;
+
+            const { data: urlData } = sb.storage.from('garden-images').getPublicUrl(path);
+            imageUrl = urlData.publicUrl;
+        }
+
+        // Insert health log
+        const { data: logData, error: logErr } = await sb.from('health_logs').insert({
+            user_id: getCurrentUser().id,
+            inventory_id: itemId,
+            health,
+            flowering,
+            notes,
+            image_url: imageUrl,
+        }).select().single();
+
+        if (logErr) throw logErr;
+
+        // Update inventory snapshot
+        const updates = { health };
+        if (flowering) updates.flowering = flowering;
+        await sb.from('inventory').update(updates).eq('id', itemId).eq('user_id', getCurrentUser().id);
+
+        // Update local cache
+        const idx = getAllInventory().findIndex(i => i.id === itemId);
+        if (idx !== -1) Object.assign(getAllInventory()[idx], updates);
+
+        closeModal('health-log-modal');
+
+        // If photo was taken for stressed/sick, run diagnosis in background
+        if (imageUrl && (health === 'stressed' || health === 'sick')) {
+            alert('Health check saved. Analyzing photo...');
+            runDiagnosis(logData.id, itemId, imageUrl, item.common, item.scientific, health, notes);
+        } else {
+            alert('Health check saved!');
+        }
+
+        emit('item-updated', { itemId });
+
+    } catch (err) {
+        console.error('Failed to save health log:', err);
+        alert('Could not save health check. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save health check';
+        _healthPhotoFile = null;
+    }
+}
+
+async function runDiagnosis(logId, itemId, imageUrl, common, scientific, health, notes) {
+    try {
+        const response = await fetch(
+            SUPABASE_URL + '/functions/v1/garden-assistant',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({
+                    action: 'diagnose',
+                    data: { imageUrl, common, scientific, health, notes }
+                }),
+            }
+        );
+
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        // Save diagnosis to the health log
+        await sb.from('health_logs')
+            .update({ diagnosis: result.diagnosis })
+            .eq('id', logId)
+            .eq('user_id', getCurrentUser().id);
+
+        emit('item-updated', { itemId });
+
+    } catch (err) {
+        console.error('Diagnosis failed:', err);
+        alert("Couldn't analyze the photo. Your health check was still saved.");
+    }
 }
