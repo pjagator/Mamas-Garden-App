@@ -258,18 +258,21 @@ export function dismissWelcome() {
 }
 
 // ── Collapsible garden search ───────────────────────────────────
+function closeGardenSearch() {
+    const overlay = document.getElementById('garden-search-overlay');
+    if (!overlay.classList.contains('open')) return;
+    overlay.classList.remove('open');
+    document.getElementById('search-input').value = '';
+    handleSearch('');
+}
+
 export function toggleGardenSearch() {
     const overlay = document.getElementById('garden-search-overlay');
-    const input = document.getElementById('search-input');
-    const isOpen = overlay.classList.contains('open');
-
-    if (isOpen) {
-        overlay.classList.remove('open');
-        input.value = '';
-        handleSearch('');
+    if (overlay.classList.contains('open')) {
+        closeGardenSearch();
     } else {
         overlay.classList.add('open');
-        setTimeout(() => input.focus(), 50);
+        setTimeout(() => document.getElementById('search-input').focus(), 50);
     }
 }
 
@@ -277,20 +280,16 @@ export function toggleGardenSearch() {
 document.addEventListener('click', (e) => {
     const overlay = document.getElementById('garden-search-overlay');
     if (!overlay || !overlay.classList.contains('open')) return;
-    // If click is inside the overlay (input or icon), do nothing
     if (overlay.contains(e.target)) return;
-    // If click is on the search toggle button, let toggleGardenSearch handle it
     const toggleBtn = e.target.closest('[aria-label="Search"]');
     if (toggleBtn) return;
-    // Otherwise close
-    overlay.classList.remove('open');
-    document.getElementById('search-input').value = '';
-    handleSearch('');
+    closeGardenSearch();
 });
 
 // ── Navigation ─────────────────────────────────────────────────
 export function showScreen(name, btnEl) {
     localStorage.setItem('garden-last-visit', Date.now().toString());
+    closeGardenSearch();
     const current = document.querySelector('.screen.active-screen:not(#welcome-screen)');
     const next = document.getElementById('tab-' + name);
     if (current === next) return;
