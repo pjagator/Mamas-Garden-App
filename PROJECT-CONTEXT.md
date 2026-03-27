@@ -280,8 +280,8 @@ Filters are combinable (e.g., Native + Shrub + Hammock).
 
 Sort options: name (A-Z), date added (newest/oldest), location.
 
-### Photos on Manual Entries
-Manual entries can optionally have a photo. Camera/gallery buttons in the manual entry modal. If user is on Capture tab with a photo and switches to manual entry, carry the photo over.
+### Photos on Manual Entries ✓ Implemented
+Manual entries support photos. If a photo is loaded in the capture preview canvas when the user switches to manual entry, `saveManualEntry()` uploads it via `uploadImage()` and saves the URL with the entry. The canvas is cleared after a successful save.
 
 ### Bug-Plant Associations
 Link insects to the plants they're found on. "Found on" field when saving a bug, picks from existing plant inventory.

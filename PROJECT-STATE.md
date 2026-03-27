@@ -32,7 +32,7 @@
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | ~350 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=18`. connection toast element. `viewport-fit=cover` in viewport meta for iPhone status bar bleed. Collapsible search: magnifying glass icon button in garden header expands full-width frosted overlay. |
+| `index.html` | ~350 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=19`. connection toast element. `viewport-fit=cover` in viewport meta for iPhone status bar bleed. Collapsible search: magnifying glass icon button in garden header expands full-width frosted overlay. |
 
 ### Edge Functions
 
@@ -189,6 +189,7 @@
 - Modal with fields: common name (required), scientific name, type (plant/bug), category, blooming season (multi-select checkboxes), notes
 - Auto-matches against 16-species native plant database for name correction and native status
 - Saves to inventory with `source: 'Manual'`
+- If a photo is loaded in the capture preview canvas, it is uploaded and saved with the entry (same upload path as identified entries)
 
 ### Garden Inventory
 - 2-column card grid (1-column below 360px)
@@ -391,7 +392,6 @@ From LEARNING-PLAN.md:
 
 ### Other Missing Pieces
 
-- **Photos on manual entries**: Manual entry modal has no camera/gallery option (planned in PROJECT-CONTEXT.md)
 - **No data validation on server**: Edge functions don't validate input structure
 - **`found_on_plant_id` column naming**: Code uses `linked_plant_id` in the client (`app.js:821,1034,1078,1084`), but PROJECT-CONTEXT.md spec calls it `found_on_plant_id`. The actual DB column name is unclear — likely `linked_plant_id` since that's what the working code uses.
 
@@ -408,7 +408,7 @@ From LEARNING-PLAN.md:
 | Live URL | GitHub Pages | `https://pjagator.github.io/Mamas-Garden-App/` |
 
 ### Cache Busting
-- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=18`)
+- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=19`)
 
 ### No Build Step
 - No bundler, no transpilation, no minification
