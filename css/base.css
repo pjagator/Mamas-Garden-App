@@ -14,10 +14,10 @@
     --ink-mid:      #4a4a4a;
     --ink-light:    #9a9a9a;
     --white:        #ffffff;
-    --shadow-sm:    0 2px 8px rgba(28,58,43,0.10);
-    --shadow-md:    0 6px 24px rgba(28,58,43,0.14);
+    --shadow-sm:    0 2px 10px rgba(28,58,43,0.06);
+    --shadow-md:    0 3px 14px rgba(28,58,43,0.09);
     --shadow-lg:    0 16px 48px rgba(28,58,43,0.18);
-    --radius:       16px;
+    --radius:       14px;
     --radius-sm:    10px;
     --nav-height:   72px;
     --font-display: 'Playfair Display', Georgia, serif;
@@ -41,6 +41,17 @@
     --space-6:      24px;
     --space-8:      32px;
     --space-12:     48px;
+
+    /* Gradients */
+    --bg-page: linear-gradient(170deg, #f5f0e8 0%, #ece5d6 50%, #e0d8c8 100%);
+    --bg-header: linear-gradient(135deg, #1c3a2b 0%, #2d5a3d 70%, #3d6a4d 100%);
+    --bg-welcome: linear-gradient(160deg, #2d5a3d 0%, #1c3a2b 30%, #2a4a38 60%, #3d5a3d 80%, #4a6a4a 100%);
+    --bg-btn-primary: linear-gradient(135deg, #1c3a2b, #2d5a3d);
+    --bg-fab: linear-gradient(135deg, #c4622d, #d4723d);
+
+    /* FAB */
+    --fab-size: 56px;
+    --fab-shadow: 0 6px 20px rgba(196,98,45,0.35);
 }
 
 html { height: 100%; }
@@ -49,11 +60,13 @@ body {
     font-family: var(--font-body);
     font-size: var(--text-base);
     line-height: 1.5;
-    background: var(--cream);
+    background: var(--bg-page);
+    min-height: 100vh;
     color: var(--ink);
-    min-height: 100%;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* ── Fields & buttons ────────────────────────────────────────── */
@@ -223,4 +236,12 @@ small a { color: var(--green-mid); }
 @supports (-webkit-touch-callout: none) {
     input[type="file"], input[type="text"], input[type="email"], input[type="password"] { font-size: var(--text-base); }
     .field { font-size: var(--text-base); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
