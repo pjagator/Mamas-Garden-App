@@ -860,6 +860,116 @@
 }
 .health-pulse-btn:active { opacity: 0.7; }
 
+/* ── Detail Modal — Hero ─────────────────────────────────────── */
+.detail-hero {
+    height: 220px;
+    position: relative;
+    border-radius: 0 0 20px 20px;
+    overflow: hidden;
+    margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-6)) 0;
+}
+.detail-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.detail-hero-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(28,58,43,0.85));
+    padding: 16px 20px 14px;
+}
+.detail-hero-name {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.02em;
+}
+.detail-hero-sci {
+    font-size: var(--text-sm);
+    color: var(--green-light);
+    font-style: italic;
+    margin-top: 2px;
+}
+.detail-hero-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+.detail-hero-badge {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    color: white;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Detail Modal — Content Cards */
+.detail-content {
+    padding: var(--space-4) 0 0;
+}
+.detail-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-3);
+}
+.detail-card-heading {
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--green-sage);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-2);
+}
+
+/* About grid */
+.detail-about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+.detail-about-label {
+    font-size: 10px;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+}
+.detail-about-value {
+    font-size: var(--text-sm);
+    color: var(--ink);
+    font-weight: 500;
+}
+
+/* Notes */
+.detail-notes-text {
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-style: italic;
+    color: var(--ink-mid);
+    line-height: 1.6;
+}
+
+/* Delete link */
+.detail-delete-link {
+    display: block;
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--terra);
+    cursor: pointer;
+    padding: var(--space-2);
+    margin-top: var(--space-2);
+}
+
 /* ── Floating Action Button ──────────────────────────────────── */
 .fab {
     width: var(--fab-size);

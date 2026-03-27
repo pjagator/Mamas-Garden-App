@@ -197,57 +197,54 @@ export function renderInventory() {
 export function showItemDetail(item) {
     const body = document.getElementById('item-modal-body');
 
-    const imgEl = item.image_url
-        ? `<img class="detail-img" src="${item.image_url}" alt="${item.common}">`
-        : `<div style="width:100%;height:160px;background:var(--cream-dark);border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;justify-content:center;font-size:48px;">${item.type === 'plant' ? '🌿' : '🐛'}</div>`;
+    // Hero image
+    const heroImg = item.image_url
+        ? `<img src="${item.image_url}" alt="${item.common}">`
+        : `<div style="width:100%;height:100%;background:var(--bg-header);display:flex;align-items:center;justify-content:center;font-size:48px;">🌿</div>`;
 
-    const linkedPlantName = item.linked_plant_id === 'ground' ? 'Ground'
-        : item.linked_plant_id ? (getAllInventory().find(p => p.id === item.linked_plant_id)?.common || null) : null;
+    // Status badges
+    const badges = [];
+    if (item.is_native) badges.push('Native to Florida');
+    if (item.health) badges.push(item.health.charAt(0).toUpperCase() + item.health.slice(1));
+    if (item.flowering === 'yes') badges.push('Flowering');
+    else if (item.flowering === 'budding') badges.push('Budding');
 
-    const rows = [
-        ['Type', item.category || item.type],
-        ['Location', item.location || null],
-        linkedPlantName ? ['Found on', linkedPlantName] : null,
-        ['Added', new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })],
-        item.confidence ? ['ID confidence', item.confidence + '%'] : null,
-        item.bloom   ? ['Blooming season', item.bloom.join(', ')] : null,
-        item.season  ? ['Active season',   item.season.join(', ')] : null,
-        item.care    ? ['Care',            item.care]              : null,
-        item.source  ? ['Identified via',  item.source]           : null,
-    ].filter(r => r && r[1]);
-
-    const nativeBadge = item.is_native
-        ? '<span class="tag native" style="display:inline-block;margin-bottom:12px;">⭐ Florida Native</span>'
-        : '';
-
-    const statusBadges = [];
-    if (item.health) {
-        const hClass = item.health === 'thriving' || item.health === 'healthy' ? 'health-good'
-            : item.health === 'stressed' || item.health === 'sick' ? 'health-bad' : 'health-neutral';
-        statusBadges.push(`<span class="tag ${hClass}">${item.health}</span>`);
-    }
-    if (item.flowering === 'yes') statusBadges.push('<span class="tag season">flowering</span>');
-    if (item.flowering === 'budding') statusBadges.push('<span class="tag season">budding</span>');
-    if (item.height) statusBadges.push(`<span class="tag" style="background:var(--cream-dark);color:var(--ink-mid);">${item.height}</span>`);
+    // About card rows
+    const aboutItems = [];
+    if (item.type) aboutItems.push(['Type', item.category || item.type]);
+    aboutItems.push(['Added', new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })]);
+    if (item.location) aboutItems.push(['Location', item.location]);
+    if (item.confidence) aboutItems.push(['Confidence', item.confidence + '%']);
+    if (item.bloom?.length) aboutItems.push(['Blooming', item.bloom.join(', ')]);
+    if (item.season?.length) aboutItems.push(['Active', item.season.join(', ')]);
 
     body.innerHTML = `
-        ${imgEl}
-        <div class="detail-name">${item.common}</div>
-        <div class="detail-sci">${item.scientific || ''}</div>
-        ${nativeBadge}
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${statusBadges.join('')}</div>
-        ${rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')}
-        ${item.notes ? `<div class="detail-notes"><div class="detail-notes-label">Notes</div><div class="detail-notes-text">${item.notes}</div></div>` : ''}
-        ${renderTagEditor(item)}
-        ${item.type === 'bug' ? renderBugPlantLink(item) : ''}
-        ${item.type === 'plant' ? renderPlantStatus(item) : ''}
-        ${item.type === 'plant' ? renderLinkedBugs(item) : ''}
-        ${item.type === 'plant' ? renderHealthHistory(item) : ''}
-        ${renderCareProfile(item)}
-        <div class="detail-delete">
-            <button class="btn-danger" onclick="deleteItem('${item.id}', '${item.image_url || ''}')">Delete entry</button>
+        <div class="detail-hero">
+            ${heroImg}
+            <div class="detail-hero-overlay">
+                <div class="detail-hero-name">${item.common}</div>
+                ${item.scientific ? `<div class="detail-hero-sci">${item.scientific}</div>` : ''}
+                <div class="detail-hero-badges">
+                    ${badges.map(b => `<span class="detail-hero-badge">${b}</span>`).join('')}
+                </div>
+            </div>
+        </div>
+        <div class="detail-content">
+            <div class="detail-card">
+                <div class="detail-card-heading">About</div>
+                <div class="detail-about-grid">
+                    ${aboutItems.map(([k,v]) => `<div><div class="detail-about-label">${k}</div><div class="detail-about-value">${v}</div></div>`).join('')}
+                </div>
+            </div>
+            ${item.notes ? `<div class="detail-card"><div class="detail-card-heading">Notes</div><div class="detail-notes-text">${item.notes}</div></div>` : ''}
+            ${renderTagEditor(item)}
+            ${item.type === 'bug' ? renderBugPlantLink(item) : ''}
+            ${renderCareProfile(item)}
+            ${item.type === 'plant' ? renderHealthHistory(item) : ''}
+            ${item.type === 'plant' ? renderPlantStatus(item) : ''}
+            ${item.type === 'plant' ? renderLinkedBugs(item) : ''}
+            <div class="detail-delete-link" onclick="deleteItem('${item.id}', '${item.image_url || ''}')">Delete this entry</div>
         </div>`;
-
     openModal('item-modal');
 }
 
