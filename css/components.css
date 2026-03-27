@@ -153,7 +153,7 @@
 
 /* ── Filter / sort ───────────────────────────────────────────── */
 .chip {
-    font-size: 11px;
+    font-size: 13px;
     padding: 6px 14px;
     border-radius: 20px;
     background: var(--white);
@@ -196,7 +196,7 @@
 
 .sort-select {
     font-family: var(--font-body);
-    font-size: 11px;
+    font-size: 13px;
     min-height: 32px;
     padding: 6px 14px;
     border: none;
@@ -245,7 +245,7 @@
     font-size: 36px;
 }
 
-.garden-card-info { padding: 10px 10px 12px; }
+.garden-card-info { padding: var(--space-3); }
 .garden-card-name {
     font-family: var(--font-display);
     font-size: 14px;
@@ -254,20 +254,20 @@
     line-height: 1.2;
 }
 .garden-card-sci {
-    font-size: 10px;
+    font-size: var(--text-sm);
     color: var(--green-sage);
     font-style: italic;
     margin-top: 2px;
 }
 .garden-card-tags {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     margin-top: 8px;
     flex-wrap: wrap;
 }
 .garden-card-tags .tag {
-    font-size: 9px;
-    padding: 2px 7px;
+    font-size: 11px;
+    padding: 3px 8px;
     border-radius: 10px;
     background: linear-gradient(135deg, var(--green-light), #e8f0e8);
     color: var(--green-mid);
