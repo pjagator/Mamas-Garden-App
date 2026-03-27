@@ -294,16 +294,57 @@ export function closeModal(id) {
 
 // ── Load inventory ─────────────────────────────────────────────
 export async function loadInventory() {
-    const { data, error } = await sb.from('inventory')
-        .select('*')
-        .eq('user_id', getCurrentUser().id)
-        .order('date', { ascending: false });
-    if (error) { console.error(error); return; }
-    _allInventory = data || [];
-    updateStats();
-    renderInventory();
-    renderTimeline();
-    loadReminders();
+    const cacheKey = 'garden-inventory-cache';
+    const cacheTimeKey = 'garden-inventory-cache-ts';
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+    // Serve from cache immediately if available and fresh
+    const cached = localStorage.getItem(cacheKey);
+    const cachedTime = localStorage.getItem(cacheTimeKey);
+    const hasFreshCache = cached && cachedTime && (Date.now() - Number(cachedTime) < maxAge);
+
+    if (hasFreshCache && _allInventory.length === 0) {
+        try {
+            _allInventory = JSON.parse(cached);
+            updateStats();
+            renderInventory();
+            renderTimeline();
+            loadReminders();
+        } catch (e) { /* corrupt cache, ignore */ }
+    }
+
+    // Fetch fresh data from network
+    try {
+        const { data, error } = await sb.from('inventory')
+            .select('*')
+            .eq('user_id', getCurrentUser().id)
+            .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        const fresh = data || [];
+        const changed = JSON.stringify(fresh) !== cached;
+
+        _allInventory = fresh;
+        localStorage.setItem(cacheKey, JSON.stringify(fresh));
+        localStorage.setItem(cacheTimeKey, String(Date.now()));
+
+        if (changed || !hasFreshCache) {
+            updateStats();
+            renderInventory();
+            renderTimeline();
+            loadReminders();
+        }
+    } catch (err) {
+        console.error('loadInventory network error:', err);
+        // If we already rendered from cache, that's fine — user sees cached data
+        // If no cache, render empty state
+        if (!hasFreshCache && _allInventory.length === 0) {
+            updateStats();
+            renderInventory();
+            renderTimeline();
+        }
+    }
 }
 
 // ── Imports from child modules ─────────────────────────────────
