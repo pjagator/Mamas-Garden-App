@@ -111,7 +111,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 0 var(--space-8);
+    padding: env(safe-area-inset-top, 0px) var(--space-8) 0;
     text-align: center;
 }
 .welcome-greeting {
@@ -198,7 +198,7 @@
 .screen-header {
     background: var(--bg-header);
     color: var(--white);
-    padding: 56px var(--space-6) 28px;
+    padding: calc(56px + env(safe-area-inset-top, 0px)) var(--space-6) 28px;
 }
 
 .screen-title {
@@ -218,7 +218,7 @@
 /* Garden Header */
 .garden-header {
     background: var(--bg-header);
-    padding: 48px var(--space-5) var(--space-4);
+    padding: calc(48px + env(safe-area-inset-top, 0px)) var(--space-5) var(--space-4);
 }
 .garden-header-top {
     display: flex;
