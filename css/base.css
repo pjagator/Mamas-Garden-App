@@ -22,7 +22,7 @@
     --radius-sm:    10px;
     --nav-height:   72px;
     --font-display: 'Playfair Display', Georgia, serif;
-    --font-body:    'DM Sans', -apple-system, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
 
     /* ── Typography scale (ratio ≈ 1.125 – major second) ──── */
     --text-xs:      0.75rem;    /* 12px – tags, nav labels, fine print */
