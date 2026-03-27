@@ -219,6 +219,7 @@
 .garden-header {
     background: var(--bg-header);
     padding: calc(48px + env(safe-area-inset-top, 0px)) var(--space-5) var(--space-4);
+    position: relative;
 }
 .garden-header-top {
     display: flex;
@@ -253,16 +254,33 @@
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
 }
-.garden-search {
-    margin-top: var(--space-3);
-    background: rgba(255,255,255,0.12);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
+.garden-header-actions {
     display: flex;
+    gap: var(--space-2);
     align-items: center;
-    gap: 8px;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+}
+.garden-search-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(28, 58, 43, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    align-items: center;
+    padding: calc(48px + env(safe-area-inset-top, 0px)) var(--space-5) var(--space-4);
+    gap: 10px;
+    opacity: 0;
+    display: flex;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 200ms ease, transform 200ms ease;
+}
+.garden-search-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
 }
 .garden-search-input {
     background: transparent;
@@ -275,10 +293,6 @@
 }
 .garden-search-input::placeholder {
     color: rgba(255,255,255,0.5);
-}
-.search-icon {
-    font-size: 14px;
-    opacity: 0.5;
 }
 
 /* ── Bottom nav ──────────────────────────────────────────────── */
