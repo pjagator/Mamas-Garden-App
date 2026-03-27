@@ -190,6 +190,72 @@
     font-weight: 300;
 }
 
+/* Garden Header */
+.garden-header {
+    background: var(--bg-header);
+    padding: 48px var(--space-5) var(--space-4);
+}
+.garden-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.garden-header .screen-title {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.02em;
+}
+.garden-header .screen-sub {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    color: var(--green-light);
+    font-style: italic;
+    margin-top: 3px;
+}
+.gear-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.garden-search {
+    margin-top: var(--space-3);
+    background: rgba(255,255,255,0.12);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.garden-search-input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    width: 100%;
+    outline: none;
+}
+.garden-search-input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+.search-icon {
+    font-size: 14px;
+    opacity: 0.5;
+}
+
 /* ── Bottom nav ──────────────────────────────────────────────── */
 .bottom-nav {
     position: fixed;

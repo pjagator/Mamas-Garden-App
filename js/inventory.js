@@ -55,9 +55,15 @@ function today() { return new Date().toISOString().split('T')[0]; }
 // ── Exported functions ────────────────────────────────────────
 
 export function updateStats() {
-    document.getElementById('stat-plants').textContent  = getAllInventory().filter(i => i.type === 'plant').length;
-    document.getElementById('stat-bugs').textContent    = getAllInventory().filter(i => i.type === 'bug').length;
-    document.getElementById('stat-natives').textContent = getAllInventory().filter(i => i.is_native).length;
+    const plants = getAllInventory().filter(i => i.type === 'plant').length;
+    const bugs = getAllInventory().filter(i => i.type === 'bug').length;
+    const el = document.getElementById('garden-subtitle');
+    if (el) {
+        const parts = [];
+        if (plants) parts.push(`${plants} species cataloged`);
+        if (bugs) parts.push(`${bugs} visitors observed`);
+        el.textContent = parts.join(' · ') || 'Your garden awaits';
+    }
 }
 
 export function handleSearch(val) {
