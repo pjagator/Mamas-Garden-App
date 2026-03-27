@@ -311,6 +311,7 @@ import { showAuthTab, handleSignIn, handleSignUp, handleSendCode, handleVerifyCo
 import { handlePhoto, removeImage, identifySpecies, renderIdCards, selectIdCard, saveSelectedId, openManualEntry, saveManualEntry } from './capture.js';
 import { updateStats, handleSearch, setFilter, toggleTagFilter, setLocationFilter, setSort, toggleFilterDropdown, renderInventory, showItemDetail, showLinkedBug, deleteItem, renderTimeline, exportJSON, exportCSV, clearAllData, showNativesDB } from './inventory.js';
 import { toggleTag, removeTag, addCustomTag, toggleBugPlantLink, saveBugPlantLink, togglePlantStatus, setLocationZone, setLocationHabitat, savePlantStatus, refreshCareProfile, toggleCareProfile, parseLocation, buildLocation, loadReminders, toggleReminderDone, addCustomReminder, removeReminder, toggleRemindersSection, toggleHealthHistory, loadMoreHealthHistory, openHealthLog, saveHealthLog, toggleLinkedBugs } from './features.js';
+import { isOnline, onConnectionChange } from './network.js';
 
 // ── Auth state change handler ──────────────────────────────────
 sb.auth.onAuthStateChange((event, session) => {
@@ -378,6 +379,19 @@ if (fabEl) {
         lastScrollY = scrollY;
     }, { passive: true });
 }
+
+// ── Connection status toast ─────────────────────────────────
+const _toast = document.getElementById('connection-toast');
+onConnectionChange((online) => {
+    if (online) {
+        _toast.textContent = 'Back online';
+        _toast.className = 'connection-toast online visible';
+        setTimeout(() => { _toast.classList.remove('visible'); }, 2000);
+    } else {
+        _toast.textContent = "You're offline — browsing cached data";
+        _toast.className = 'connection-toast offline visible';
+    }
+});
 
 // ── Window bindings for HTML onclick/oninput/onchange handlers ──
 Object.assign(window, {
