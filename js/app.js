@@ -230,20 +230,51 @@ export function initWelcomeScreen() {
 }
 
 export function dismissWelcome() {
-    document.getElementById('welcome-screen').classList.remove('active-screen');
-    document.getElementById('tab-capture').classList.add('active-screen');
-    document.querySelectorAll('.nav-btn').forEach(b => {
-        b.classList.toggle('active', b.querySelector('.nav-label').textContent === 'Capture');
-    });
+    const welcome = document.getElementById('welcome-screen');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        welcome.classList.remove('active-screen');
+        document.getElementById('tab-garden').classList.add('active-screen');
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            b.classList.toggle('active', b.querySelector('.nav-label')?.textContent === 'Garden');
+        });
+        return;
+    }
+    welcome.style.opacity = '0';
+    welcome.style.transition = 'opacity 300ms ease';
+    setTimeout(() => {
+        welcome.classList.remove('active-screen');
+        welcome.style.opacity = '';
+        welcome.style.transition = '';
+        document.getElementById('tab-garden').classList.add('active-screen');
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            b.classList.toggle('active', b.querySelector('.nav-label')?.textContent === 'Garden');
+        });
+    }, 300);
 }
 
 // ── Navigation ─────────────────────────────────────────────────
 export function showScreen(name, btnEl) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active-screen');
-    if (btnEl) btnEl.classList.add('active');
+    const current = document.querySelector('.screen.active-screen:not(#welcome-screen)');
+    const next = document.getElementById('tab-' + name);
+    if (current === next) return;
+
     document.getElementById('welcome-screen').classList.remove('active-screen');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+
+    if (current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        current.style.opacity = '0';
+        current.style.transition = 'opacity 200ms ease';
+        setTimeout(() => {
+            current.classList.remove('active-screen');
+            current.style.opacity = '';
+            current.style.transition = '';
+            next.classList.add('active-screen');
+        }, 200);
+    } else {
+        if (current) current.classList.remove('active-screen');
+        next.classList.add('active-screen');
+    }
 }
 
 // ── Modal helpers ──────────────────────────────────────────────
@@ -306,16 +337,28 @@ on('item-updated', ({ itemId }) => {
     if (item) showItemDetail(item);
 });
 
+export function openCaptureModal() {
+    openModal('capture-modal');
+}
+
+export function closeCaptureModal() {
+    closeModal('capture-modal');
+}
+
+export function openSettingsSheet() {
+    openModal('settings-modal');
+}
+
 // ── Window bindings for HTML onclick/oninput/onchange handlers ──
 Object.assign(window, {
     // Auth
     showAuthTab, handleSignIn, handleSignUp, handleSendCode, handleVerifyCode, handlePasswordReset, handleSignOut,
     // Navigation
-    showScreen, dismissWelcome,
+    showScreen, dismissWelcome, openCaptureModal, closeCaptureModal, openSettingsSheet,
     // Capture
     handlePhoto, removeImage, identifySpecies, renderIdCards, selectIdCard, saveSelectedId, openManualEntry, saveManualEntry,
     // Inventory
-    handleSearch, setFilter, toggleTagFilter, setLocationFilter, setSort, toggleFilterDropdown, showItemDetail, showLinkedBug, deleteItem, exportJSON, exportCSV, clearAllData, showNativesDB,
+    handleSearch, setFilter, toggleTagFilter, setLocationFilter, setSort, toggleFilterDropdown, showItemDetail, showLinkedBug, deleteItem, exportJSON, exportCSV, clearAllData,
     // Features
     toggleTag, removeTag, addCustomTag, toggleBugPlantLink, saveBugPlantLink, togglePlantStatus, setLocationZone, setLocationHabitat, savePlantStatus, refreshCareProfile, toggleCareProfile,
     toggleHealthHistory, loadMoreHealthHistory, openHealthLog, saveHealthLog,
