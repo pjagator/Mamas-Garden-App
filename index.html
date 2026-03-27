@@ -69,19 +69,16 @@
 <div id="app" style="display:none">
 
     <!-- Welcome Screen -->
-    <div id="welcome-screen" class="screen active-screen">
+    <div id="welcome-screen" class="screen active-screen welcome-screen" onclick="dismissWelcome()">
         <div class="welcome-container">
-            <p class="welcome-greeting" id="welcome-greeting"></p>
-            <div class="welcome-quote-block">
-                <blockquote class="welcome-quote" id="welcome-quote-text"></blockquote>
-                <p class="welcome-attribution" id="welcome-quote-attr"></p>
+            <div class="welcome-greeting" id="welcome-greeting">Good morning</div>
+            <div class="welcome-divider"></div>
+            <div class="welcome-quote">
+                <div class="welcome-quote-text" id="welcome-quote-text">"To plant a garden is to believe in tomorrow."</div>
+                <div class="welcome-attribution" id="welcome-quote-attr">— Audrey Hepburn</div>
             </div>
-            <div class="welcome-fact-block">
-                <p class="welcome-fact-label">Garden Note</p>
-                <p class="welcome-fact" id="welcome-fact-text"></p>
-            </div>
-            <button class="btn-primary welcome-enter-btn" onclick="dismissWelcome()">Start exploring</button>
         </div>
+        <div class="welcome-hint">tap to enter</div>
     </div>
 
     <!-- Capture Tab -->

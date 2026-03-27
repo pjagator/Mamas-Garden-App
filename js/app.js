@@ -209,24 +209,24 @@ function getDailyIndex(arr, offset) {
     return (dayOfYear + offset) % arr.length;
 }
 
-function getGreeting() {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
+function setWelcomeGreeting() {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const el = document.getElementById('welcome-greeting');
+    if (el) el.textContent = greeting;
 }
 
 export function initWelcomeScreen() {
     const qi = getDailyIndex(GARDEN_QUOTES, 0);
-    const fi = getDailyIndex(GARDEN_FACTS, 17);
     const q = GARDEN_QUOTES[qi];
 
-    document.getElementById('welcome-greeting').textContent = getGreeting();
-    document.getElementById('welcome-quote-text').textContent = q.text;
-    document.getElementById('welcome-quote-attr').textContent = q.source
+    setWelcomeGreeting();
+    const quoteEl = document.getElementById('welcome-quote-text');
+    if (quoteEl) quoteEl.textContent = `\u201c${q.text}\u201d`;
+    const attrEl = document.getElementById('welcome-quote-attr');
+    if (attrEl) attrEl.textContent = q.source
         ? `\u2014 ${q.author}, ${q.source}`
         : `\u2014 ${q.author}`;
-    document.getElementById('welcome-fact-text').textContent = GARDEN_FACTS[fi];
 }
 
 export function dismissWelcome() {

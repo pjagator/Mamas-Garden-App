@@ -95,90 +95,64 @@
 }
 
 /* ── Welcome screen ─────────────────────────────────────────── */
-#welcome-screen {
-    background: var(--cream);
-    min-height: calc(100vh - var(--nav-height));
-    padding: 0 0 calc(var(--nav-height) + var(--space-6));
+.welcome-screen {
+    background: var(--bg-welcome);
+    min-height: 100vh;
+    padding: 0;
+    position: relative;
+    cursor: pointer;
 }
-
 .welcome-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - var(--nav-height));
-    padding: var(--space-12) 28px calc(var(--nav-height) + var(--space-6));
+    min-height: 100vh;
+    padding: 0 40px;
     text-align: center;
 }
-
 .welcome-greeting {
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    font-weight: 300;
-    color: var(--ink-light);
-    letter-spacing: 0.12em;
+    font-size: 11px;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    margin-bottom: var(--space-8);
-}
-
-.welcome-quote-block {
-    max-width: 340px;
-    margin-bottom: var(--space-8);
-}
-
-.welcome-quote {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 500;
-    font-size: var(--text-xl);
-    line-height: 1.5;
-    color: var(--green-deep);
-    margin: 0;
-    quotes: none;
-}
-
-.welcome-attribution {
-    margin-top: var(--space-3);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
+    color: rgba(255,255,255,0.75);
     font-weight: 400;
-    color: var(--ink-mid);
-    letter-spacing: 0.02em;
 }
-
-.welcome-fact-block {
-    max-width: 340px;
-    background: var(--white);
-    border-radius: var(--radius);
-    padding: var(--space-4) var(--space-5);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: var(--space-8);
-    text-align: left;
+.welcome-divider {
+    width: 32px;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--terra-light), transparent);
+    margin: 20px 0;
 }
-
-.welcome-fact-label {
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--terra);
-    margin-bottom: var(--space-2);
-}
-
-.welcome-fact {
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    line-height: 1.5;
-    color: var(--ink-mid);
-}
-
-.welcome-enter-btn {
+.welcome-quote {
     max-width: 260px;
-    background: var(--green-deep);
-    border-radius: var(--radius-sm);
-    letter-spacing: 0.04em;
 }
+.welcome-quote-text {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-style: italic;
+    color: #ffffff;
+    line-height: 1.7;
+    font-weight: 400;
+}
+.welcome-attribution {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 10px;
+    font-weight: 300;
+}
+.welcome-hint {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.1em;
+    font-weight: 300;
+}
+.welcome-screen.active-screen ~ .bottom-nav { display: none; }
 
 /* ── Screens ─────────────────────────────────────────────────── */
 .screen {
