@@ -52,7 +52,7 @@
 
     /* FAB */
     --fab-size: 56px;
-    --fab-shadow: 0 6px 20px rgba(196,98,45,0.35);
+    --fab-shadow: 0 6px 20px rgba(var(--terra-rgb),0.35);
 }
 
 html { height: 100%; }
