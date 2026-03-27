@@ -37,7 +37,7 @@
 .id-notes {
     width: 100%;
     padding: var(--space-2) var(--space-3);
-    border: 1px solid #ddd;
+    border: 1px solid var(--cream-dark);
     border-radius: var(--radius-sm);
     font-family: var(--font-body);
     font-size: var(--text-sm);
@@ -541,7 +541,7 @@
     display: inline-block;
     font-size: 0.6875rem;
     color: var(--terra);
-    background: rgba(196, 98, 45, 0.1);
+    background: rgba(var(--terra-rgb), 0.1);
     padding: 1px 6px;
     border-radius: 4px;
     margin-top: 4px;
@@ -637,10 +637,10 @@
 }
 .health-pill {
     padding: 10px 16px;
-    border: 2px solid var(--green);
+    border: 2px solid var(--green-deep);
     border-radius: 20px;
     background: transparent;
-    color: var(--green);
+    color: var(--green-deep);
     font-family: var(--font-body);
     font-size: var(--text-sm);
     font-weight: 500;
@@ -652,16 +652,16 @@
     -webkit-user-select: none;
 }
 .health-pill.active {
-    background: var(--green);
+    background: var(--green-deep);
     color: #fff;
 }
 .health-pill-warn {
-    border-color: var(--terracotta);
-    color: var(--terracotta);
+    border-color: var(--terra);
+    color: var(--terra);
 }
 .health-pill-warn.active {
-    background: var(--terracotta);
-    border-color: var(--terracotta);
+    background: var(--terra);
+    border-color: var(--terra);
     color: #fff;
 }
 .health-pill:active { opacity: 0.7; }
@@ -698,7 +698,7 @@
     position: absolute;
     top: 4px;
     right: -8px;
-    background: var(--terracotta);
+    background: var(--terra);
     color: #fff;
     border: none;
     border-radius: 50%;
@@ -763,7 +763,7 @@
 }
 .health-diagnosis-card .diagnosis-label {
     font-weight: 500;
-    color: var(--green);
+    color: var(--green-deep);
     font-size: var(--text-xs);
     text-transform: uppercase;
     margin-bottom: 4px;
@@ -776,12 +776,12 @@
     color: var(--ink-mid);
 }
 .severity-mild { border-left: 3px solid #f0ad4e; }
-.severity-moderate { border-left: 3px solid var(--terracotta); }
+.severity-moderate { border-left: 3px solid var(--terra); }
 .severity-severe { border-left: 3px solid #d9534f; }
 .health-show-more {
     text-align: center;
     padding: 12px;
-    color: var(--green);
+    color: var(--green-deep);
     font-size: var(--text-sm);
     cursor: pointer;
     min-height: 44px;
