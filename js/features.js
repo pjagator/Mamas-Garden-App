@@ -1,6 +1,45 @@
 // ── Features: tags, bug-plant linking, plant status, care profiles ──
 import { sb, getCurrentUser, getAllInventory, emit, SUPABASE_URL, SUPABASE_ANON_KEY, PRESET_TAGS, LOCATION_ZONES, LOCATION_HABITATS, openModal, closeModal } from './app.js';
 
+// ── Shared expandable section toggle ──────────────────────────
+function toggleSection(bodyId, chevronId) {
+    const body = document.getElementById(bodyId);
+    const chevron = document.getElementById(chevronId);
+    if (!body) return;
+
+    const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (body.style.height && body.style.height !== '0px') {
+        // Collapse
+        if (isReducedMotion) {
+            body.style.height = '0px';
+        } else {
+            body.style.height = body.scrollHeight + 'px';
+            requestAnimationFrame(() => {
+                body.style.transition = 'height 300ms ease';
+                body.style.height = '0px';
+            });
+        }
+        chevron?.classList.remove('open');
+    } else {
+        // Expand
+        if (isReducedMotion) {
+            body.style.height = 'auto';
+        } else {
+            body.style.transition = 'height 300ms ease';
+            body.style.height = body.scrollHeight + 'px';
+            const handler = () => {
+                if (body.style.height !== '0px') body.style.height = 'auto';
+                body.removeEventListener('transitionend', handler);
+            };
+            body.addEventListener('transitionend', handler);
+        }
+        chevron?.classList.add('open');
+    }
+}
+
+export function toggleLinkedBugs() { toggleSection('linked-bugs-body', 'linked-bugs-toggle-icon'); }
+
 // ── Tag editor ────────────────────────────────────────────────
 export function renderTagEditor(item) {
     const currentTags = item.tags || [];
@@ -14,16 +53,14 @@ export function renderTagEditor(item) {
         `<span class="tag-chip active">${t} <button onclick="removeTag('${item.id}', '${t}')" style="background:none;border:none;color:inherit;cursor:pointer;padding:0 0 0 4px;font-size:1.1em;">&times;</button></span>`
     ).join('');
 
-    return `
-        <div class="tag-editor-section">
-            <div class="care-profile-title" style="margin-bottom:8px;">Tags</div>
-            <div class="tag-chips-row">${presetChips}</div>
-            ${customChips ? `<div class="tag-chips-row" style="margin-top:6px;">${customChips}</div>` : ''}
-            <div style="display:flex;gap:6px;margin-top:8px;">
-                <input class="field" id="custom-tag-input" placeholder="Custom tag..." style="margin-bottom:0;flex:1;padding:8px 12px;">
-                <button class="btn-secondary" onclick="addCustomTag('${item.id}')" style="padding:8px 14px;white-space:nowrap;">Add</button>
-            </div>
-        </div>`;
+    return `<div class="detail-card">
+        <div class="detail-card-heading">Tags</div>
+        <div class="tag-chips-row">${presetChips}${customChips}</div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+            <input class="field" id="custom-tag-input" placeholder="Custom tag..." style="flex:1;">
+            <button class="btn-secondary" onclick="addCustomTag('${item.id}')">Add</button>
+        </div>
+    </div>`;
 }
 
 export async function toggleTag(itemId, tag) {
@@ -83,29 +120,27 @@ export function renderBugPlantLink(item) {
     });
 
     return `
-        <div class="plant-status-section">
-            <div class="plant-status-header" onclick="toggleBugPlantLink()">
-                <h3 class="care-profile-title">Found On</h3>
-                <span style="font-size:0.82em;color:var(--ink-mid);">${displayText ? displayText + ' ' : ''}<span class="care-toggle" id="bug-link-toggle-icon">▶</span></span>
+        <div class="detail-card-expandable">
+            <div class="detail-card-header" onclick="toggleBugPlantLink()">
+                <div>
+                    <div class="detail-card-heading">Found On</div>
+                    ${displayText ? `<div style="font-size:var(--text-xs);color:var(--ink-light);">${displayText}</div>` : ''}
+                </div>
+                <svg class="detail-card-chevron" id="bug-link-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div id="bug-plant-link-body" style="display:none;">
+            <div class="detail-card-body" id="bug-plant-link-body" style="height:0;overflow:hidden;">
+                <div style="padding-top:var(--space-3);">
                 <label class="field-label">Plant or location</label>
                 <select class="field" id="bug-plant-select">
                     ${optionsHtml}
                 </select>
                 <button class="btn-primary" id="save-bug-link-btn" onclick="saveBugPlantLink('${item.id}')" style="margin-top:8px;">Save</button>
+                </div>
             </div>
         </div>`;
 }
 
-export function toggleBugPlantLink() {
-    const body = document.getElementById('bug-plant-link-body');
-    const icon = document.getElementById('bug-link-toggle-icon');
-    if (!body) return;
-    const isHidden = body.style.display === 'none';
-    body.style.display = isHidden ? 'block' : 'none';
-    if (icon) icon.textContent = isHidden ? '▼' : '▶';
-}
+export function toggleBugPlantLink() { toggleSection('bug-plant-link-body', 'bug-link-toggle-icon'); }
 
 export async function saveBugPlantLink(itemId) {
     const val = document.getElementById('bug-plant-select').value || null;
@@ -141,27 +176,36 @@ export function renderLinkedBugs(item) {
     if (!bugs.length) return '';
 
     return `
-        <div class="plant-status-section">
-            <div class="detail-notes-label" style="margin-bottom:8px;">Insects found on this plant</div>
-            ${bugs.map(b => `
-                <div class="linked-bug-row" onclick="showLinkedBug('${b.id}')">
-                    <span class="linked-bug-icon">🐛</span>
-                    <span class="linked-bug-name">${b.common}</span>
-                    ${b.scientific ? `<span class="linked-bug-sci">${b.scientific}</span>` : ''}
+        <div class="detail-card-expandable">
+            <div class="detail-card-header" onclick="toggleLinkedBugs()">
+                <div>
+                    <div class="detail-card-heading">Visitors</div>
+                    <div style="font-size:var(--text-xs);color:var(--ink-light);">${bugs.length} insect${bugs.length !== 1 ? 's' : ''} found</div>
                 </div>
-            `).join('')}
+                <svg class="detail-card-chevron open" id="linked-bugs-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="detail-card-body" id="linked-bugs-body">
+                ${bugs.map(b => `
+                    <div class="linked-bug-row" onclick="showLinkedBug('${b.id}')">
+                        <span class="linked-bug-icon">🐛</span>
+                        <span class="linked-bug-name">${b.common}</span>
+                        ${b.scientific ? `<span class="linked-bug-sci">${b.scientific}</span>` : ''}
+                    </div>
+                `).join('')}
+            </div>
         </div>`;
 }
 
 // ── Plant status tracking ─────────────────────────────────────
 export function renderPlantStatus(item) {
     return `
-        <div class="plant-status-section">
-            <div class="plant-status-header" onclick="togglePlantStatus()">
-                <h3 class="care-profile-title">Plant Status</h3>
-                <span class="care-toggle" id="status-toggle-icon">▶</span>
+        <div class="detail-card-expandable">
+            <div class="detail-card-header" onclick="togglePlantStatus()">
+                <div class="detail-card-heading">Plant Status</div>
+                <svg class="detail-card-chevron" id="status-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="plant-status-body" id="plant-status-body" style="display:none;">
+            <div class="detail-card-body" id="plant-status-body" style="height:0;overflow:hidden;">
+                <div style="padding-top:var(--space-3);">
                 <label class="field-label">Health</label>
                 <select class="field" id="status-health">
                     <option value="">-- Select --</option>
@@ -198,18 +242,12 @@ export function renderPlantStatus(item) {
                 <textarea class="field" id="status-features" rows="3" placeholder="e.g. Attracting pollinators, new growth, needs staking...">${item.features || ''}</textarea>
 
                 <button class="btn-primary" id="save-status-btn" onclick="savePlantStatus('${item.id}')" style="margin-top:10px;">Save status</button>
+                </div>
             </div>
         </div>`;
 }
 
-export function togglePlantStatus() {
-    const body = document.getElementById('plant-status-body');
-    const icon = document.getElementById('status-toggle-icon');
-    if (!body) return;
-    const isHidden = body.style.display === 'none';
-    body.style.display = isHidden ? 'block' : 'none';
-    if (icon) icon.textContent = isHidden ? '▼' : '▶';
-}
+export function togglePlantStatus() { toggleSection('plant-status-body', 'status-toggle-icon'); }
 
 // Parse location string like "Front, Hammock" into { zone, habitat }
 export function parseLocation(loc) {
@@ -336,9 +374,7 @@ export async function refreshCareProfile(itemId) {
     const section = document.getElementById('care-profile-section');
     if (section) {
         section.innerHTML = `
-            <div class="care-profile-header" style="margin-bottom:12px;">
-                <h3 class="care-profile-title">Care Profile</h3>
-            </div>
+            <div class="detail-card-heading">Care Profile</div>
             <div class="spinner-wrap" style="padding:16px 0;">
                 <div class="spinner"></div>
                 <p class="spinner-label">Generating care profile...</p>
@@ -351,9 +387,7 @@ export async function refreshCareProfile(itemId) {
     } else {
         if (section) {
             section.innerHTML = `
-                <div class="care-profile-header">
-                    <h3 class="care-profile-title">Care Profile</h3>
-                </div>
+                <div class="detail-card-heading">Care Profile</div>
                 <p style="color:var(--terra);font-size:0.85em;">Failed to generate care profile. Try again later.</p>
                 <button class="btn-secondary" onclick="refreshCareProfile('${itemId}')" style="margin-top:8px;font-size:0.85em;">Retry</button>`;
         }
@@ -367,10 +401,8 @@ export function renderCareProfile(item) {
 
     if (!cp) {
         return `
-            <div id="care-profile-section" class="care-profile-section">
-                <div class="care-profile-header">
-                    <h3 class="care-profile-title">Care Profile</h3>
-                </div>
+            <div id="care-profile-section" class="detail-card-expandable">
+                <div class="detail-card-heading">Care Profile</div>
                 <p style="color:var(--ink-light);font-size:0.85em;margin-bottom:8px;">No care profile yet.</p>
                 <button class="btn-secondary" onclick="refreshCareProfile('${item.id}')" style="font-size:0.85em;">Generate care profile</button>
             </div>`;
@@ -382,7 +414,7 @@ export function renderCareProfile(item) {
     if (cp.watering) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">💧</span>
+                <div class="care-item-icon">💧</div>
                 <div>
                     <div class="care-label">Watering</div>
                     <div class="care-value">${cp.watering.frequency || ''}</div>
@@ -395,7 +427,7 @@ export function renderCareProfile(item) {
     if (cp.sun) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">☀️</span>
+                <div class="care-item-icon">☀️</div>
                 <div>
                     <div class="care-label">Sun</div>
                     <div class="care-value">${cp.sun}</div>
@@ -407,7 +439,7 @@ export function renderCareProfile(item) {
     if (cp.soil) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">🪴</span>
+                <div class="care-item-icon">🪴</div>
                 <div>
                     <div class="care-label">Soil</div>
                     <div class="care-value">${cp.soil}</div>
@@ -419,7 +451,7 @@ export function renderCareProfile(item) {
     if (cp.fertilizing) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">🧪</span>
+                <div class="care-item-icon">🧪</div>
                 <div>
                     <div class="care-label">Fertilizing</div>
                     <div class="care-value">${cp.fertilizing.schedule || ''}</div>
@@ -432,7 +464,7 @@ export function renderCareProfile(item) {
     if (cp.pruning) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">✂️</span>
+                <div class="care-item-icon">✂️</div>
                 <div>
                     <div class="care-label">Pruning</div>
                     <div class="care-value">${cp.pruning.timing || ''}</div>
@@ -445,7 +477,7 @@ export function renderCareProfile(item) {
     if (cp.mature_size) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">📏</span>
+                <div class="care-item-icon">📏</div>
                 <div>
                     <div class="care-label">Mature Size</div>
                     <div class="care-value">Height: ${cp.mature_size.height || 'N/A'} · Spread: ${cp.mature_size.spread || 'N/A'}</div>
@@ -457,7 +489,7 @@ export function renderCareProfile(item) {
     if (cp.pests && cp.pests.length) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">🐛</span>
+                <div class="care-item-icon">🐛</div>
                 <div>
                     <div class="care-label">Pests & Diseases</div>
                     <div class="care-value">${cp.pests.join(', ')}</div>
@@ -469,7 +501,7 @@ export function renderCareProfile(item) {
     if (cp.companions && cp.companions.length) {
         sections.push(`
             <div class="care-item">
-                <span class="care-icon">🌱</span>
+                <div class="care-item-icon">🌱</div>
                 <div>
                     <div class="care-label">Companion Plants</div>
                     <div class="care-value">${cp.companions.join(', ')}</div>
@@ -478,26 +510,19 @@ export function renderCareProfile(item) {
     }
 
     return `
-        <div id="care-profile-section" class="care-profile-section">
-            <div class="care-profile-header" onclick="toggleCareProfile()">
-                <h3 class="care-profile-title">Care Profile</h3>
-                <span class="care-toggle" id="care-toggle-icon">▼</span>
+        <div id="care-profile-section" class="detail-card-expandable">
+            <div class="detail-card-header" onclick="toggleCareProfile()">
+                <div class="detail-card-heading">Care Profile</div>
+                <svg class="detail-card-chevron open" id="care-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="care-profile-body" id="care-profile-body">
+            <div class="detail-card-body" id="care-profile-body">
                 ${sections.join('')}
                 <button class="btn-secondary" onclick="refreshCareProfile('${item.id}')" style="margin-top:12px;font-size:0.85em;width:100%;">Refresh care info</button>
             </div>
         </div>`;
 }
 
-export function toggleCareProfile() {
-    const body = document.getElementById('care-profile-body');
-    const icon = document.getElementById('care-toggle-icon');
-    if (!body) return;
-    const isHidden = body.style.display === 'none';
-    body.style.display = isHidden ? 'block' : 'none';
-    if (icon) icon.textContent = isHidden ? '▼' : '▶';
-}
+export function toggleCareProfile() { toggleSection('care-profile-body', 'care-toggle-icon'); }
 
 // ── Seasonal care reminders ───────────────────────────────────
 
@@ -932,26 +957,25 @@ export function renderHealthHistory(item) {
     if (item.type !== 'plant') return '';
 
     return `
-        <div class="health-history-section">
-            <div class="health-history-header" onclick="toggleHealthHistory('${item.id}')">
-                <h3 class="care-profile-title">Health History</h3>
-                <span class="care-toggle" id="health-history-toggle">▶</span>
+        <div class="detail-card-expandable">
+            <div class="detail-card-header" onclick="toggleHealthHistory('${item.id}')">
+                <div class="detail-card-heading">Health History</div>
+                <svg class="detail-card-chevron" id="health-history-toggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div id="health-history-body" class="health-history-body" style="display:none;">
-                <div id="health-history-list">Loading...</div>
+            <div class="detail-card-body" id="health-history-body" style="height:0;overflow:hidden;">
+                <div id="health-history-list" style="padding-top:var(--space-3);">Loading...</div>
             </div>
         </div>`;
 }
 
 export async function toggleHealthHistory(itemId) {
     const body = document.getElementById('health-history-body');
-    const icon = document.getElementById('health-history-toggle');
     if (!body) return;
-    const isHidden = body.style.display === 'none';
-    body.style.display = isHidden ? 'block' : 'none';
-    if (icon) icon.textContent = isHidden ? '▼' : '▶';
+    const isCollapsed = !body.style.height || body.style.height === '0px';
 
-    if (isHidden) {
+    toggleSection('health-history-body', 'health-history-toggle');
+
+    if (isCollapsed) {
         _healthHistoryOffset = 0;
         try {
             await loadHealthHistoryPage(itemId, true);

@@ -970,6 +970,48 @@
     margin-top: var(--space-2);
 }
 
+/* ── Expandable detail card ──────────────────────────────────── */
+.detail-card-expandable {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-3);
+}
+.detail-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    min-height: 24px;
+}
+.detail-card-header .detail-card-heading {
+    margin-bottom: 0;
+}
+.detail-card-chevron {
+    transition: transform 250ms ease;
+    color: var(--ink-light);
+}
+.detail-card-chevron.open {
+    transform: rotate(180deg);
+}
+.detail-card-body {
+    overflow: hidden;
+}
+
+/* Care item with icon container */
+.care-item-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--green-light), #e8f0e8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
 /* ── Floating Action Button ──────────────────────────────────── */
 .fab {
     width: var(--fab-size);
