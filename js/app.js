@@ -397,3 +397,9 @@ Object.assign(window, {
     // Modal
     openModal, closeModal,
 });
+
+// ── Service worker registration ──────────────────────────────
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/Mamas-Garden-App/sw.js')
+        .catch(err => console.error('SW registration failed:', err));
+}
