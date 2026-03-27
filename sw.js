@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v14';
+const CACHE_VERSION = 'v15';
 const CACHE_NAME = `garden-${CACHE_VERSION}`;
 const CORE_FILES = [
     '/Mamas-Garden-App/',

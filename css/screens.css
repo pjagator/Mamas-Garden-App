@@ -97,17 +97,20 @@
 /* ── Welcome screen ─────────────────────────────────────────── */
 .welcome-screen {
     background: var(--bg-welcome);
-    min-height: 100vh;
+    height: 100dvh;
+    height: 100vh; /* fallback for older browsers */
+    height: 100dvh;
     padding: 0;
     position: relative;
     cursor: pointer;
+    overflow: hidden;
 }
 .welcome-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    height: 100%;
     padding: 0 var(--space-8);
     text-align: center;
 }
