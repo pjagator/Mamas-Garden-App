@@ -11,6 +11,10 @@ const CORE_FILES = [
     '/Mamas-Garden-App/css/screens.css',
     '/Mamas-Garden-App/js/app.js',
     '/Mamas-Garden-App/js/network.js',
+    '/Mamas-Garden-App/js/auth.js',
+    '/Mamas-Garden-App/js/capture.js',
+    '/Mamas-Garden-App/js/features.js',
+    '/Mamas-Garden-App/js/inventory.js',
 ];
 
 const SUPABASE_STORAGE_ORIGIN = 'https://itjvgruwvlrrlhsknwiw.supabase.co';
@@ -44,7 +48,7 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// ── LRU eviction for image cache ─────────────────────────────
+// ── FIFO eviction for image cache ────────────────────────────
 async function evictOldImages() {
     const cache = await caches.open(IMAGE_CACHE);
     const keys = await cache.keys();

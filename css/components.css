@@ -1100,5 +1100,11 @@
     color: var(--white);
 }
 
+/* ── FAB offline state ──────────────────────────────────────── */
+.fab.fab-offline {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+}
+
 /* ── Filter utility ────────────────────────────────────────── */
 .garden-card.filter-hidden { display: none !important; }

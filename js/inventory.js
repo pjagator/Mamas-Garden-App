@@ -166,38 +166,7 @@ export function toggleFilterDropdown(id) {
 export function renderInventory() {
     let items = [...getAllInventory()];
 
-    // Type/status filters
-    if (currentFilter === 'plant')   items = items.filter(i => i.type === 'plant');
-    if (currentFilter === 'bug')     items = items.filter(i => i.type === 'bug');
-    if (currentFilter === 'native')  items = items.filter(i => i.is_native);
-    if (currentFilter === 'blooming') {
-        const season = getCurrentSeason();
-        items = items.filter(i => i.bloom && (i.bloom.includes(season) || i.bloom.includes('Year-round')));
-    }
-
-    // Tag filters (AND: item must have all selected tags)
-    if (activeTagFilters.length) {
-        items = items.filter(i => activeTagFilters.every(t => (i.tags || []).includes(t)));
-    }
-
-    // Location filter
-    if (activeLocationFilter) {
-        items = items.filter(i => i.location === activeLocationFilter);
-    }
-
-    // Search
-    if (currentSearch) {
-        items = items.filter(i =>
-            (i.common      || '').toLowerCase().includes(currentSearch) ||
-            (i.scientific  || '').toLowerCase().includes(currentSearch) ||
-            (i.category    || '').toLowerCase().includes(currentSearch) ||
-            (i.notes       || '').toLowerCase().includes(currentSearch) ||
-            (i.tags        || []).some(t => t.toLowerCase().includes(currentSearch)) ||
-            (i.location    || '').toLowerCase().includes(currentSearch)
-        );
-    }
-
-    // Sort
+    // Sort only — filtering is handled by applyFilters() on the DOM
     if (currentSort === 'name-az') items.sort((a, b) => (a.common || '').localeCompare(b.common || ''));
     else if (currentSort === 'name-za') items.sort((a, b) => (b.common || '').localeCompare(a.common || ''));
     else if (currentSort === 'date-asc') items.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -206,9 +175,6 @@ export function renderInventory() {
 
     const grid = document.getElementById('garden-grid');
     if (!items.length) {
-        if (currentSearch || currentFilter !== 'all') {
-            grid.innerHTML = `<div class="empty-state"><p>No matching entries.</p></div>`;
-        } else {
             grid.innerHTML = `
                 <div style="text-align:center;padding:var(--space-8) var(--space-6);">
                     <div style="font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--green-deep);line-height:1.5;">
@@ -263,6 +229,7 @@ export function renderInventory() {
         fragment.appendChild(card);
     });
     grid.appendChild(fragment);
+    applyFilters();
 }
 
 export function showItemDetail(item) {

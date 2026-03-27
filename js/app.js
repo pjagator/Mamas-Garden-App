@@ -435,15 +435,12 @@ onConnectionChange((online) => {
     }
     // FAB state
     const fab = document.querySelector('.fab');
-    if (fab) {
-        fab.style.opacity = online ? '' : '0.5';
-        fab.style.pointerEvents = online ? '' : 'none';
-    }
+    if (fab) fab.classList.toggle('fab-offline', !online);
 });
 // Set initial state if starting offline
 if (!isOnline()) {
     const fab = document.querySelector('.fab');
-    if (fab) { fab.style.opacity = '0.5'; fab.style.pointerEvents = 'none'; }
+    if (fab) fab.classList.add('fab-offline');
 }
 
 // ── Window bindings for HTML onclick/oninput/onchange handlers ──
