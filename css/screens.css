@@ -171,7 +171,7 @@
 }
 
 .screen-header {
-    background: var(--green-deep);
+    background: var(--bg-header);
     color: var(--white);
     padding: 56px var(--space-6) 28px;
 }
@@ -482,33 +482,60 @@
 /* ── Timeline tab ────────────────────────────────────────────── */
 #timeline-content { padding: var(--space-5); }
 
-.season-block { margin-bottom: 28px; }
-
-.season-title {
-    font-family: var(--font-display);
-    font-size: var(--text-xl);
-    font-weight: 500;
-    line-height: 1.2;
-    color: var(--green-deep);
-    margin-bottom: var(--space-3);
-    padding-bottom: var(--space-2);
-    border-bottom: 2px solid var(--green-light);
-}
-
-.timeline-entry {
+.timeline-season-header {
     display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--space-3);
+}
+.timeline-season-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--green-deep);
+    white-space: nowrap;
+}
+.timeline-season-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--green-light), transparent);
+}
+.timeline-track {
+    position: relative;
+    padding-left: 20px;
+}
+.timeline-line {
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    bottom: 8px;
+    width: 1.5px;
+    background: linear-gradient(180deg, var(--green-light), var(--cream-dark));
+}
+.timeline-entry {
+    position: relative;
+    margin-bottom: var(--space-3);
+}
+.timeline-dot {
+    position: absolute;
+    left: -18px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--cream);
+}
+.timeline-dot.plant { background: linear-gradient(135deg, var(--green-mid), var(--green-sage)); }
+.timeline-dot.bug { background: linear-gradient(135deg, var(--terra), var(--terra-light)); }
+.timeline-entry-card {
     background: var(--white);
     border-radius: var(--radius-sm);
-    margin-bottom: var(--space-2);
+    padding: 12px 14px;
     box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform 150ms ease;
 }
-
-.timeline-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
-.timeline-name { font-weight: 500; font-size: var(--text-sm); color: var(--ink); }
-.timeline-sci  { font-style: italic; font-size: var(--text-xs); color: var(--ink-light); }
+.timeline-entry-card:active { transform: scale(0.98); }
 
 .timeline-empty { color: var(--ink-light); font-size: var(--text-sm); padding: var(--space-2) 0; font-style: italic; }
 

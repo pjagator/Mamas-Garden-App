@@ -268,32 +268,79 @@ export async function deleteItem(id, imageUrl) {
 }
 
 export function renderTimeline() {
-    const seasons = ['Spring','Summer','Fall','Winter'];
+    const now = new Date();
+    const year = now.getFullYear();
+    const seasonDefs = [
+        { label: `Spring ${year}`, key: 'Spring' },
+        { label: `Summer ${year}`, key: 'Summer' },
+        { label: `Fall ${year}`,   key: 'Fall'   },
+        { label: `Winter ${year}`, key: 'Winter' }
+    ];
     const container = document.getElementById('timeline-content');
     container.innerHTML = '';
 
-    seasons.forEach(season => {
-        const block = document.createElement('div');
-        block.className = 'season-block';
+    const allItems = getAllInventory();
 
-        const bloomingPlants = getAllInventory().filter(i =>
+    seasonDefs.forEach(({ label, key }) => {
+        const bloomingPlants = allItems.filter(i =>
             i.type === 'plant' && i.bloom &&
-            (i.bloom.includes(season) || i.bloom.includes('Year-round'))
+            (i.bloom.includes(key) || i.bloom.includes('Year-round'))
         );
-        const activeInsects = getAllInventory().filter(i =>
+        const activeInsects = allItems.filter(i =>
             i.type === 'bug' && i.season &&
-            (i.season.includes(season) || i.season.includes('Year-round'))
+            (i.season.includes(key) || i.season.includes('Year-round'))
         );
 
-        const entries = [
-            ...bloomingPlants.map(p => `<div class="timeline-entry"><span class="timeline-icon">🌸</span><div><div class="timeline-name">${p.common}</div><div class="timeline-sci">${p.scientific || ''}</div></div></div>`),
-            ...activeInsects.map(b => `<div class="timeline-entry"><span class="timeline-icon">🦋</span><div><div class="timeline-name">${b.common}</div><div class="timeline-sci">${b.scientific || ''}</div></div></div>`)
-        ];
+        const section = document.createElement('div');
+        section.style.marginBottom = 'var(--space-6)';
 
-        block.innerHTML = `
-            <div class="season-title">${season}</div>
-            ${entries.length ? entries.join('') : '<p class="timeline-empty">Nothing logged yet for this season.</p>'}`;
-        container.appendChild(block);
+        const header = `
+            <div class="timeline-season-header">
+                <div class="timeline-season-title">${label}</div>
+                <div class="timeline-season-rule"></div>
+            </div>`;
+
+        if (!bloomingPlants.length && !activeInsects.length) {
+            section.innerHTML = header + '<p class="timeline-empty">Nothing logged yet for this season.</p>';
+            container.appendChild(section);
+            return;
+        }
+
+        const track = document.createElement('div');
+        track.className = 'timeline-track';
+        track.innerHTML = '<div class="timeline-line"></div>';
+
+        [...bloomingPlants, ...activeInsects].forEach(item => {
+            const dotClass = item.type === 'plant' ? 'plant' : 'bug';
+            const dateStr = item.date ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+            const nativeTag = item.is_native
+                ? `<span class="tag" style="font-size:9px;padding:2px 8px;border-radius:10px;background:linear-gradient(135deg,var(--green-light),#e8f0e8);color:var(--green-mid);">Native</span>`
+                : '';
+            const categoryTag = item.category
+                ? `<span class="tag" style="font-size:9px;padding:2px 8px;border-radius:10px;background:var(--cream-dark);color:var(--ink-light);">${item.category}</span>`
+                : '';
+
+            const entry = document.createElement('div');
+            entry.className = 'timeline-entry';
+            entry.innerHTML = `
+                <div class="timeline-dot ${dotClass}"></div>
+                <div class="timeline-entry-card">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div>
+                            <div style="font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--green-deep);">${item.common || 'Unknown'}</div>
+                            <div style="font-size:11px;color:var(--green-sage);font-style:italic;">${item.scientific || ''}</div>
+                        </div>
+                        <div style="font-size:10px;color:var(--ink-light);">${dateStr}</div>
+                    </div>
+                    ${(nativeTag || categoryTag) ? `<div style="display:flex;gap:4px;margin-top:8px;">${nativeTag}${categoryTag}</div>` : ''}
+                </div>`;
+            entry.querySelector('.timeline-entry-card').addEventListener('click', () => showItemDetail(item));
+            track.appendChild(entry);
+        });
+
+        section.innerHTML = header;
+        section.appendChild(track);
+        container.appendChild(section);
     });
 }
 
