@@ -22,23 +22,23 @@ Single-page app using ES modules. No build step, no bundler.
 
 ### Frontend (JS modules in `js/`)
 ```
-js/app.js        -- Entry point. Supabase client, shared state (getters/setters), event system (on/emit), helpers, data arrays (quotes, facts, native plants), welcome screen, navigation, modal helpers, loadInventory, window bindings for all HTML event handlers.
+js/app.js        -- Entry point. Supabase client, shared state (getters/setters), event system (on/emit), helpers, data arrays (quotes), welcome screen, navigation (2 tabs + FAB), modal helpers (including capture modal, settings sheet), loadInventory, FAB scroll behavior, window bindings for all HTML event handlers.
 js/auth.js       -- All auth flows: sign in, sign up, OTP, password reset, sign out.
-js/capture.js    -- Photo capture, canvas preview, image upload, species ID via edge function, ID result cards, manual entry, save flow.
-js/inventory.js  -- Garden grid rendering, search/filter/sort, item detail modal, delete, timeline, export, native DB modal, clear data.
-js/features.js   -- Tag editor, bug-plant linking, plant status tracking, care profile generation/display, seasonal care reminders, health check logging/history/diagnosis.
+js/capture.js    -- Photo capture, canvas preview, image upload, species ID via edge function, ID result cards, manual entry, save flow. Runs inside capture modal (not a tab).
+js/inventory.js  -- Garden grid rendering, search/filter/sort, item detail modal (hero image + unified cards), delete, timeline (vertical track), export, clear data.
+js/features.js   -- Tag editor, bug-plant linking, plant status tracking, care profile generation/display, seasonal care reminders, health check logging/history/diagnosis. Shared toggleSection() helper for expandable cards.
 ```
 
 ### Frontend (CSS in `css/`)
 ```
-css/base.css       -- Reset, :root custom properties (colors, typography, spacing), fields, buttons, spinner, utilities.
-css/components.css -- Cards, tags, badges, detail view, care profile, plant status, linked bugs, filter chips, seasonal reminders.
-css/screens.css    -- Auth, welcome, capture, garden, timeline, settings, modals, bottom nav.
+css/base.css       -- Reset, :root custom properties (colors, typography, spacing, gradients, FAB tokens), fields, buttons, utilities, reduced motion media query.
+css/components.css -- Cards, tags, badges, detail view (hero + unified cards), FAB, care profile, expandable sections, filter chips, loading dots, seasonal reminders.
+css/screens.css    -- Auth, welcome (forest gradient), garden (gradient header, frosted search), timeline (vertical track), modals, bottom nav (2 tabs + FAB).
 ```
 
 ### HTML
 ```
-index.html    -- HTML structure: welcome screen, 4 tab screens, 3 modals, bottom tab nav, auth screen. Loads CSS via 3 <link> tags, JS via single <script type="module">.
+index.html    -- HTML structure: welcome screen, 2 tab screens (garden, timeline), capture modal, settings modal, item detail modal, health check modal, bottom nav (2 tabs + FAB), auth screen. Loads CSS via 3 <link> tags, JS via single <script type="module">.
 ```
 
 ### Edge functions
@@ -62,7 +62,8 @@ LEARNING-PLAN.md        -- 10-lesson curriculum for professional app polish (2 o
 - **State access**: `getCurrentUser()` and `getAllInventory()` getters in `app.js`. Never access `_currentUser` or `_allInventory` directly from other modules.
 - **Event system**: `on(event, fn)` and `emit(event, data)` in `app.js`. Events: `'inventory-changed'` (triggers loadInventory), `'item-updated'` (triggers renderInventory + detail modal refresh).
 - **Window bindings**: All functions referenced in HTML `onclick`/`oninput`/`onchange` attributes are bound to `window` via `Object.assign(window, {...})` at the bottom of `app.js`.
-- **Adding new features**: Create a new `js/<feature>.js` file, import from `app.js`, export functions, add window bindings in `app.js`. Listen for `'inventory-changed'` to stay in sync. New screens use `showScreen()`. New CSS goes in the appropriate file (components vs screens).
+- **Adding new features**: Create a new `js/<feature>.js` file, import from `app.js`, export functions, add window bindings in `app.js`. Listen for `'inventory-changed'` to stay in sync. New screens use `showScreen()`. New modals use `openModal()`/`closeModal()`. New CSS goes in the appropriate file (components vs screens). Use the unified card system (`.detail-card` or `.detail-card-expandable`) for content sections.
+- **Navigation**: 2 tabs (Garden home, Timeline) + floating action button (FAB) for capture. No settings tab — gear icon in garden header opens settings sheet modal. Capture is a modal, not a screen.
 
 ## Design Constraints
 
@@ -71,7 +72,7 @@ LEARNING-PLAN.md        -- 10-lesson curriculum for professional app polish (2 o
 - **ES modules, no bundler**. JS files in `js/`, CSS files in `css/`, loaded directly by `index.html`. New features get their own module file.
 - **API keys stay server-side**. Only the Supabase anon key appears in client code. All AI calls go through edge functions.
 - **Edge functions use direct `fetch()`**, NOT `sb.functions.invoke()`. The SDK method had persistent JWT/EarlyDrop failures. This is a settled decision -- see PROJECT-CONTEXT.md for the full story.
-- **Design system**: Playfair Display headings, DM Sans body, forest green (#1c3a2b), warm cream (#f5f0e8), terracotta (#c4622d). Typography scale from 0.75rem to 1.875rem. Spacing scale in 4px increments.
+- **Design system**: "The Botanical Journal" aesthetic. Playfair Display headings, DM Sans body, forest green (#1c3a2b), warm cream (#f5f0e8), terracotta (#c4622d). Gradient backgrounds (not flat solids). Typography scale from 0.75rem to 1.875rem. Spacing scale in 4px increments. Unified white card system with 14px radius and consistent shadow. Literary language throughout ("species cataloged", "visitors observed"). SVG icons (not emoji). Smooth text rendering. Organic animations with cubic-bezier easing. Respects `prefers-reduced-motion`.
 
 ## Supabase
 
