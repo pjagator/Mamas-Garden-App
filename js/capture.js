@@ -39,6 +39,12 @@ function friendlyError(msg) {
             message: 'There was a problem loading your photo for analysis. Please try taking or selecting the photo again.'
         };
     }
+    if (lower.includes('lock') || lower.includes('another request')) {
+        return {
+            title: 'Session busy',
+            message: 'Your session was refreshing. Please try again — it should work on the next attempt.'
+        };
+    }
     if (lower.includes('session') || lower.includes('sign')) {
         return {
             title: 'Session expired',
@@ -160,6 +166,8 @@ export async function identifySpecies() {
         alert('Species identification requires an internet connection. Please try again when you\u2019re back online.');
         return;
     }
+
+    await ensureSession();
 
     const btn = document.getElementById('identify-btn');
     btn.disabled = true;
