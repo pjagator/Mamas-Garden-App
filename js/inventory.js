@@ -270,7 +270,7 @@ export function showItemDetail(item) {
 
     // Hero image
     const heroImg = item.image_url
-        ? `<img src="${item.image_url}" alt="${item.common}">`
+        ? `<img src="${item.image_url}" alt="${item.common}" loading="lazy">`
         : `<div style="width:100%;height:100%;background:var(--bg-header);display:flex;align-items:center;justify-content:center;font-size:48px;">🌿</div>`;
 
     // Status badges
