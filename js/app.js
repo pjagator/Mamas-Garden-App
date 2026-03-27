@@ -227,6 +227,10 @@ export function initWelcomeScreen() {
     if (attrEl) attrEl.textContent = q.source
         ? `\u2014 ${q.author}, ${q.source}`
         : `\u2014 ${q.author}`;
+
+    const fi = getDailyIndex(GARDEN_FACTS, 7);
+    const factEl = document.getElementById('welcome-fact-text');
+    if (factEl) factEl.textContent = GARDEN_FACTS[fi];
 }
 
 export function dismissWelcome() {

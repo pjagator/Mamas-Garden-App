@@ -141,6 +141,28 @@
     margin-top: 10px;
     font-weight: 300;
 }
+.welcome-fact {
+    position: absolute;
+    bottom: 48px;
+    left: 28px;
+    right: 28px;
+    text-align: center;
+}
+.welcome-fact-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+}
+.welcome-fact-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.55;
+    font-weight: 300;
+    max-width: 300px;
+    margin: 0 auto;
+}
 .welcome-hint {
     position: absolute;
     bottom: 24px;
