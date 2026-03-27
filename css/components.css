@@ -821,3 +821,33 @@
     padding: 0;
 }
 .health-pulse-btn:active { opacity: 0.7; }
+
+/* ── Floating Action Button ──────────────────────────────────── */
+.fab {
+    width: var(--fab-size);
+    height: var(--fab-size);
+    border-radius: 50%;
+    background: var(--bg-fab);
+    border: none;
+    box-shadow: var(--fab-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+    position: relative;
+    bottom: 12px;
+    z-index: 101;
+}
+.fab:active {
+    transform: scale(0.9);
+}
+.fab svg {
+    transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes fabPulse {
+    0%, 100% { box-shadow: var(--fab-shadow); }
+    50% { box-shadow: 0 8px 28px rgba(var(--terra-rgb),0.45); }
+}
+.fab { animation: fabPulse 3s ease-in-out infinite; }
