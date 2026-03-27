@@ -116,12 +116,12 @@ export async function identifySpecies() {
 
     const btn = document.getElementById('identify-btn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> Identifying...';
+    btn.innerHTML = '<div class="loading-dots" style="display:inline-flex;padding:0;gap:4px;margin-right:8px;vertical-align:middle;"><span></span><span></span><span></span></div> Identifying...';
 
     document.getElementById('id-results').style.display = 'block';
     document.getElementById('id-cards').innerHTML = `
         <div class="spinner-wrap">
-            <div class="spinner"></div>
+            <div class="loading-dots"><span></span><span></span><span></span></div>
             <p class="spinner-label">Analyzing with Claude AI...</p>
         </div>`;
 

@@ -376,7 +376,7 @@ export async function refreshCareProfile(itemId) {
         section.innerHTML = `
             <div class="detail-card-heading">Care Profile</div>
             <div class="spinner-wrap" style="padding:16px 0;">
-                <div class="spinner"></div>
+                <div class="loading-dots"><span></span><span></span><span></span></div>
                 <p class="spinner-label">Generating care profile...</p>
             </div>`;
     }

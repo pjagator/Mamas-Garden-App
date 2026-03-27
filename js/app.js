@@ -354,6 +354,27 @@ export function openSettingsSheet() {
     openModal('settings-modal');
 }
 
+// ── Reduced motion preference ──────────────────────────────────
+export const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── FAB scroll behavior ────────────────────────────────────────
+let lastScrollY = 0;
+const fabEl = document.querySelector('.fab');
+if (fabEl) {
+    window.addEventListener('scroll', () => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const scrollY = window.scrollY;
+        if (scrollY > lastScrollY && scrollY > 50) {
+            fabEl.style.transform = 'scale(0.8)';
+            fabEl.style.opacity = '0.6';
+        } else {
+            fabEl.style.transform = '';
+            fabEl.style.opacity = '';
+        }
+        lastScrollY = scrollY;
+    }, { passive: true });
+}
+
 // ── Window bindings for HTML onclick/oninput/onchange handlers ──
 Object.assign(window, {
     // Auth

@@ -584,11 +584,14 @@
     max-height: 90vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    animation: sheetIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    animation: sheetIn 400ms cubic-bezier(0.32, 0.72, 0, 1);
     position: relative;
 }
 
-@keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheetIn {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
 
 .modal-close {
     position: absolute;
