@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v18';
+const CACHE_VERSION = 'v19';
 const STATIC_CACHE = `garden-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = 'garden-images-v1';
 const IMAGE_CACHE_MAX = 200; // max entries before LRU eviction

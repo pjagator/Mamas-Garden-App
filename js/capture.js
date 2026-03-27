@@ -341,7 +341,10 @@ export async function saveManualEntry() {
 
     try {
         await ensureSession();
-        const entry = buildEntry(result, null, notes);
+        const canvas = document.getElementById('preview-canvas');
+        const hasPhoto = canvas && canvas.style.display !== 'none';
+        const imageUrl = hasPhoto ? await uploadImage(canvas) : null;
+        const entry = buildEntry(result, imageUrl, notes);
         const { data: inserted, error } = await sb.from('inventory').insert(entry).select().single();
         if (error) throw error;
         if (!inserted) throw new Error('Save failed — no data returned. Please try signing out and back in.');
@@ -350,6 +353,7 @@ export async function saveManualEntry() {
         else alert(`${result.common} added to your garden.`);
 
         closeModal('manual-modal');
+        if (hasPhoto) removeImage();
         emit('inventory-changed');
 
         // Generate care profile in background (non-blocking)
