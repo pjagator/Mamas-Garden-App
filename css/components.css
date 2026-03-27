@@ -1099,3 +1099,6 @@
     background: var(--green-mid);
     color: var(--white);
 }
+
+/* ── Filter utility ────────────────────────────────────────── */
+.garden-card.filter-hidden { display: none !important; }

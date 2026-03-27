@@ -43,6 +43,59 @@ function renderLocationFilterDropdown() {
     ).join('');
 }
 
+function applyFilters() {
+    const grid = document.getElementById('garden-grid');
+    const cards = grid.querySelectorAll('.garden-card');
+    if (!cards.length) { renderInventory(); return; }
+
+    const season = getCurrentSeason();
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        let show = true;
+
+        // Type/status filter
+        if (currentFilter === 'plant' && card.dataset.type !== 'plant') show = false;
+        if (currentFilter === 'bug' && card.dataset.type !== 'bug') show = false;
+        if (currentFilter === 'native' && card.dataset.native !== 'true') show = false;
+        if (currentFilter === 'blooming') {
+            const item = getAllInventory().find(i => i.common === card.querySelector('.garden-card-name')?.textContent);
+            if (!item?.bloom || (!item.bloom.includes(season) && !item.bloom.includes('Year-round'))) show = false;
+        }
+
+        // Tag filters (AND)
+        if (show && activeTagFilters.length) {
+            const cardTags = card.dataset.tags ? card.dataset.tags.split(',') : [];
+            if (!activeTagFilters.every(t => cardTags.includes(t.toLowerCase()))) show = false;
+        }
+
+        // Location filter
+        if (show && activeLocationFilter) {
+            if (card.dataset.location !== activeLocationFilter.toLowerCase()) show = false;
+        }
+
+        // Search
+        if (show && currentSearch) {
+            const text = card.textContent.toLowerCase();
+            if (!text.includes(currentSearch)) show = false;
+        }
+
+        card.classList.toggle('filter-hidden', !show);
+        if (show) visibleCount++;
+    });
+
+    // Show empty state if nothing visible
+    const emptyEl = grid.querySelector('.empty-state');
+    if (visibleCount === 0 && !emptyEl && (currentSearch || currentFilter !== 'all' || activeTagFilters.length || activeLocationFilter)) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.innerHTML = '<p>No matching entries.</p>';
+        grid.appendChild(empty);
+    } else if (visibleCount > 0 && emptyEl) {
+        emptyEl.remove();
+    }
+}
+
 function download(blob, name) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -68,14 +121,14 @@ export function updateStats() {
 
 export function handleSearch(val) {
     currentSearch = val.toLowerCase().trim();
-    renderInventory();
+    applyFilters();
 }
 
 export function setFilter(filter, btnEl) {
     currentFilter = filter;
     document.querySelectorAll('.filter-row .chip').forEach(b => b.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
-    renderInventory();
+    applyFilters();
 }
 
 export function toggleTagFilter(tag) {
@@ -83,13 +136,13 @@ export function toggleTagFilter(tag) {
     if (idx === -1) activeTagFilters.push(tag);
     else activeTagFilters.splice(idx, 1);
     renderTagFilterDropdown();
-    renderInventory();
+    applyFilters();
 }
 
 export function setLocationFilter(loc) {
     activeLocationFilter = activeLocationFilter === loc ? '' : loc;
     renderLocationFilterDropdown();
-    renderInventory();
+    applyFilters();
 }
 
 export function setSort(sort) {
