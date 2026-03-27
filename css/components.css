@@ -577,7 +577,7 @@
 
 .reminder-plant-tag {
     display: inline-block;
-    font-size: 0.6875rem;
+    font-size: var(--text-sm);
     color: var(--terra);
     background: rgba(var(--terra-rgb), 0.1);
     padding: 1px 6px;
@@ -879,7 +879,7 @@
     left: 0;
     right: 0;
     background: linear-gradient(transparent, rgba(28,58,43,0.85));
-    padding: 16px 20px 14px;
+    padding: var(--space-4) var(--space-5);
 }
 .detail-hero-name {
     font-family: var(--font-display);
@@ -901,7 +901,7 @@
     flex-wrap: wrap;
 }
 .detail-hero-badge {
-    font-size: 10px;
+    font-size: 12px;
     padding: 3px 10px;
     border-radius: 12px;
     background: rgba(255,255,255,0.18);
@@ -938,7 +938,7 @@
     gap: 12px 16px;
 }
 .detail-about-label {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--ink-light);
     text-transform: uppercase;
     letter-spacing: 0.06em;
