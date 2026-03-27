@@ -1,9 +1,9 @@
 # PROJECT-STATE.md — Full Codebase Audit
 
-**Generated**: 2026-03-26
+**Generated**: 2026-03-27
 **Repo**: https://github.com/pjagator/Mamas-Garden-App
-**Total files**: 19 (excluding `.git/`)
-**Total lines**: ~5,500
+**Total files**: 21 (excluding `.git/`)
+**Total lines**: ~6,200
 
 ---
 
@@ -13,31 +13,39 @@
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `js/app.js` | 322 | Entry point. Supabase client, shared state (getters/setters), event system (on/emit), data arrays (65 quotes, 64 facts, 15 native plants, preset tags/locations), helpers, welcome screen, SPA navigation, modal helpers, loadInventory, auth state change handler, window bindings for all HTML event handlers. |
+| `js/app.js` | ~450 | Entry point. Supabase client, shared state (getters/setters), event system (on/emit), data arrays (65 quotes, 64 facts, 15 native plants, preset tags/locations), helpers, welcome screen, SPA navigation, modal helpers, loadInventory, auth state change handler, window bindings for all HTML event handlers. connection toast UI, localStorage inventory caching, offline FAB state. |
 | `js/auth.js` | 83 | Auth flows: sign in, sign up, magic link OTP, password reset, sign out. Internal: setAuthMsg, otpEmail. |
-| `js/capture.js` | 300 | Photo capture via camera/gallery, canvas preview (max 900px), image upload (temp 0.5 quality, final 0.82 quality), species ID via edge function, ID result cards, manual entry modal, save flow with care profile generation. |
-| `js/inventory.js` | 320 | Garden grid rendering (2-column), search/filter/sort, item detail modal orchestration, delete, timeline, JSON/CSV export, native DB modal, clear all data. Module-local filter/search/sort state. |
-| `js/features.js` | 752 | Tag editor (preset + custom), bug-plant linking, plant status tracking (health/flowering/height/location/features), care profile generation + display, seasonal care reminders (load/generate/render/check-off/add-custom/delete). Uses event system to avoid circular dependencies with inventory.js. |
+| `js/capture.js` | ~320 | Photo capture via camera/gallery, canvas preview (max 900px), image upload (temp 0.5 quality, final 0.82 quality), species ID via edge function, ID result cards, manual entry modal, save flow with care profile generation. resilientFetch for API calls, offline guards. |
+| `js/inventory.js` | ~400 | Garden grid rendering (2-column), search/filter/sort, item detail modal orchestration, delete, timeline, JSON/CSV export, native DB modal, clear all data. Module-local filter/search/sort state. DocumentFragment batch rendering, filter-by-hiding via data attributes. |
+| `js/features.js` | ~770 | Tag editor (preset + custom), bug-plant linking, plant status tracking (health/flowering/height/location/features), care profile generation + display, seasonal care reminders (load/generate/render/check-off/add-custom/delete). Uses event system to avoid circular dependencies with inventory.js. resilientFetch for API calls, offline guards. |
+| `js/network.js` | 61 | Standalone network resilience utility. `resilientFetch()` with configurable retries, exponential backoff, AbortController timeout. `isOnline()` and `onConnectionChange()` for connection state. No imports from app.js. |
 
 ### Core Application Files — CSS (in `css/`)
 
 | File | Lines | Purpose |
 |------|-------|---------|
 | `css/base.css` | 226 | Design system: reset, :root custom properties (colors, typography scale, spacing scale, shadows, radii, fonts), body, fields, 5 button variants, divider, checkbox row, spinner (deduplicated), iOS font-size fix. |
-| `css/components.css` | 629 | Reusable components: ID result cards (deduplicated), confidence badges, tags (all variants), tag editor, filter chips, garden cards, detail view, plant status, linked bugs, care profile, natives list, seasonal care reminders (checklist, checkboxes, add-row). |
+| `css/components.css` | ~660 | Reusable components: ID result cards (deduplicated), confidence badges, tags (all variants), tag editor, filter chips, garden cards, detail view, plant status, linked bugs, care profile, natives list, seasonal care reminders (checklist, checkboxes, add-row). connection toast, FAB offline state, filter-hidden utility. |
 | `css/screens.css` | 532 | Screen layouts: auth, welcome, app shell, screens base + animations, bottom nav, capture tab, garden tab (stats/search/grid), timeline, settings, modals (overlay + sheet + slide-up animation), 360px breakpoint. |
 
 ### HTML
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | 305 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=11`. |
+| `index.html` | ~350 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=16`. connection toast element. |
 
 ### Edge Functions
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `supabase/functions/garden-assistant/index.ts` | 171 | Deno edge function for care profiles and seasonal reminders. Two actions: `"care_profile"` (accepts plant data, returns structured care JSON) and `"reminders"` (accepts month + plant list, returns 3-5 monthly care tasks). Both call Claude Haiku (claude-haiku-4-5-20251001) with Tampa Bay-specific prompts. CORS enabled, JWT verification disabled. |
+| `supabase/functions/garden-assistant/index.ts` | ~270 | Deno edge function for care profiles and seasonal reminders. Two actions: `"care_profile"` (accepts plant data, returns structured care JSON) and `"reminders"` (accepts month + plant list, returns 3-5 monthly care tasks). Both call Claude Haiku (claude-haiku-4-5-20251001) with Tampa Bay-specific prompts. CORS enabled, JWT verification disabled. fetchWithRetry for Claude API resilience, plant health diagnosis via Claude Sonnet. |
+| `supabase/functions/identify-species/index.ts` | ~120 | Deno edge function for species identification from photos via Claude Sonnet. Includes fetchWithRetry with exponential backoff for overloaded errors. CORS enabled, JWT disabled. |
+
+### Service Worker
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `sw.js` | 80 | PWA service worker. Two caches: `garden-static-vN` (core files, cache-first) and `garden-images-v1` (Supabase Storage images, stale-while-revalidate with FIFO eviction at 200 entries). Navigation is network-first. Skips temp images. |
 
 ### Database Migrations
 
@@ -239,6 +247,17 @@
 ### Plant Health Tracking
 - **Plant Health Tracking** -- Quick-log health checks from pulse icon on plant cards. Bottom sheet with health/flowering status pills, optional photo. Health history timeline in detail modal with pagination. AI-powered diagnosis via Claude Sonnet for stressed/sick plants with photos. Data stored in `health_logs` table.
 
+### Network Resilience & Offline Browsing
+- **resilientFetch**: All edge function calls use `resilientFetch()` wrapper with configurable retries (default 2), exponential backoff (1s, 2s, 4s), and AbortController timeout (default 15s, 30s for identification)
+- **Connection toast**: Fixed bar at top of screen shows "You're offline — browsing cached data" (terracotta) when offline, "Back online" (green, auto-dismisses 2s) when reconnected. `aria-live="polite"` for accessibility.
+- **Offline guards**: Write operations (identify species, save to garden, health diagnosis) check `isOnline()` and show friendly messages when offline. Read operations work from cache.
+- **FAB offline state**: Capture button dims to 50% opacity and becomes non-interactive when offline (via CSS class, not inline styles)
+- **Inventory caching**: `loadInventory()` saves to localStorage. On next load, renders from cache immediately, then refreshes from Supabase in background. 24-hour max age. Invalidated on writes.
+- **Image caching**: Service worker intercepts Supabase Storage image requests with stale-while-revalidate strategy. Cached images served instantly, background refresh when online. Temp images excluded.
+- **Batch DOM rendering**: `renderInventory()` and `renderTimeline()` use DocumentFragment to batch all DOM insertions into a single append
+- **Filter-by-hiding**: Garden grid cards have `data-type`, `data-native`, `data-tags`, `data-location` attributes. `applyFilters()` toggles `.filter-hidden` CSS class instead of rebuilding DOM. Sort still triggers full re-render.
+- **Lazy hero image**: Detail modal hero image uses `loading="lazy"` (grid cards already had this)
+
 ### Timeline
 - Seasonal view: Spring, Summer, Fall, Winter
 - Lists blooming plants (🌸) and active insects (🦋) per season
@@ -332,11 +351,13 @@
 
 6. **`alert()` used everywhere for user feedback**: Error messages, success confirmations, and validation all use `alert()` (`app.js:429,542,551,595,625-626,873,941,946,995,1007`). LEARNING-PLAN.md Lesson 7 plans to replace these with a toast notification system, but that hasn't been implemented yet.
 
-7. **No offline handling**: If the user loses connectivity, all Supabase calls will silently fail or show raw error messages. No offline detection or queuing.
+7. ~~**No offline handling**~~ **FIXED** — Connection toast, offline guards, localStorage inventory cache, service worker image cache.
 
 8. **No loading state on Garden tab**: When inventory loads on auth, there's no skeleton or spinner — the grid is just empty until data arrives.
 
 9. **Export CSV doesn't escape quotes**: If a note contains double quotes, the CSV output will be malformed (`app.js:924`).
+
+10. ~~**No service worker**~~ **FIXED** — sw.js with dual-cache strategy (static + images), all JS modules in CORE_FILES for offline startup.
 
 ### Incomplete / Not Yet Built Features
 
@@ -360,15 +381,14 @@ From LEARNING-PLAN.md:
 | 4. Smooth Transitions | **Partially done** — screen fade-in, modal slide-up exist; no card stagger, no filter transitions |
 | 5. Empty States | **Partially done** — basic empty states exist but lack personality/illustrations |
 | 6. Image Optimization | **Not started** — no thumbnails, no blur-up loading, no `thumbnail_url` column |
-| 7. Error Handling | **Not started** — still using alert(), no toast system, no retry logic, no offline detection |
+| 7. Error Handling | **Partially done** — resilientFetch with retries/timeouts, friendly error messages, connection toast, offline guards. Still using alert() for some messages (no toast system yet). |
 | 8. Gesture Support | **Not started** — no swipe-to-delete, no pull-to-refresh, no swipe-to-dismiss modals |
 | 9. Accessibility | **Not started** — no ARIA labels, no focus management, no focus trapping in modals, no screen reader announcements |
-| 10. Performance | **Not started** — no Lighthouse audit, no lazy loading, no virtual scrolling |
+| 10. Performance | **Partially done** — DocumentFragment batch rendering, filter-by-hiding, lazy loading on detail hero image. No Lighthouse audit yet. |
 
 ### Other Missing Pieces
 
 - **Photos on manual entries**: Manual entry modal has no camera/gallery option (planned in PROJECT-CONTEXT.md)
-- **No service worker**: manifest.json exists but no service worker, so no offline capability or push notifications
 - **No data validation on server**: Edge functions don't validate input structure
 - **`found_on_plant_id` column naming**: Code uses `linked_plant_id` in the client (`app.js:821,1034,1078,1084`), but PROJECT-CONTEXT.md spec calls it `found_on_plant_id`. The actual DB column name is unclear — likely `linked_plant_id` since that's what the working code uses.
 
@@ -385,7 +405,7 @@ From LEARNING-PLAN.md:
 | Live URL | GitHub Pages | `https://pjagator.github.io/Mamas-Garden-App/` |
 
 ### Cache Busting
-- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=11`)
+- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=16`)
 
 ### No Build Step
 - No bundler, no transpilation, no minification

@@ -17,12 +17,22 @@ A mobile-first (iPhone) web app for tracking native plants and insects in a Tamp
 
 ## File Structure
 
-Three files in the repo root:
+ES modules in `js/`, CSS in `css/`, edge functions in `supabase/functions/`:
 
 ```
-index.html   -- HTML structure only, links to style.css and app.js
-style.css    -- All styles (botanical editorial design, bottom tab nav, ID result cards)
-app.js       -- All JavaScript logic
+index.html                              -- HTML structure, loads CSS and JS
+css/base.css                            -- Design system: custom properties, reset, buttons
+css/components.css                      -- Reusable components, connection toast, filter utility
+css/screens.css                         -- Screen layouts, modals, bottom nav
+js/app.js                               -- Entry point, state, events, navigation, inventory caching
+js/auth.js                              -- Auth flows
+js/capture.js                           -- Photo capture, species ID, save flow
+js/inventory.js                         -- Garden grid, filters, timeline, detail modal
+js/features.js                          -- Tags, care profiles, reminders, health checks
+js/network.js                           -- Network resilience: resilientFetch, connection state
+sw.js                                   -- Service worker: static + image caching
+supabase/functions/identify-species/    -- Species ID via Claude Sonnet (with retry)
+supabase/functions/garden-assistant/    -- Care profiles, reminders, diagnosis (with retry)
 ```
 
 ---
@@ -82,6 +92,8 @@ One secret stored in Supabase Edge Functions:
 
 Located at: `https://itjvgruwvlrrlhsknwiw.supabase.co/functions/v1/identify-species`
 
+Source code: `supabase/functions/identify-species/index.ts`
+
 JWT verification is DISABLED on this function. It accepts requests with just the anon key.
 
 Uses `Deno.serve()` syntax (NOT the old `serve` import).
@@ -90,99 +102,13 @@ The function flow:
 1. Receives `{ imageUrl: string }` in the request body
 2. Fetches the image from Supabase Storage
 3. Converts to base64 server-side using chunked conversion (8KB chunks to avoid call stack overflow)
-4. Sends the image to Claude Sonnet (claude-sonnet-4-20250514) with a Tampa Bay botanist/entomologist prompt
+4. Sends the image to Claude Sonnet (claude-sonnet-4-20250514) with a Tampa Bay botanist/entomologist prompt, with retry logic (exponential backoff up to 3 retries for 529/5xx errors)
 5. Claude identifies the species (plant or insect), returns top 3 matches with confidence scores, native status, bloom/active seasons, care tips, and descriptions
 6. Returns `{ identifications: [...] }` with top 3 matches
 
 **Important**: The app.js calls this function using direct `fetch()`, NOT `sb.functions.invoke()`. The Supabase JS client's `invoke` method had persistent JWT issues causing EarlyDrop errors.
 
-Current edge function code:
-
-```typescript
-Deno.serve(async (req) => {
-  var corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    var body = await req.json();
-    var imageUrl = body.imageUrl;
-    if (!imageUrl) throw new Error("No image URL provided");
-
-    var apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) throw new Error("API key not configured");
-
-    var imgResponse = await fetch(imageUrl);
-    if (!imgResponse.ok) throw new Error("Could not fetch image: " + imgResponse.status);
-    var imgBuffer = await imgResponse.arrayBuffer();
-
-    var bytes = new Uint8Array(imgBuffer);
-    var binary = "";
-    for (var i = 0; i < bytes.length; i += 8192) {
-      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
-    }
-    var base64 = btoa(binary);
-
-    var prompt = "You are a botanist and entomologist with deep expertise in Florida species, particularly the Tampa Bay region.\n\nAnalyze this image and identify the species. You are not limited to any predefined list. Identify the actual species in the image, whether it is a common garden plant, a Florida native, a non-native ornamental, a weed, an insect, or anything else.\n\nReturn ONLY a JSON array of the top 3 most likely identifications, ordered by confidence. No other text.\n\nEach item in the array must have exactly these fields:\n{\n  \"common\": \"Common name\",\n  \"scientific\": \"Scientific name\",\n  \"type\": \"plant\" or \"bug\",\n  \"category\": \"e.g. Shrub, Butterfly, Tree, Wildflower, Grass, Vine, Palm, Cycad, Fern, Succulent, Herb, Beetle, Moth, etc.\",\n  \"confidence\": number 0-100,\n  \"isNative\": true or false (native to Florida specifically),\n  \"bloom\": [\"Spring\",\"Summer\",\"Fall\",\"Winter\",\"Year-round\"] or null (plants only, for Tampa Bay),\n  \"season\": [\"Spring\",\"Summer\",\"Fall\",\"Winter\",\"Year-round\"] or null (insects only, for Tampa Bay),\n  \"care\": \"Brief care tip specific to Tampa Bay climate\" or null,\n  \"description\": \"One sentence description relevant to Tampa Bay gardeners\"\n}\n\nImportant:\n- Be precise. Do not guess a common species if the features do not match.\n- isNative means native to Florida, not just North America.\n- Be honest with confidence. Lower score if the image is blurry or ambiguous.\n- If the image does not contain a plant or insect, return an empty array [].";
-
-    var response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1024,
-        messages: [{
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/jpeg",
-                data: base64,
-              },
-            },
-            { type: "text", text: prompt },
-          ],
-        }],
-      }),
-    });
-
-    if (!response.ok) {
-      var err = await response.text();
-      throw new Error("Claude API error: " + err);
-    }
-
-    var result = await response.json();
-    var text = result.content[0].text.trim();
-    var clean = text.replace(/```json|```/g, "").trim();
-    var identifications = JSON.parse(clean);
-
-    var enriched = identifications.map(function(id) {
-      return Object.assign({}, id, { source: "Claude AI" });
-    });
-
-    return new Response(JSON.stringify({ identifications: enriched }), {
-      headers: Object.assign({}, corsHeaders, { "Content-Type": "application/json" }),
-    });
-
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
-    });
-  }
-});
-```
+See `supabase/functions/identify-species/index.ts` for the current source code.
 
 ---
 
@@ -196,6 +122,9 @@ Deno.serve(async (req) => {
 - Timeline tab: seasonal view of what's blooming/active
 - Settings tab: export JSON/CSV, clear data, sign out
 - No API key UI -- identification is fully handled server-side
+- Offline browsing: cached inventory via localStorage, cached images via service worker
+- Connection awareness: toast bar for offline/online, disabled capture when offline
+- Network resilience: all API calls use resilientFetch with retries, timeouts, backoff
 
 ---
 
@@ -244,6 +173,10 @@ Deno.serve(async (req) => {
 - Never expose the service role key in client code -- it bypasses all RLS. Only use the anon key in the browser.
 - Keep HTML, CSS, and JS in separate files. Large single files cause issues with some tools.
 - Previously tried Plant.id (Kindwise) and PlantNet APIs for species identification. Plant.id free tier was too limited (100/day), PlantNet had compatibility issues with Supabase Edge Functions. Claude Sonnet handles both plants and insects in a single API call and is accurate enough for a personal garden tracker.
+- Both edge functions include `fetchWithRetry()` with exponential backoff for Claude API 529 (overloaded) errors. Always redeploy both functions after editing.
+- Service worker (`sw.js`) manages two caches: `garden-static-vN` for core files and `garden-images-v1` for Supabase Storage photos. Bump CACHE_VERSION in sw.js and `?v=N` in index.html together.
+- Inventory data cached in localStorage, not service worker. `loadInventory()` renders from cache first, refreshes in background.
+- FAB offline state uses CSS class `.fab-offline` (not inline styles) to avoid conflicts with FAB scroll behavior.
 
 ---
 

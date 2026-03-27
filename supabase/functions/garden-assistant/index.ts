@@ -1,3 +1,25 @@
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    // Retry on 529 (overloaded) or 500+ server errors
+    if (response.status === 529 || (response.status >= 500 && attempt < maxRetries)) {
+      const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
+      console.log(`Claude API returned ${response.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+
+    return response;
+  }
+
+  throw new Error("Max retries exceeded");
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -84,7 +106,7 @@ Return a JSON object with exactly these fields:
 
 Be specific to Tampa Bay's subtropical climate, sandy soil, summer rains, and humidity. Return ONLY the JSON object, no other text.`;
 
-  const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+  const claudeResponse = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": anthropicKey,
@@ -145,7 +167,7 @@ Return a JSON object with exactly this structure:
 
 Be specific to Tampa Bay's subtropical climate. Include a mix of tasks: pruning, watering adjustments, pest watch, bloom expectations, or seasonal prep. Return ONLY the JSON object, no other text.`;
 
-  const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+  const claudeResponse = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": anthropicKey,
@@ -206,7 +228,7 @@ Analyze the photo and diagnose what might be wrong. Return ONLY a JSON object wi
 
 Be specific to Tampa Bay's subtropical climate, sandy alkaline soil, humidity, and common local pests/diseases. Return ONLY the JSON object, no other text.`;
 
-  const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+  const claudeResponse = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": anthropicKey,

@@ -9,7 +9,7 @@ Before making any changes, read the PROJECT-CONTEXT.md file in the repo root for
 ### Rules
 
 - This is a vanilla JS / HTML / CSS app. No frameworks, no build step, no bundlers.
-- Three files in the repo root: index.html, style.css, app.js
+- ES modules in `js/`, CSS in `css/`, single `index.html`. See CLAUDE.md for full file list.
 - All backend logic goes through Supabase (auth, database, storage, edge functions)
 - The app must work well on iPhone Safari. Test all UI changes at 390px width.
 - Use the existing design system: Playfair Display headings, DM Sans body, forest green (#1c3a2b), warm cream (#f5f0e8), terracotta (#c4622d)
@@ -22,12 +22,15 @@ Before making any changes, read the PROJECT-CONTEXT.md file in the repo root for
 ## Current Features (already working)
 
 - Email/password auth
-- Photo capture and species identification (Plant.id + Claude Haiku)
+- Photo capture and species identification via Claude Sonnet with retry logic
 - Manual plant/insect entry
 - Garden inventory with search and filters
 - Seasonal timeline
 - JSON/CSV export
 - Item detail view with delete
+- Network resilience (resilientFetch with retries/timeouts on all API calls)
+- Offline browsing (localStorage inventory cache, service worker image cache)
+- Connection awareness (toast bar, disabled capture FAB when offline)
 
 ---
 

@@ -4,23 +4,27 @@
 
 All app state lives in module-level variables (`app.js:25-31`). `allInventory` is the single source of truth for inventory data -- loaded once from Supabase, patched locally on mutations, then re-rendered. There is no database polling; every write triggers `loadInventory()` which refreshes the cache and calls `renderInventory()` + `renderTimeline()`.
 
+Inventory data is also cached in localStorage (`garden-inventory-cache`). On app load, `loadInventory()` renders from cache first (instant), then refreshes from Supabase in background. Cache is invalidated automatically after writes.
+
 Pattern: mutate DB -> `loadInventory()` -> re-render all dependent views.
 
 ## Edge Function Communication
 
 All edge functions are called via direct `fetch()` with the anon key in the Authorization header -- NOT `sb.functions.invoke()`. This was a deliberate decision after persistent JWT/EarlyDrop failures with the SDK method.
 
-Pattern used everywhere (`app.js:219-229`, `app.js:630-644`):
+Pattern used everywhere:
 ```
-fetch(SUPABASE_URL + '/functions/v1/<name>', {
+resilientFetch(SUPABASE_URL + '/functions/v1/<name>', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
     },
     body: JSON.stringify({ ... }),
-})
+}, { retries: 2, timeoutMs: 15000 })
 ```
+
+All edge function calls go through `resilientFetch()` from `network.js` — configurable retries, exponential backoff, AbortController timeout. The edge functions themselves also have `fetchWithRetry()` for Claude API calls.
 
 Edge functions themselves follow a shared structure:
 1. CORS preflight handler
@@ -72,23 +76,26 @@ Instances: `toggleCareProfile()` (`app.js:733`), `togglePlantStatus()` (`app.js:
 ```
 Photo -> Canvas preview (max 900px)
   -> uploadTempImage (0.5 quality JPEG)
-  -> Edge function: Plant.id -> [insect.id fallback] -> Claude enrichment
+  -> resilientFetch to identify-species edge function (30s timeout, 2 retries)
   -> renderIdCards (3 selectable cards, first auto-selected)
   -> User selects + adds notes
   -> saveSelectedId: uploadImage (0.82 quality) -> buildEntry -> DB insert
-  -> Background: generateCareProfile (non-blocking)
+  -> Background: generateCareProfile via resilientFetch (non-blocking)
 ```
 
 Key: temp images use low quality for fast identification; final images use higher quality for the gallery.
 
 ## Error Handling
 
-Three tiers:
+Four tiers:
 1. **User-facing**: `alert()` for save/delete/auth errors with friendly messages
 2. **Console**: `console.error()` for non-blocking failures (care profile generation, image deletion)
 3. **UI state**: Error cards rendered inline for identification failures (`app.js:251-255`)
+4. **Connection awareness**: `isOnline()` check before write operations shows friendly offline messages. Connection toast bar for online/offline transitions.
 
 All async operations wrap in try/catch with button state management (disable + text change during operation, restore in `finally`).
+
+Edge function errors are mapped to friendly messages in `capture.js` via `friendlyError()` — overloaded, no species found, image issues, and session errors get human-readable explanations.
 
 ## Native Plant Cross-Reference
 
@@ -97,6 +104,18 @@ All async operations wrap in try/catch with button state management (disable + t
 2. During manual entry (`app.js:366-377`) -- auto-fills missing fields
 
 This is supplementary, not authoritative -- Plant.id/Claude results take precedence when available.
+
+## Network Resilience
+
+`js/network.js` is a standalone utility (no imports from app.js):
+- `resilientFetch(url, options, config)` — drop-in `fetch()` replacement with retries (default 2), exponential backoff (1s, 2s, 4s, max 8s), and AbortController timeout (default 15s)
+- `isOnline()` — tracks `navigator.onLine` state
+- `onConnectionChange(fn)` — subscribe to online/offline events, returns unsubscribe function
+
+Offline behavior:
+- Write operations (identify, save, diagnose): check `isOnline()`, show friendly alert, return early
+- Read operations: work from localStorage cache + service worker image cache
+- FAB: disabled via `.fab-offline` CSS class (not inline styles, to avoid scroll handler conflicts)
 
 ## CSS Design System
 
