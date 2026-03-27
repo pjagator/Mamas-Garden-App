@@ -13,7 +13,7 @@
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `js/app.js` | ~450 | Entry point. Supabase client, shared state (getters/setters), event system (on/emit), data arrays (65 quotes, 64 facts, 15 native plants, preset tags/locations), helpers, welcome screen, SPA navigation, modal helpers, loadInventory, auth state change handler, window bindings for all HTML event handlers. connection toast UI, localStorage inventory caching, offline FAB state. |
+| `js/app.js` | ~460 | Entry point. Supabase client, shared state (getters/setters), event system (on/emit), data arrays (65 quotes, 64 facts, 15 native plants, preset tags/locations), helpers, welcome screen (conditional — shown only after 1+ hour absence via `garden-last-visit` localStorage timestamp), SPA navigation, modal helpers, loadInventory, auth state change handler, window bindings for all HTML event handlers. connection toast UI, localStorage inventory caching, offline FAB state. |
 | `js/auth.js` | 83 | Auth flows: sign in, sign up, magic link OTP, password reset, sign out. Internal: setAuthMsg, otpEmail. |
 | `js/capture.js` | ~320 | Photo capture via camera/gallery, canvas preview (max 900px), image upload (temp 0.5 quality, final 0.82 quality), species ID via edge function, ID result cards, manual entry modal, save flow with care profile generation. resilientFetch for API calls, offline guards. |
 | `js/inventory.js` | ~400 | Garden grid rendering (2-column), search/filter/sort, item detail modal orchestration, delete, timeline, JSON/CSV export, native DB modal, clear all data. Module-local filter/search/sort state. DocumentFragment batch rendering, filter-by-hiding via data attributes. |
@@ -24,15 +24,15 @@
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `css/base.css` | 226 | Design system: reset, :root custom properties (colors, typography scale, spacing scale, shadows, radii, fonts), body, fields, 5 button variants, divider, checkbox row, spinner (deduplicated), iOS font-size fix. |
+| `css/base.css` | 226 | Design system: reset, :root custom properties (colors, typography scale, spacing scale, shadows, radii, fonts), body, fields, 5 button variants, divider, checkbox row, spinner (deduplicated), iOS font-size fix. `--font-body` uses system-ui stack (`-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif`). |
 | `css/components.css` | ~660 | Reusable components: ID result cards (deduplicated), confidence badges, tags (all variants), tag editor, filter chips, garden cards, detail view, plant status, linked bugs, care profile, natives list, seasonal care reminders (checklist, checkboxes, add-row). connection toast, FAB offline state, filter-hidden utility. |
-| `css/screens.css` | 532 | Screen layouts: auth, welcome, app shell, screens base + animations, bottom nav, capture tab, garden tab (stats/search/grid), timeline, settings, modals (overlay + sheet + slide-up animation), 360px breakpoint. |
+| `css/screens.css` | 532 | Screen layouts: auth, welcome (safe-area-inset-top padding), app shell, screens base + animations, bottom nav, capture tab, garden tab (stats/collapsible search overlay/grid), timeline, settings, modals (overlay + sheet + slide-up animation), 360px breakpoint. |
 
 ### HTML
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | ~350 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=16`. connection toast element. |
+| `index.html` | ~350 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=18`. connection toast element. `viewport-fit=cover` in viewport meta for iPhone status bar bleed. Collapsible search: magnifying glass icon button in garden header expands full-width frosted overlay. |
 
 ### Edge Functions
 
@@ -162,12 +162,13 @@
 - Auth state listener auto-shows/hides app
 
 ### Welcome Screen
-- Displays on every app open (after auth)
+- **Conditional display**: Only shown after 1+ hour absence. Recent visits (within 1 hour) skip directly to garden tab. Absence tracked via `garden-last-visit` in localStorage; timestamp saved on navigation away, dismiss button, and page hide (`visibilitychange`).
 - Time-of-day greeting ("Good morning" / "Good afternoon" / "Good evening")
 - Daily literary quote from array of 66 quotes (rotated by day-of-year)
 - Daily gardening fact from array of 64 facts (rotated with offset)
 - "Start exploring" button dismisses to Capture tab
 - Bottom nav visible during welcome so users can skip to any tab
+- Uses `env(safe-area-inset-top)` for iPhone status bar padding
 
 ### Capture & Identification
 - Take photo via device camera (`capture="environment"`)
@@ -193,6 +194,7 @@
 - 2-column card grid (1-column below 360px)
 - Each card shows: image or emoji placeholder, common name, scientific name, tags (native badge, plant tags, bloom season, location, health status)
 - Stats header: plant count, insect count, native count
+- **Collapsible search**: Garden header shows a magnifying glass icon button instead of an always-visible search bar. Tapping the icon expands a full-width frosted search overlay. Dismissed by tapping the icon again, tapping outside, or navigating away. Uses CSS opacity/pointer-events transition.
 - Live search across: common name, scientific name, category, notes, tags, location
 
 ### Filtering
@@ -287,7 +289,7 @@
 - Typography scale: 7 steps (xs 12px → 3xl 30px), ratio ~1.125 major second
 - Spacing scale: 8 steps based on 4px unit (space-1 4px → space-12 48px)
 - Colors: green-deep (#1c3a2b), green-mid (#2d5a3d), green-sage (#7a9e7e), green-light (#c8dfc9), cream (#f5f0e8), cream-dark (#ece5d6), terra (#c4622d), terra-light (#e8a882), ink (#1a1a1a), ink-mid (#4a4a4a), ink-light (#9a9a9a)
-- Fonts: Playfair Display (headings), DM Sans (body)
+- Fonts: Playfair Display (headings), system-ui stack / SF Pro on iPhone (body — DM Sans removed)
 - Shadows: 3 levels (sm, md, lg)
 - Border radius: 16px (default), 10px (small)
 - 44px minimum touch targets on all interactive elements
@@ -309,7 +311,8 @@
 | Font | Weights | Used For |
 |------|---------|----------|
 | Playfair Display | 500, 700, italic 500 | Headings, screen titles, modal titles, card names, welcome quote |
-| DM Sans | 300, 400, 500 | Body text, buttons, labels, inputs, everything else |
+
+DM Sans was removed. Body text now uses the system-ui font stack (`-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif`) — renders as SF Pro on iPhone, which matches native iOS aesthetics and eliminates the Google Fonts network request for body text.
 
 ### External APIs (via Edge Functions)
 | API | Model/Endpoint | Used For | Called From |
@@ -405,7 +408,7 @@ From LEARNING-PLAN.md:
 | Live URL | GitHub Pages | `https://pjagator.github.io/Mamas-Garden-App/` |
 
 ### Cache Busting
-- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=16`)
+- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=18`)
 
 ### No Build Step
 - No bundler, no transpilation, no minification

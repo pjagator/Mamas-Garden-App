@@ -27,7 +27,7 @@ Single-page app using ES modules. No build step, no bundler.
 
 ### Frontend (JS modules in `js/`)
 ```
-js/app.js        -- Entry point. Supabase client, shared state (getters/setters), event system (on/emit), helpers, data arrays (quotes), welcome screen, navigation (2 tabs + FAB), modal helpers (including capture modal, settings sheet), loadInventory, localStorage inventory caching, connection toast UI, offline FAB state, FAB scroll behavior, window bindings for all HTML event handlers.
+js/app.js        -- Entry point. Supabase client, shared state (getters/setters), event system (on/emit), helpers, data arrays (quotes), conditional welcome screen (shown only after 1+ hour absence, tracked via `garden-last-visit` localStorage key), navigation (2 tabs + FAB), modal helpers (including capture modal, settings sheet), loadInventory, localStorage inventory caching, connection toast UI, offline FAB state, FAB scroll behavior, window bindings for all HTML event handlers.
 js/auth.js       -- All auth flows: sign in, sign up, OTP, password reset, sign out.
 js/capture.js    -- Photo capture, canvas preview, image upload, species ID via edge function using resilientFetch, offline guards, ID result cards, manual entry, save flow. Runs inside capture modal (not a tab).
 js/inventory.js  -- Garden grid rendering with DocumentFragment batch rendering, search/filter/sort using filter-by-hiding via data attributes, item detail modal (hero image + unified cards), delete, timeline (vertical track), export, clear data.
@@ -39,12 +39,12 @@ js/network.js    -- Standalone network resilience utility. resilientFetch() with
 ```
 css/base.css       -- Reset, :root custom properties (colors, typography, spacing, gradients, FAB tokens), fields, buttons, utilities, reduced motion media query.
 css/components.css -- Cards, tags, badges, detail view (hero + unified cards), FAB, FAB offline state, care profile, expandable sections, filter chips, filter-hidden utility, loading dots, seasonal reminders, connection toast.
-css/screens.css    -- Auth, welcome (forest gradient), garden (gradient header, frosted search), timeline (vertical track), modals, bottom nav (2 tabs + FAB).
+css/screens.css    -- Auth, welcome (forest gradient, safe-area-inset-top padding), garden (gradient header with safe-area-inset-top, collapsible frosted search overlay), timeline (vertical track), modals, bottom nav (2 tabs + FAB).
 ```
 
 ### HTML
 ```
-index.html    -- HTML structure: welcome screen, 2 tab screens (garden, timeline), capture modal, settings modal, item detail modal, health check modal, connection toast element, bottom nav (2 tabs + FAB), auth screen. Loads CSS via 3 <link> tags (?v=16), JS via single <script type="module"> (?v=16).
+index.html    -- HTML structure: welcome screen, 2 tab screens (garden, timeline), capture modal, settings modal, item detail modal, health check modal, connection toast element, bottom nav (2 tabs + FAB), auth screen. Loads CSS via 3 <link> tags (?v=18), JS via single <script type="module"> (?v=18). viewport-fit=cover for iPhone status bar bleed.
 ```
 
 ### Edge functions
@@ -71,7 +71,7 @@ LEARNING-PLAN.md        -- 10-lesson curriculum for professional app polish (2 o
 - **Network calls**: All `fetch()` calls to edge functions use `resilientFetch()` from `network.js` (retries, timeouts, backoff). Supabase SDK calls (`sb.from()`, `sb.storage`) go through the SDK directly.
 - **Offline behavior**: Write operations (save, identify, diagnose) check `isOnline()` and show friendly messages when offline. Read operations work from localStorage cache.
 - **Adding new features**: Create a new `js/<feature>.js` file, import from `app.js`, export functions, add window bindings in `app.js`. Listen for `'inventory-changed'` to stay in sync. New screens use `showScreen()`. New modals use `openModal()`/`closeModal()`. New CSS goes in the appropriate file (components vs screens). Use the unified card system (`.detail-card` or `.detail-card-expandable`) for content sections.
-- **Navigation**: 2 tabs (Garden home, Timeline) + floating action button (FAB) for capture. No settings tab — gear icon in garden header opens settings sheet modal. Capture is a modal, not a screen.
+- **Navigation**: 2 tabs (Garden home, Timeline) + floating action button (FAB) for capture. No settings tab — gear icon in garden header opens settings sheet modal. Capture is a modal, not a screen. Garden header has a collapsible search: magnifying glass icon expands a full-width frosted overlay; dismissed by tapping icon again, tapping outside, or navigating away.
 
 ## Design Constraints
 
@@ -80,7 +80,7 @@ LEARNING-PLAN.md        -- 10-lesson curriculum for professional app polish (2 o
 - **ES modules, no bundler**. JS files in `js/`, CSS files in `css/`, loaded directly by `index.html`. New features get their own module file.
 - **API keys stay server-side**. Only the Supabase anon key appears in client code. All AI calls go through edge functions.
 - **Edge functions use direct `fetch()`**, NOT `sb.functions.invoke()`. The SDK method had persistent JWT/EarlyDrop failures. This is a settled decision -- see PROJECT-CONTEXT.md for the full story.
-- **Design system**: "The Botanical Journal" aesthetic. Playfair Display headings, DM Sans body, forest green (#1c3a2b), warm cream (#f5f0e8), terracotta (#c4622d). Gradient backgrounds (not flat solids). Typography scale from 0.75rem to 1.875rem. Spacing scale in 4px increments. Unified white card system with 14px radius and consistent shadow. Literary language throughout ("species cataloged", "visitors observed"). SVG icons (not emoji). Smooth text rendering. Organic animations with cubic-bezier easing. Respects `prefers-reduced-motion`.
+- **Design system**: "The Botanical Journal" aesthetic. Playfair Display headings (Google Fonts), system-ui / SF Pro body (`-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif` — DM Sans removed), forest green (#1c3a2b), warm cream (#f5f0e8), terracotta (#c4622d). Gradient backgrounds (not flat solids). Typography scale from 0.75rem to 1.875rem. Spacing scale in 4px increments. Unified white card system with 14px radius and consistent shadow. Literary language throughout ("species cataloged", "visitors observed"). SVG icons (not emoji). Smooth text rendering. Organic animations with cubic-bezier easing. Respects `prefers-reduced-motion`. `viewport-fit=cover` + `env(safe-area-inset-top)` for iPhone status bar.
 
 ## Supabase
 
@@ -165,7 +165,7 @@ Bucket `garden-images` (public). Final images at `{user_id}/{timestamp}.jpg`. Te
 - **Frontend**: `git push` to main (GitHub Pages auto-deploys)
 - **Edge functions**: `supabase functions deploy <function-name>` or paste in dashboard
 - **DB migrations**: Run SQL directly in Supabase SQL Editor
-- **Cache busting**: Manually increment `?v=N` (currently v16) on style.css and app.js links in index.html. Also bump CACHE_VERSION in sw.js to match.
+- **Cache busting**: Manually increment `?v=N` (currently v18) on style.css and app.js links in index.html. Also bump CACHE_VERSION in sw.js to match.
 
 ## Testing
 

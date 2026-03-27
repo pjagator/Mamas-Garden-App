@@ -143,9 +143,10 @@ See `supabase/functions/identify-species/index.ts` for the current source code.
 
 ## Design
 
-- Fonts: Playfair Display (headings), DM Sans (body)
+- Fonts: Playfair Display (headings, loaded from Google Fonts), system-ui stack / SF Pro on iPhone (body — `--font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif`). DM Sans was removed.
 - Colors: deep forest green (`#1c3a2b`), warm cream (`#f5f0e8`), terracotta (`#c4622d`)
 - Mobile-first, tested on iPhone
+- `viewport-fit=cover` with `env(safe-area-inset-top)` on headers and welcome screen for iPhone status bar bleed
 - Bottom tab nav with safe-area-inset support
 
 ---
