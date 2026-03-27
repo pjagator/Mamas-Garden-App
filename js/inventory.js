@@ -175,17 +175,16 @@ export function renderInventory() {
 
     const grid = document.getElementById('garden-grid');
     if (!items.length) {
-            grid.innerHTML = `
-                <div style="text-align:center;padding:var(--space-8) var(--space-6);">
-                    <div style="font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--green-deep);line-height:1.5;">
-                        "In every walk with nature,<br>one receives far more than he seeks."
-                    </div>
-                    <div style="font-size:11px;color:var(--ink-light);margin-top:6px;">— John Muir</div>
-                    <div style="font-size:var(--text-sm);color:var(--green-sage);margin-top:var(--space-4);">
-                        Tap + to catalog your first species.
-                    </div>
-                </div>`;
-        }
+        grid.innerHTML = `
+            <div style="text-align:center;padding:var(--space-8) var(--space-6);">
+                <div style="font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--green-deep);line-height:1.5;">
+                    "In every walk with nature,<br>one receives far more than he seeks."
+                </div>
+                <div style="font-size:11px;color:var(--ink-light);margin-top:6px;">— John Muir</div>
+                <div style="font-size:var(--text-sm);color:var(--green-sage);margin-top:var(--space-4);">
+                    Tap + to catalog your first species.
+                </div>
+            </div>`;
         return;
     }
 

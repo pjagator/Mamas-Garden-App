@@ -35,14 +35,13 @@ self.addEventListener('install', (e) => {
     );
 });
 
-// ── Activate — clean old static caches, keep image cache ────
+// ── Activate — clean all old caches, keep current static + image ─
 self.addEventListener('activate', (e) => {
+    const KEEP = new Set([STATIC_CACHE, IMAGE_CACHE]);
     e.waitUntil(
         caches.keys()
             .then(keys => Promise.all(
-                keys
-                    .filter(k => k.startsWith('garden-static-') && k !== STATIC_CACHE)
-                    .map(k => caches.delete(k))
+                keys.filter(k => !KEEP.has(k)).map(k => caches.delete(k))
             ))
             .then(() => self.clients.claim())
     );
