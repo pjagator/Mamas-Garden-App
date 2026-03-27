@@ -234,6 +234,7 @@ export function initWelcomeScreen() {
 }
 
 export function dismissWelcome() {
+    localStorage.setItem('garden-last-visit', Date.now().toString());
     const welcome = document.getElementById('welcome-screen');
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         welcome.classList.remove('active-screen');
@@ -289,6 +290,7 @@ document.addEventListener('click', (e) => {
 
 // ── Navigation ─────────────────────────────────────────────────
 export function showScreen(name, btnEl) {
+    localStorage.setItem('garden-last-visit', Date.now().toString());
     const current = document.querySelector('.screen.active-screen:not(#welcome-screen)');
     const next = document.getElementById('tab-' + name);
     if (current === next) return;
@@ -393,11 +395,20 @@ sb.auth.onAuthStateChange((event, session) => {
         document.getElementById('app').style.display = 'block';
         const settingsEmail = document.getElementById('settings-email');
         if (settingsEmail) settingsEmail.textContent = _currentUser.email;
-        // Show welcome screen, hide all tab screens
+        // Show welcome screen or skip to garden if visited recently
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('welcome-screen').classList.add('active-screen');
-        initWelcomeScreen();
+        const lastVisit = parseInt(localStorage.getItem('garden-last-visit') || '0', 10);
+        const oneHour = 60 * 60 * 1000;
+        if (Date.now() - lastVisit < oneHour) {
+            document.getElementById('tab-garden').classList.add('active-screen');
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.toggle('active', b.querySelector('.nav-label')?.textContent === 'Garden');
+            });
+        } else {
+            document.getElementById('welcome-screen').classList.add('active-screen');
+            initWelcomeScreen();
+        }
         loadInventory();
         renderTimeline();
     } else {
@@ -498,3 +509,10 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/Mamas-Garden-App/sw.js')
         .catch(err => console.error('SW registration failed:', err));
 }
+
+// ── Save last visit timestamp when leaving ───────────────────
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && getCurrentUser()) {
+        localStorage.setItem('garden-last-visit', Date.now().toString());
+    }
+});
