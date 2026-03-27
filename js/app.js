@@ -424,6 +424,7 @@ if (fabEl) {
 // ── Connection status toast ─────────────────────────────────
 const _toast = document.getElementById('connection-toast');
 onConnectionChange((online) => {
+    // Toast
     if (online) {
         _toast.textContent = 'Back online';
         _toast.className = 'connection-toast online visible';
@@ -432,7 +433,18 @@ onConnectionChange((online) => {
         _toast.textContent = "You're offline — browsing cached data";
         _toast.className = 'connection-toast offline visible';
     }
+    // FAB state
+    const fab = document.querySelector('.fab');
+    if (fab) {
+        fab.style.opacity = online ? '' : '0.5';
+        fab.style.pointerEvents = online ? '' : 'none';
+    }
 });
+// Set initial state if starting offline
+if (!isOnline()) {
+    const fab = document.querySelector('.fab');
+    if (fab) { fab.style.opacity = '0.5'; fab.style.pointerEvents = 'none'; }
+}
 
 // ── Window bindings for HTML onclick/oninput/onchange handlers ──
 Object.assign(window, {
