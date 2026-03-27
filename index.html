@@ -99,16 +99,16 @@
             </div>
         </div>
 
-        <div id="reminders-section" class="reminders-section" style="display:none;">
-            <div class="reminders-header" onclick="toggleRemindersSection()">
-                <h3 class="reminders-title">This Month in Your Garden</h3>
-                <span id="reminders-chevron" class="reminders-chevron">&#9660;</span>
+        <div class="detail-card-expandable" id="reminders-section" style="display:none;margin:var(--space-3) var(--space-5);">
+            <div class="detail-card-header" onclick="toggleRemindersSection()">
+                <div class="detail-card-heading">This Month</div>
+                <svg class="detail-card-chevron" id="reminders-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div id="reminders-body" class="reminders-body">
-                <div id="reminders-list" class="reminders-list"></div>
-                <div class="reminders-add-row">
-                    <input type="text" id="custom-reminder-input" class="custom-reminder-input" placeholder="Add your own reminder..." maxlength="100">
-                    <button class="btn-add-reminder" onclick="addCustomReminder()" aria-label="Add reminder">+</button>
+            <div id="reminders-body" class="detail-card-body">
+                <div id="reminders-list"></div>
+                <div style="display:flex;gap:6px;margin-top:var(--space-2);">
+                    <input class="field" id="custom-reminder-input" placeholder="Add a custom reminder..." style="flex:1;">
+                    <button class="btn-secondary" onclick="addCustomReminder()">Add</button>
                 </div>
             </div>
         </div>

@@ -554,6 +554,13 @@ export async function loadReminders() {
     }
 
     section.style.display = '';
+    // Ensure body starts in open state so toggleSection logic is consistent
+    const remindersBody = document.getElementById('reminders-body');
+    const remindersChevron = document.getElementById('reminders-chevron');
+    if (remindersBody && !remindersBody.style.height) {
+        remindersBody.style.height = 'auto';
+        remindersChevron?.classList.add('open');
+    }
     const monthKey = getMonthKey();
     const plantHash = getPlantHash();
 
@@ -578,7 +585,7 @@ export async function loadReminders() {
     if (needsRegen) {
         // Show loading state
         const list = document.getElementById('reminders-list');
-        if (list) list.innerHTML = '<div class="reminders-loading">Generating your monthly reminders...</div>';
+        if (list) list.innerHTML = '<div style="font-size:var(--text-sm);color:var(--ink-light);padding:var(--space-2) 0;">Generating your monthly reminders...</div>';
 
         // Delete old AI reminders
         if (aiReminders.length > 0) {
@@ -653,7 +660,7 @@ async function generateReminders(monthKey, plantHash, plants) {
     } catch (err) {
         console.error('Reminder generation failed:', err);
         const list = document.getElementById('reminders-list');
-        if (list) list.innerHTML = '<div class="reminders-loading">Could not generate reminders. Try again later.</div>';
+        if (list) list.innerHTML = '<div style="font-size:var(--text-sm);color:var(--ink-light);padding:var(--space-2) 0;">Could not generate reminders. Try again later.</div>';
         return [];
     }
 }
@@ -663,7 +670,7 @@ function renderReminders(reminders) {
     if (!list) return;
 
     if (reminders.length === 0) {
-        list.innerHTML = '<div class="reminders-loading">No reminders yet.</div>';
+        list.innerHTML = '<div style="font-size:var(--text-sm);color:var(--ink-light);padding:var(--space-2) 0;">No reminders yet.</div>';
         return;
     }
 
@@ -674,20 +681,23 @@ function renderReminders(reminders) {
     });
 
     list.innerHTML = sorted.map(r => {
-        const doneClass = r.done ? ' done' : '';
-        const checkmark = r.done ? '✓' : '';
+        const isDone = r.done;
         const isCustom = r.source === 'custom';
-        const plantTag = r.plant && r.plant !== 'General' ? `<span class="reminder-plant-tag">${escapeHtml(r.plant)}</span>` : '';
-        const deleteBtn = isCustom ? `<button class="reminder-delete" onclick="removeReminder('${r.id}')" aria-label="Delete reminder">&times;</button>` : '';
+        const plantTag = r.plant && r.plant !== 'General'
+            ? `<span style="display:inline-block;font-size:var(--text-xs);background:var(--cream-dark);color:var(--green-deep);border-radius:10px;padding:1px 8px;margin-top:3px;">${escapeHtml(r.plant)}</span>`
+            : '';
+        const deleteBtn = isCustom
+            ? `<button onclick="removeReminder('${r.id}')" aria-label="Delete reminder" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:16px;padding:0 var(--space-1);line-height:1;">&times;</button>`
+            : '';
 
-        return `<div class="reminder-item${doneClass}">
-            <button class="reminder-check" onclick="toggleReminderDone('${r.id}')">${checkmark}</button>
-            <div class="reminder-content">
-                <div class="reminder-icon-title">
-                    ${r.icon ? `<span class="reminder-icon">${r.icon}</span>` : ''}
-                    <span class="reminder-title-text">${escapeHtml(r.title)}</span>
-                </div>
-                ${r.detail ? `<div class="reminder-detail">${escapeHtml(r.detail)}</div>` : ''}
+        return `<div class="care-item" style="${isDone ? 'opacity:0.5;' : ''}">
+            <button onclick="toggleReminderDone('${r.id}')" aria-label="Toggle done" style="flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid ${isDone ? 'var(--green-mid)' : 'var(--ink-light)'};background:${isDone ? 'var(--green-mid)' : 'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:2px;padding:0;">
+                ${isDone ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2"><polyline points="1.5 5 4 7.5 8.5 2.5"/></svg>' : ''}
+            </button>
+            ${r.icon ? `<div class="care-icon" style="margin-top:0;">${r.icon}</div>` : ''}
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:var(--text-sm);font-weight:600;color:var(--ink);${isDone ? 'text-decoration:line-through;' : ''}">${escapeHtml(r.title)}</div>
+                ${r.detail ? `<div style="font-size:var(--text-xs);color:var(--ink-light);margin-top:2px;line-height:1.4;">${escapeHtml(r.detail)}</div>` : ''}
                 ${plantTag}
             </div>
             ${deleteBtn}
@@ -771,9 +781,7 @@ export async function removeReminder(id) {
 }
 
 export function toggleRemindersSection() {
-    const section = document.getElementById('reminders-section');
-    if (!section) return;
-    section.classList.toggle('collapsed');
+    toggleSection('reminders-body', 'reminders-chevron');
 }
 
 // ── Health log (quick check-in) ──────────────────────────────
