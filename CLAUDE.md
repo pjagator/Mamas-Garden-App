@@ -1,5 +1,10 @@
 # Tampa Bay Garden Tracker
 
+**Session start**: Before working on any code, read these files to understand current state:
+- `PROJECT-STATE.md` — Full codebase audit (files, features, bugs, dependencies)
+- `PROJECT-CONTEXT.md` — Supabase config, edge function details, gotchas
+- `.claude/docs/architectural_patterns.md` — Code patterns and conventions
+
 A mobile-first web app for tracking native plants and wildlife in a Tampa Bay, Florida garden. Built for my wife -- she's an English teacher who gardens with native Florida species and wants a simple way to catalog what's growing, identify species from photos, and track plant health over time. I use it too, but she's the primary user.
 
 ## Users
