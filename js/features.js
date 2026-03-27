@@ -180,7 +180,7 @@ export function renderLinkedBugs(item) {
             <div class="detail-card-header" onclick="toggleLinkedBugs()">
                 <div>
                     <div class="detail-card-heading">Visitors</div>
-                    <div style="font-size:var(--text-xs);color:var(--ink-light);">${bugs.length} insect${bugs.length !== 1 ? 's' : ''} found</div>
+                    <div style="font-size:var(--text-xs);color:var(--ink-light);">${bugs.length} visitor${bugs.length !== 1 ? 's' : ''} observed</div>
                 </div>
                 <svg class="detail-card-chevron open" id="linked-bugs-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>

@@ -153,7 +153,20 @@ export function renderInventory() {
 
     const grid = document.getElementById('garden-grid');
     if (!items.length) {
-        grid.innerHTML = `<div class="empty-state"><p>${currentSearch || currentFilter !== 'all' ? 'No matching entries.' : 'Your garden is empty.'}</p><p style="margin-top:4px;">${!currentSearch && currentFilter === 'all' ? 'Capture something to get started.' : ''}</p></div>`;
+        if (currentSearch || currentFilter !== 'all') {
+            grid.innerHTML = `<div class="empty-state"><p>No matching entries.</p></div>`;
+        } else {
+            grid.innerHTML = `
+                <div style="text-align:center;padding:var(--space-8) var(--space-6);">
+                    <div style="font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--green-deep);line-height:1.5;">
+                        "In every walk with nature,<br>one receives far more than he seeks."
+                    </div>
+                    <div style="font-size:11px;color:var(--ink-light);margin-top:6px;">— John Muir</div>
+                    <div style="font-size:var(--text-sm);color:var(--green-sage);margin-top:var(--space-4);">
+                        Tap + to catalog your first species.
+                    </div>
+                </div>`;
+        }
         return;
     }
 
@@ -301,7 +314,7 @@ export function renderTimeline() {
             </div>`;
 
         if (!bloomingPlants.length && !activeInsects.length) {
-            section.innerHTML = header + '<p class="timeline-empty">Nothing logged yet for this season.</p>';
+            section.innerHTML = header + '<p class="timeline-empty" style="font-style:italic;color:var(--ink-light);">Nothing cataloged for this season yet.</p>';
             container.appendChild(section);
             return;
         }
