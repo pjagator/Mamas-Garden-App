@@ -1,0 +1,114 @@
+<h2>Welcome Screen — Fact of the Day Placement</h2>
+<p class="subtitle">Where should the daily garden fact appear relative to the quote?</p>
+
+<div class="cards">
+  <!-- Option A: Fact below quote, subtle label -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="
+        background: linear-gradient(165deg, #1c3a2b 0%, #2d5a3d 40%, #1c3a2b 100%);
+        padding: 40px 28px;
+        min-height: 520px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        border-radius: 8px 8px 0 0;
+      ">
+        <!-- Greeting -->
+        <div style="font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 400;">
+          Good morning
+        </div>
+
+        <!-- Divider -->
+        <div style="width: 32px; height: 1.5px; background: linear-gradient(90deg, transparent, #e8a882, transparent); margin: 18px 0;"></div>
+
+        <!-- Quote -->
+        <div style="max-width: 260px;">
+          <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-style: italic; color: #ffffff; line-height: 1.7; font-weight: 400;">
+            &ldquo;To plant a garden is to believe in tomorrow.&rdquo;
+          </div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 10px; font-weight: 300;">
+            &mdash; Audrey Hepburn
+          </div>
+        </div>
+
+        <!-- Fact block: below quote with label -->
+        <div style="margin-top: 36px; max-width: 280px;">
+          <div style="font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 8px; font-weight: 400;">
+            Garden Note
+          </div>
+          <div style="font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; font-weight: 300;">
+            Coontie is the only native cycad in North America and the sole host plant for the rare Atala butterfly.
+          </div>
+        </div>
+
+        <!-- Tap hint -->
+        <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; font-weight: 300;">
+          tap to enter
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Below the Quote</h3>
+      <p>Fact appears beneath the quote with a subtle "Garden Note" label and second divider. Clean vertical flow: greeting → quote → fact → hint.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Fact at bottom, above hint -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="
+        background: linear-gradient(165deg, #1c3a2b 0%, #2d5a3d 40%, #1c3a2b 100%);
+        padding: 40px 28px;
+        min-height: 520px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        border-radius: 8px 8px 0 0;
+      ">
+        <!-- Greeting -->
+        <div style="font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.7); font-weight: 400;">
+          Good morning
+        </div>
+
+        <!-- Divider -->
+        <div style="width: 32px; height: 1.5px; background: linear-gradient(90deg, transparent, #e8a882, transparent); margin: 18px 0;"></div>
+
+        <!-- Quote (centered, hero) -->
+        <div style="max-width: 260px;">
+          <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-style: italic; color: #ffffff; line-height: 1.7; font-weight: 400;">
+            &ldquo;To plant a garden is to believe in tomorrow.&rdquo;
+          </div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 10px; font-weight: 300;">
+            &mdash; Audrey Hepburn
+          </div>
+        </div>
+
+        <!-- Fact block: bottom area, above hint -->
+        <div style="position: absolute; bottom: 48px; left: 28px; right: 28px; text-align: center;">
+          <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 6px;">
+            Did you know?
+          </div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.55; font-weight: 300; max-width: 300px; margin: 0 auto;">
+            Coontie is the only native cycad in North America and the sole host plant for the rare Atala butterfly.
+          </div>
+        </div>
+
+        <!-- Tap hint -->
+        <div style="position: absolute; bottom: 16px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.25); letter-spacing: 0.1em; font-weight: 300;">
+          tap to enter
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Anchored to Bottom</h3>
+      <p>Fact sits near the bottom of the screen with a "Did you know?" label, separate from the quote. Quote stays centered as the hero. Fact feels like a footer detail.</p>
+    </div>
+  </div>
+</div>
