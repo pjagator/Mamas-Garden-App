@@ -81,45 +81,6 @@
         <div class="welcome-hint">tap to enter</div>
     </div>
 
-    <!-- Capture Tab -->
-    <div id="tab-capture" class="screen">
-        <div class="screen-header">
-            <h2 class="screen-title">Capture</h2>
-            <p class="screen-sub">Tampa Bay · <span id="current-season"></span></p>
-        </div>
-
-        <div class="capture-zone" id="capture-zone">
-            <canvas id="preview-canvas" style="display:none"></canvas>
-            <div class="capture-placeholder" id="capture-placeholder">
-                <span class="capture-icon">📷</span>
-                <p>Photograph a plant or insect</p>
-            </div>
-            <button class="remove-btn" id="remove-btn" onclick="removeImage()" style="display:none">✕</button>
-        </div>
-
-        <div class="capture-actions">
-            <label for="camera-input" class="btn-capture">Take photo</label>
-            <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none">
-            <button class="btn-secondary" onclick="document.getElementById('gallery-input').click()">Gallery</button>
-            <input type="file" id="gallery-input" accept="image/*" onchange="handlePhoto(event)" style="display:none">
-        </div>
-
-        <button class="btn-primary btn-identify" id="identify-btn" onclick="identifySpecies()" style="display:none">
-            <span class="btn-icon">🔍</span> Identify species
-        </button>
-
-        <!-- Identification results -->
-        <div id="id-results" style="display:none">
-            <h3 class="results-heading">Top matches</h3>
-            <p class="results-sub">Select the correct identification</p>
-            <div id="id-cards"></div>
-        </div>
-
-        <!-- Manual entry -->
-        <div class="divider"><span>or</span></div>
-        <button class="btn-ghost" onclick="openManualEntry()">Add entry manually</button>
-    </div>
-
     <!-- Garden Tab -->
     <div id="tab-garden" class="screen">
         <div class="screen-header garden-header">
@@ -215,7 +176,45 @@
                 <button class="modal-close" style="position:static;" onclick="closeCaptureModal()">✕</button>
             </div>
             <div id="capture-modal-body">
-                <!-- Capture content will be moved here in Task 11 -->
+                <div class="capture-zone-card">
+                    <div class="capture-preview" id="capture-zone">
+                        <canvas id="preview-canvas" style="display:none"></canvas>
+                        <div class="capture-placeholder" id="capture-placeholder">
+                            <span class="capture-icon">📷</span>
+                            <p>Photograph a plant or insect</p>
+                        </div>
+                        <button class="remove-btn" id="remove-btn" onclick="removeImage()" style="display:none">✕</button>
+                    </div>
+                    <div class="capture-actions-row">
+                        <label for="camera-input">
+                            📷 Take photo
+                            <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none">
+                        </label>
+                        <label onclick="document.getElementById('gallery-input').click()">
+                            🖼 Gallery
+                            <input type="file" id="gallery-input" accept="image/*" onchange="handlePhoto(event)" style="display:none">
+                        </label>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-identify" id="identify-btn" onclick="identifySpecies()" style="display:none">
+                    <span class="btn-icon">🔍</span> Identify species
+                </button>
+
+                <!-- Identification results -->
+                <div id="id-results" style="display:none">
+                    <h3 class="results-heading">Top matches</h3>
+                    <p class="results-sub">Select the correct identification</p>
+                    <div id="id-cards"></div>
+                </div>
+
+                <div class="capture-divider"><span>or</span></div>
+                <button class="btn-ghost" onclick="openManualEntry()">Add entry manually</button>
+
+                <div style="text-align:center;margin-top:var(--space-6);padding:0 var(--space-4);">
+                    <div style="font-family:var(--font-display);font-size:var(--text-sm);font-style:italic;color:var(--green-sage);line-height:1.5;" id="capture-quote-text"></div>
+                    <div style="font-size:11px;color:var(--ink-light);margin-top:4px;" id="capture-quote-attr"></div>
+                </div>
             </div>
         </div>
     </div>

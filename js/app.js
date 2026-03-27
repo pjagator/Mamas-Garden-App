@@ -314,8 +314,8 @@ sb.auth.onAuthStateChange((event, session) => {
     if (_currentUser) {
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app').style.display = 'block';
-        document.getElementById('settings-email').textContent = _currentUser.email;
-        document.getElementById('current-season').textContent = getCurrentSeason();
+        const settingsEmail = document.getElementById('settings-email');
+        if (settingsEmail) settingsEmail.textContent = _currentUser.email;
         // Show welcome screen, hide all tab screens
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -338,6 +338,11 @@ on('item-updated', ({ itemId }) => {
 });
 
 export function openCaptureModal() {
+    const q = GARDEN_QUOTES[Math.floor(Math.random() * GARDEN_QUOTES.length)];
+    const qt = document.getElementById('capture-quote-text');
+    const qa = document.getElementById('capture-quote-attr');
+    if (qt) qt.textContent = `\u201C${q.text}\u201D`;
+    if (qa) qa.textContent = `\u2014 ${q.author}`;
     openModal('capture-modal');
 }
 

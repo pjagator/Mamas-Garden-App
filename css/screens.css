@@ -302,17 +302,24 @@
 .nav-btn.active .nav-label { color: var(--green-deep); font-weight: 700; }
 .nav-btn.active .nav-icon svg { transform: scale(1.1); }
 
-/* ── Capture tab ─────────────────────────────────────────────── */
-.capture-zone {
-    position: relative;
-    margin: var(--space-5) var(--space-5) 0;
+/* ── Capture modal ────────────────────────────────────────────── */
+.capture-zone-card {
+    background: var(--white);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--cream-dark);
-    min-height: 260px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-4);
+}
+
+.capture-preview {
+    position: relative;
+    min-height: 200px;
+    background: linear-gradient(135deg, var(--cream-dark), #e0d8c8);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 8px;
 }
 
 .capture-placeholder {
@@ -328,7 +335,6 @@
     width: 100%;
     height: auto;
     display: block;
-    border-radius: var(--radius);
 }
 
 .remove-btn {
@@ -351,43 +357,66 @@
 
 .remove-btn:active { transform: scale(0.9); background: rgba(0,0,0,0.7); }
 
-.capture-actions {
+.capture-actions-row {
     display: flex;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-5) 0;
+    border-top: 1px solid var(--cream);
 }
 
-label.btn-capture {
+.capture-actions-row label,
+.capture-actions-row button {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
-    padding: var(--space-3);
-    background: var(--green-deep);
-    color: var(--white);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-body);
-    font-size: var(--text-base);
+    gap: 6px;
+    padding: 14px;
+    font-size: var(--text-sm);
     font-weight: 500;
-    text-align: center;
+    color: var(--green-deep);
     cursor: pointer;
-    transition: transform 150ms ease, background-color 150ms ease;
-    -webkit-user-select: none;
-    user-select: none;
+    background: transparent;
+    border: none;
+    font-family: var(--font-body);
 }
 
-label.btn-capture:active { transform: scale(0.98); background: var(--green-mid); }
+.capture-actions-row label:first-child {
+    border-right: 1px solid var(--cream);
+}
 
 .btn-identify {
-    margin: var(--space-3) var(--space-5) 0;
+    margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
+    width: 100%;
+    background: var(--bg-btn-primary);
 }
 
 .btn-icon { font-size: var(--text-lg); }
+
+/* ── Capture divider ─────────────────────────────────────────── */
+.capture-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: var(--space-4) 0;
+}
+
+.capture-divider::before,
+.capture-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cream-dark);
+}
+
+.capture-divider span {
+    font-size: 11px;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
 
 /* ── Capture results headings ────────────────────────────────── */
 .results-heading {
@@ -395,14 +424,14 @@ label.btn-capture:active { transform: scale(0.98); background: var(--green-mid);
     font-size: var(--text-xl);
     font-weight: 500;
     line-height: 1.2;
-    padding: var(--space-5) var(--space-5) var(--space-1);
+    padding: var(--space-5) 0 var(--space-1);
     color: var(--green-deep);
 }
 
 .results-sub {
     font-size: var(--text-sm);
     color: var(--ink-light);
-    padding: 0 var(--space-5) var(--space-3);
+    padding: 0 0 var(--space-3);
 }
 
 /* ── Garden tab ──────────────────────────────────────────────── */
