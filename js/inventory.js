@@ -171,9 +171,14 @@ export function renderInventory() {
     }
 
     grid.innerHTML = '';
-    items.forEach(item => {
+    const fragment = document.createDocumentFragment();
+    items.forEach((item, i) => {
         const card = document.createElement('div');
         card.className = 'garden-card';
+        card.dataset.type = item.type || '';
+        card.dataset.native = item.is_native ? 'true' : 'false';
+        card.dataset.tags = (item.tags || []).join(',').toLowerCase();
+        card.dataset.location = (item.location || '').toLowerCase();
         card.onclick = () => showItemDetail(item);
 
         const imgEl = item.image_url
@@ -197,14 +202,14 @@ export function renderInventory() {
                 <div class="garden-card-tags">${tags.join('')}</div>
             </div>
             ${item.type === 'plant' ? `<button class="health-pulse-btn" onclick="event.stopPropagation();openHealthLog('${item.id}')" aria-label="Health check">💓</button>` : ''}`;
-        grid.appendChild(card);
-    });
 
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        grid.querySelectorAll('.garden-card').forEach((card, i) => {
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             card.style.animationDelay = `${i * 40}ms`;
-        });
-    }
+        }
+
+        fragment.appendChild(card);
+    });
+    grid.appendChild(fragment);
 }
 
 export function showItemDetail(item) {
@@ -322,6 +327,7 @@ export function renderTimeline() {
         const track = document.createElement('div');
         track.className = 'timeline-track';
         track.innerHTML = '<div class="timeline-line"></div>';
+        const trackFragment = document.createDocumentFragment();
 
         [...bloomingPlants, ...activeInsects].forEach(item => {
             const dotClass = item.type === 'plant' ? 'plant' : 'bug';
@@ -348,8 +354,9 @@ export function renderTimeline() {
                     ${(nativeTag || categoryTag) ? `<div style="display:flex;gap:4px;margin-top:8px;">${nativeTag}${categoryTag}</div>` : ''}
                 </div>`;
             entry.querySelector('.timeline-entry-card').addEventListener('click', () => showItemDetail(item));
-            track.appendChild(entry);
+            trackFragment.appendChild(entry);
         });
+        track.appendChild(trackFragment);
 
         section.innerHTML = header;
         section.appendChild(track);
