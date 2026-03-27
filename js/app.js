@@ -256,6 +256,37 @@ export function dismissWelcome() {
     }, 300);
 }
 
+// ── Collapsible garden search ───────────────────────────────────
+export function toggleGardenSearch() {
+    const overlay = document.getElementById('garden-search-overlay');
+    const input = document.getElementById('search-input');
+    const isOpen = overlay.classList.contains('open');
+
+    if (isOpen) {
+        overlay.classList.remove('open');
+        input.value = '';
+        handleSearch('');
+    } else {
+        overlay.classList.add('open');
+        setTimeout(() => input.focus(), 50);
+    }
+}
+
+// Close search when tapping outside the input area
+document.addEventListener('click', (e) => {
+    const overlay = document.getElementById('garden-search-overlay');
+    if (!overlay || !overlay.classList.contains('open')) return;
+    // If click is inside the overlay (input or icon), do nothing
+    if (overlay.contains(e.target)) return;
+    // If click is on the search toggle button, let toggleGardenSearch handle it
+    const toggleBtn = e.target.closest('[aria-label="Search"]');
+    if (toggleBtn) return;
+    // Otherwise close
+    overlay.classList.remove('open');
+    document.getElementById('search-input').value = '';
+    handleSearch('');
+});
+
 // ── Navigation ─────────────────────────────────────────────────
 export function showScreen(name, btnEl) {
     const current = document.querySelector('.screen.active-screen:not(#welcome-screen)');
@@ -448,7 +479,7 @@ Object.assign(window, {
     // Auth
     showAuthTab, handleSignIn, handleSignUp, handleSendCode, handleVerifyCode, handlePasswordReset, handleSignOut,
     // Navigation
-    showScreen, dismissWelcome, openCaptureModal, closeCaptureModal, openSettingsSheet,
+    showScreen, dismissWelcome, openCaptureModal, closeCaptureModal, openSettingsSheet, toggleGardenSearch,
     // Capture
     handlePhoto, removeImage, identifySpecies, renderIdCards, selectIdCard, saveSelectedId, openManualEntry, saveManualEntry,
     // Inventory
