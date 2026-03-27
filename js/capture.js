@@ -2,6 +2,16 @@
 import { sb, getCurrentUser, SUPABASE_URL, SUPABASE_ANON_KEY, matchNative, confidenceClass, openModal, closeModal, emit, PRESET_TAGS } from './app.js';
 import { generateCareProfile } from './features.js';
 
+async function ensureSession() {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error || !session) {
+        const { data: refreshed, error: refreshErr } = await sb.auth.refreshSession();
+        if (refreshErr || !refreshed.session) {
+            throw new Error('Your session has expired. Please sign out and sign back in.');
+        }
+    }
+}
+
 // Module-local state
 let pendingIdResults = [];
 let selectedIdIndex = null;
@@ -219,10 +229,12 @@ export async function saveSelectedId() {
     btn.textContent = 'Saving...';
 
     try {
+        await ensureSession();
         const imageUrl = await uploadImage(canvas);
         const entry = buildEntry(result, imageUrl, notes);
         const { data: inserted, error } = await sb.from('inventory').insert(entry).select().single();
         if (error) throw error;
+        if (!inserted) throw new Error('Save failed — no data returned. Please try signing out and back in.');
 
         alert(`${result.common} added to your garden!`);
         removeImage();
@@ -277,9 +289,11 @@ export async function saveManualEntry() {
     btn.textContent = 'Saving...';
 
     try {
+        await ensureSession();
         const entry = buildEntry(result, null, notes);
         const { data: inserted, error } = await sb.from('inventory').insert(entry).select().single();
         if (error) throw error;
+        if (!inserted) throw new Error('Save failed — no data returned. Please try signing out and back in.');
 
         if (nativeMatch) alert(`Saved! ${result.common} is a Florida native plant.`);
         else alert(`${result.common} added to your garden.`);
