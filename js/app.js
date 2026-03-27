@@ -294,16 +294,57 @@ export function closeModal(id) {
 
 // ── Load inventory ─────────────────────────────────────────────
 export async function loadInventory() {
-    const { data, error } = await sb.from('inventory')
-        .select('*')
-        .eq('user_id', getCurrentUser().id)
-        .order('date', { ascending: false });
-    if (error) { console.error(error); return; }
-    _allInventory = data || [];
-    updateStats();
-    renderInventory();
-    renderTimeline();
-    loadReminders();
+    const cacheKey = 'garden-inventory-cache';
+    const cacheTimeKey = 'garden-inventory-cache-ts';
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+    // Serve from cache immediately if available and fresh
+    const cached = localStorage.getItem(cacheKey);
+    const cachedTime = localStorage.getItem(cacheTimeKey);
+    const hasFreshCache = cached && cachedTime && (Date.now() - Number(cachedTime) < maxAge);
+
+    if (hasFreshCache && _allInventory.length === 0) {
+        try {
+            _allInventory = JSON.parse(cached);
+            updateStats();
+            renderInventory();
+            renderTimeline();
+            loadReminders();
+        } catch (e) { /* corrupt cache, ignore */ }
+    }
+
+    // Fetch fresh data from network
+    try {
+        const { data, error } = await sb.from('inventory')
+            .select('*')
+            .eq('user_id', getCurrentUser().id)
+            .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        const fresh = data || [];
+        const changed = JSON.stringify(fresh) !== cached;
+
+        _allInventory = fresh;
+        localStorage.setItem(cacheKey, JSON.stringify(fresh));
+        localStorage.setItem(cacheTimeKey, String(Date.now()));
+
+        if (changed || !hasFreshCache) {
+            updateStats();
+            renderInventory();
+            renderTimeline();
+            loadReminders();
+        }
+    } catch (err) {
+        console.error('loadInventory network error:', err);
+        // If we already rendered from cache, that's fine — user sees cached data
+        // If no cache, render empty state
+        if (!hasFreshCache && _allInventory.length === 0) {
+            updateStats();
+            renderInventory();
+            renderTimeline();
+        }
+    }
 }
 
 // ── Imports from child modules ─────────────────────────────────
@@ -311,6 +352,7 @@ import { showAuthTab, handleSignIn, handleSignUp, handleSendCode, handleVerifyCo
 import { handlePhoto, removeImage, identifySpecies, renderIdCards, selectIdCard, saveSelectedId, openManualEntry, saveManualEntry } from './capture.js';
 import { updateStats, handleSearch, setFilter, toggleTagFilter, setLocationFilter, setSort, toggleFilterDropdown, renderInventory, showItemDetail, showLinkedBug, deleteItem, renderTimeline, exportJSON, exportCSV, clearAllData, showNativesDB } from './inventory.js';
 import { toggleTag, removeTag, addCustomTag, toggleBugPlantLink, saveBugPlantLink, togglePlantStatus, setLocationZone, setLocationHabitat, savePlantStatus, refreshCareProfile, toggleCareProfile, parseLocation, buildLocation, loadReminders, toggleReminderDone, addCustomReminder, removeReminder, toggleRemindersSection, toggleHealthHistory, loadMoreHealthHistory, openHealthLog, saveHealthLog, toggleLinkedBugs } from './features.js';
+import { isOnline, onConnectionChange } from './network.js';
 
 // ── Auth state change handler ──────────────────────────────────
 sb.auth.onAuthStateChange((event, session) => {
@@ -377,6 +419,28 @@ if (fabEl) {
         }
         lastScrollY = scrollY;
     }, { passive: true });
+}
+
+// ── Connection status toast ─────────────────────────────────
+const _toast = document.getElementById('connection-toast');
+onConnectionChange((online) => {
+    // Toast
+    if (online) {
+        _toast.textContent = 'Back online';
+        _toast.className = 'connection-toast online visible';
+        setTimeout(() => { _toast.classList.remove('visible'); }, 2000);
+    } else {
+        _toast.textContent = "You're offline — browsing cached data";
+        _toast.className = 'connection-toast offline visible';
+    }
+    // FAB state
+    const fab = document.querySelector('.fab');
+    if (fab) fab.classList.toggle('fab-offline', !online);
+});
+// Set initial state if starting offline
+if (!isOnline()) {
+    const fab = document.querySelector('.fab');
+    if (fab) fab.classList.add('fab-offline');
 }
 
 // ── Window bindings for HTML onclick/oninput/onchange handlers ──

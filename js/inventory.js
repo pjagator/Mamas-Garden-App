@@ -43,6 +43,59 @@ function renderLocationFilterDropdown() {
     ).join('');
 }
 
+function applyFilters() {
+    const grid = document.getElementById('garden-grid');
+    const cards = grid.querySelectorAll('.garden-card');
+    if (!cards.length) { renderInventory(); return; }
+
+    const season = getCurrentSeason();
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        let show = true;
+
+        // Type/status filter
+        if (currentFilter === 'plant' && card.dataset.type !== 'plant') show = false;
+        if (currentFilter === 'bug' && card.dataset.type !== 'bug') show = false;
+        if (currentFilter === 'native' && card.dataset.native !== 'true') show = false;
+        if (currentFilter === 'blooming') {
+            const item = getAllInventory().find(i => i.common === card.querySelector('.garden-card-name')?.textContent);
+            if (!item?.bloom || (!item.bloom.includes(season) && !item.bloom.includes('Year-round'))) show = false;
+        }
+
+        // Tag filters (AND)
+        if (show && activeTagFilters.length) {
+            const cardTags = card.dataset.tags ? card.dataset.tags.split(',') : [];
+            if (!activeTagFilters.every(t => cardTags.includes(t.toLowerCase()))) show = false;
+        }
+
+        // Location filter
+        if (show && activeLocationFilter) {
+            if (card.dataset.location !== activeLocationFilter.toLowerCase()) show = false;
+        }
+
+        // Search
+        if (show && currentSearch) {
+            const text = card.textContent.toLowerCase();
+            if (!text.includes(currentSearch)) show = false;
+        }
+
+        card.classList.toggle('filter-hidden', !show);
+        if (show) visibleCount++;
+    });
+
+    // Show empty state if nothing visible
+    const emptyEl = grid.querySelector('.empty-state');
+    if (visibleCount === 0 && !emptyEl && (currentSearch || currentFilter !== 'all' || activeTagFilters.length || activeLocationFilter)) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.innerHTML = '<p>No matching entries.</p>';
+        grid.appendChild(empty);
+    } else if (visibleCount > 0 && emptyEl) {
+        emptyEl.remove();
+    }
+}
+
 function download(blob, name) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -68,14 +121,14 @@ export function updateStats() {
 
 export function handleSearch(val) {
     currentSearch = val.toLowerCase().trim();
-    renderInventory();
+    applyFilters();
 }
 
 export function setFilter(filter, btnEl) {
     currentFilter = filter;
     document.querySelectorAll('.filter-row .chip').forEach(b => b.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
-    renderInventory();
+    applyFilters();
 }
 
 export function toggleTagFilter(tag) {
@@ -83,13 +136,13 @@ export function toggleTagFilter(tag) {
     if (idx === -1) activeTagFilters.push(tag);
     else activeTagFilters.splice(idx, 1);
     renderTagFilterDropdown();
-    renderInventory();
+    applyFilters();
 }
 
 export function setLocationFilter(loc) {
     activeLocationFilter = activeLocationFilter === loc ? '' : loc;
     renderLocationFilterDropdown();
-    renderInventory();
+    applyFilters();
 }
 
 export function setSort(sort) {
@@ -113,38 +166,7 @@ export function toggleFilterDropdown(id) {
 export function renderInventory() {
     let items = [...getAllInventory()];
 
-    // Type/status filters
-    if (currentFilter === 'plant')   items = items.filter(i => i.type === 'plant');
-    if (currentFilter === 'bug')     items = items.filter(i => i.type === 'bug');
-    if (currentFilter === 'native')  items = items.filter(i => i.is_native);
-    if (currentFilter === 'blooming') {
-        const season = getCurrentSeason();
-        items = items.filter(i => i.bloom && (i.bloom.includes(season) || i.bloom.includes('Year-round')));
-    }
-
-    // Tag filters (AND: item must have all selected tags)
-    if (activeTagFilters.length) {
-        items = items.filter(i => activeTagFilters.every(t => (i.tags || []).includes(t)));
-    }
-
-    // Location filter
-    if (activeLocationFilter) {
-        items = items.filter(i => i.location === activeLocationFilter);
-    }
-
-    // Search
-    if (currentSearch) {
-        items = items.filter(i =>
-            (i.common      || '').toLowerCase().includes(currentSearch) ||
-            (i.scientific  || '').toLowerCase().includes(currentSearch) ||
-            (i.category    || '').toLowerCase().includes(currentSearch) ||
-            (i.notes       || '').toLowerCase().includes(currentSearch) ||
-            (i.tags        || []).some(t => t.toLowerCase().includes(currentSearch)) ||
-            (i.location    || '').toLowerCase().includes(currentSearch)
-        );
-    }
-
-    // Sort
+    // Sort only — filtering is handled by applyFilters() on the DOM
     if (currentSort === 'name-az') items.sort((a, b) => (a.common || '').localeCompare(b.common || ''));
     else if (currentSort === 'name-za') items.sort((a, b) => (b.common || '').localeCompare(a.common || ''));
     else if (currentSort === 'date-asc') items.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -153,9 +175,6 @@ export function renderInventory() {
 
     const grid = document.getElementById('garden-grid');
     if (!items.length) {
-        if (currentSearch || currentFilter !== 'all') {
-            grid.innerHTML = `<div class="empty-state"><p>No matching entries.</p></div>`;
-        } else {
             grid.innerHTML = `
                 <div style="text-align:center;padding:var(--space-8) var(--space-6);">
                     <div style="font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--green-deep);line-height:1.5;">
@@ -171,9 +190,14 @@ export function renderInventory() {
     }
 
     grid.innerHTML = '';
-    items.forEach(item => {
+    const fragment = document.createDocumentFragment();
+    items.forEach((item, i) => {
         const card = document.createElement('div');
         card.className = 'garden-card';
+        card.dataset.type = item.type || '';
+        card.dataset.native = item.is_native ? 'true' : 'false';
+        card.dataset.tags = (item.tags || []).join(',').toLowerCase();
+        card.dataset.location = (item.location || '').toLowerCase();
         card.onclick = () => showItemDetail(item);
 
         const imgEl = item.image_url
@@ -197,14 +221,15 @@ export function renderInventory() {
                 <div class="garden-card-tags">${tags.join('')}</div>
             </div>
             ${item.type === 'plant' ? `<button class="health-pulse-btn" onclick="event.stopPropagation();openHealthLog('${item.id}')" aria-label="Health check">💓</button>` : ''}`;
-        grid.appendChild(card);
-    });
 
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        grid.querySelectorAll('.garden-card').forEach((card, i) => {
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             card.style.animationDelay = `${i * 40}ms`;
-        });
-    }
+        }
+
+        fragment.appendChild(card);
+    });
+    grid.appendChild(fragment);
+    applyFilters();
 }
 
 export function showItemDetail(item) {
@@ -212,7 +237,7 @@ export function showItemDetail(item) {
 
     // Hero image
     const heroImg = item.image_url
-        ? `<img src="${item.image_url}" alt="${item.common}">`
+        ? `<img src="${item.image_url}" alt="${item.common}" loading="lazy">`
         : `<div style="width:100%;height:100%;background:var(--bg-header);display:flex;align-items:center;justify-content:center;font-size:48px;">🌿</div>`;
 
     // Status badges
@@ -322,6 +347,7 @@ export function renderTimeline() {
         const track = document.createElement('div');
         track.className = 'timeline-track';
         track.innerHTML = '<div class="timeline-line"></div>';
+        const trackFragment = document.createDocumentFragment();
 
         [...bloomingPlants, ...activeInsects].forEach(item => {
             const dotClass = item.type === 'plant' ? 'plant' : 'bug';
@@ -348,8 +374,9 @@ export function renderTimeline() {
                     ${(nativeTag || categoryTag) ? `<div style="display:flex;gap:4px;margin-top:8px;">${nativeTag}${categoryTag}</div>` : ''}
                 </div>`;
             entry.querySelector('.timeline-entry-card').addEventListener('click', () => showItemDetail(item));
-            track.appendChild(entry);
+            trackFragment.appendChild(entry);
         });
+        track.appendChild(trackFragment);
 
         section.innerHTML = header;
         section.appendChild(track);

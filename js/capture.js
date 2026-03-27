@@ -1,6 +1,7 @@
 // ── Photo capture & identification ─────────────────────────────
 import { sb, getCurrentUser, SUPABASE_URL, SUPABASE_ANON_KEY, matchNative, confidenceClass, openModal, closeModal, emit, PRESET_TAGS } from './app.js';
 import { generateCareProfile } from './features.js';
+import { resilientFetch, isOnline } from './network.js';
 
 async function ensureSession() {
     const { data: { session }, error } = await sb.auth.getSession();
@@ -17,6 +18,38 @@ let pendingIdResults = [];
 let selectedIdIndex = null;
 
 // ── Internal helpers ──────────────────────────────────────────
+
+function friendlyError(msg) {
+    const lower = msg.toLowerCase();
+    if (lower.includes('overloaded')) {
+        return {
+            title: 'Identification service is busy',
+            message: 'Our plant identification service is experiencing high demand. Please wait a moment and try again.'
+        };
+    }
+    if (lower.includes('no species identified') || lower.includes('empty array')) {
+        return {
+            title: 'No species found',
+            message: 'We couldn\'t identify a plant or insect in this photo. Try a closer, well-lit shot of the leaves or flowers.'
+        };
+    }
+    if (lower.includes('could not fetch image')) {
+        return {
+            title: 'Photo upload issue',
+            message: 'There was a problem loading your photo for analysis. Please try taking or selecting the photo again.'
+        };
+    }
+    if (lower.includes('session') || lower.includes('sign')) {
+        return {
+            title: 'Session expired',
+            message: 'Your session has expired. Please sign out and sign back in, then try again.'
+        };
+    }
+    return {
+        title: 'Identification failed',
+        message: msg
+    };
+}
 
 function renderPreview(src) {
     const canvas = document.getElementById('preview-canvas');
@@ -123,6 +156,10 @@ export function removeImage() {
 export async function identifySpecies() {
     const canvas = document.getElementById('preview-canvas');
     if (canvas.style.display === 'none') { alert('Please take or upload a photo first.'); return; }
+    if (!isOnline()) {
+        alert('Species identification requires an internet connection. Please try again when you\u2019re back online.');
+        return;
+    }
 
     const btn = document.getElementById('identify-btn');
     btn.disabled = true;
@@ -138,7 +175,7 @@ export async function identifySpecies() {
     try {
         const tempUrl = await uploadTempImage(canvas);
 
-      const fnResponse = await fetch(
+      const fnResponse = await resilientFetch(
     SUPABASE_URL + '/functions/v1/identify-species',
     {
         method: 'POST',
@@ -147,7 +184,8 @@ export async function identifySpecies() {
             'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({ imageUrl: tempUrl }),
-    }
+    },
+    { retries: 2, timeoutMs: 30000 }
 );
 const data = await fnResponse.json();
 if (data.error) throw new Error(data.error);
@@ -170,10 +208,11 @@ if (!data?.identifications?.length) throw new Error('No species identified. Try 
         renderIdCards(top3);
 
     } catch (err) {
+        const friendly = friendlyError(err.message);
         document.getElementById('id-cards').innerHTML = `
             <div class="id-card" style="border-color:var(--terra)">
-                <p style="color:var(--terra);font-weight:600;">Identification failed</p>
-                <p style="font-size:0.85em;color:var(--ink-mid);margin-top:6px;">${err.message}</p>
+                <p style="color:var(--terra);font-weight:600;">${friendly.title}</p>
+                <p style="font-size:0.85em;color:var(--ink-mid);margin-top:6px;">${friendly.message}</p>
             </div>`;
     } finally {
         btn.disabled = false;
@@ -219,6 +258,10 @@ export function selectIdCard(index) {
 
 export async function saveSelectedId() {
     if (selectedIdIndex === null || !pendingIdResults.length) return;
+    if (!isOnline()) {
+        alert('Saving requires an internet connection. Your photo is preserved \u2014 try again when connected.');
+        return;
+    }
 
     const result = pendingIdResults[selectedIdIndex];
     const notes = (document.getElementById('id-notes')?.value || '').trim();

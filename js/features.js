@@ -1,5 +1,6 @@
 // ── Features: tags, bug-plant linking, plant status, care profiles ──
 import { sb, getCurrentUser, getAllInventory, emit, SUPABASE_URL, SUPABASE_ANON_KEY, PRESET_TAGS, LOCATION_ZONES, LOCATION_HABITATS, openModal, closeModal } from './app.js';
+import { resilientFetch, isOnline } from './network.js';
 
 // ── Shared expandable section toggle ──────────────────────────
 function toggleSection(bodyId, chevronId) {
@@ -330,7 +331,7 @@ export async function generateCareProfile(itemId, common, scientific, type, cate
     if (type !== 'plant') return null;
 
     try {
-        const response = await fetch(
+        const response = await resilientFetch(
             SUPABASE_URL + '/functions/v1/garden-assistant',
             {
                 method: 'POST',
@@ -610,8 +611,10 @@ async function generateReminders(monthKey, plantHash, plants) {
     const month = MONTHS[new Date().getMonth()];
     const plantData = plants.map(p => ({ common: p.common, scientific: p.scientific, category: p.category }));
 
+    if (!isOnline()) return [];
+
     try {
-        const response = await fetch(
+        const response = await resilientFetch(
             SUPABASE_URL + '/functions/v1/garden-assistant',
             {
                 method: 'POST',
@@ -660,7 +663,10 @@ async function generateReminders(monthKey, plantHash, plants) {
     } catch (err) {
         console.error('Reminder generation failed:', err);
         const list = document.getElementById('reminders-list');
-        if (list) list.innerHTML = '<div style="font-size:var(--text-sm);color:var(--ink-light);padding:var(--space-2) 0;">Could not generate reminders. Try again later.</div>';
+        const msg = err.message?.toLowerCase().includes('overloaded')
+            ? 'Our garden assistant is busy right now. Your reminders will appear next time you visit.'
+            : 'Could not generate reminders. Try again later.';
+        if (list) list.innerHTML = `<div style="font-size:var(--text-sm);color:var(--ink-light);padding:var(--space-2) 0;">${msg}</div>`;
         return [];
     }
 }
@@ -924,8 +930,12 @@ export async function saveHealthLog() {
 }
 
 async function runDiagnosis(logId, itemId, imageUrl, common, scientific, health, notes) {
+    if (!isOnline()) {
+        alert("Plant diagnosis requires an internet connection. Your health check was saved \u2014 you can request a diagnosis later.");
+        return;
+    }
     try {
-        const response = await fetch(
+        const response = await resilientFetch(
             SUPABASE_URL + '/functions/v1/garden-assistant',
             {
                 method: 'POST',
@@ -953,7 +963,10 @@ async function runDiagnosis(logId, itemId, imageUrl, common, scientific, health,
 
     } catch (err) {
         console.error('Diagnosis failed:', err);
-        alert("Couldn't analyze the photo. Your health check was still saved.");
+        const msg = err.message?.toLowerCase().includes('overloaded')
+            ? "Our garden assistant is busy right now. Your health check was saved — you can request a diagnosis later."
+            : "Couldn't analyze the photo. Your health check was still saved.";
+        alert(msg);
     }
 }
 
