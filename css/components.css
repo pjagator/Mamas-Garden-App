@@ -209,24 +209,30 @@
 }
 
 /* ── Garden cards ────────────────────────────────────────────── */
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .garden-card {
     background: var(--white);
     border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
     cursor: pointer;
     transition: transform 150ms ease, box-shadow 150ms ease;
     -webkit-user-select: none;
     user-select: none;
+    animation: cardIn 300ms ease backwards;
 }
 
-.garden-card:active { transform: scale(0.97); box-shadow: var(--shadow-md); }
+.garden-card:active { transform: scale(0.97); box-shadow: var(--shadow-lg); }
 
 .garden-card-img {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
-    background: var(--cream-dark);
+    display: block;
 }
 
 .garden-card-img-placeholder {
@@ -239,10 +245,37 @@
     font-size: 36px;
 }
 
-.garden-card-info { padding: var(--space-2) var(--space-3) var(--space-3); }
-.garden-card-name { font-weight: 600; font-size: var(--text-sm); color: var(--ink); line-height: 1.3; }
-.garden-card-sci  { font-style: italic; font-size: var(--text-xs); color: var(--ink-light); margin-top: 2px; }
-.garden-card-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-1); }
+.garden-card-info { padding: 10px 10px 12px; }
+.garden-card-name {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green-deep);
+    line-height: 1.2;
+}
+.garden-card-sci {
+    font-size: 10px;
+    color: var(--green-sage);
+    font-style: italic;
+    margin-top: 2px;
+}
+.garden-card-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+.garden-card-tags .tag {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--green-light), #e8f0e8);
+    color: var(--green-mid);
+}
+.garden-card-tags .tag.bug-tag {
+    background: linear-gradient(135deg, #fde8e8, #fef0f0);
+    color: var(--terra);
+}
 
 .empty-state {
     grid-column: 1 / -1;

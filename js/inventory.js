@@ -167,12 +167,14 @@ export function renderInventory() {
             ? `<img class="garden-card-img" src="${item.image_url}" alt="${item.common}" loading="lazy">`
             : `<div class="garden-card-img-placeholder">${item.type === 'plant' ? '🌿' : '🐛'}</div>`;
 
+        const isBug = item.type === 'bug';
+        const tagClass = isBug ? 'tag bug-tag' : 'tag';
         const tags = [];
-        if (item.is_native) tags.push('<span class="tag native" style="font-size:0.68em;padding:2px 7px;">⭐ Native</span>');
-        if (item.tags && item.tags.length) tags.push(...item.tags.slice(0,2).map(t => `<span class="tag plant-tag" style="font-size:0.68em;padding:2px 7px;">${t}</span>`));
-        if (item.bloom)     tags.push(`<span class="tag season" style="font-size:0.68em;padding:2px 7px;">🌸 ${item.bloom.slice(0,2).join(', ')}</span>`);
-        if (item.location)  tags.push(`<span class="tag location-tag" style="font-size:0.68em;padding:2px 7px;">${item.location}</span>`);
-        if (item.health && (item.health === 'stressed' || item.health === 'sick')) tags.push(`<span class="tag health-bad" style="font-size:0.68em;padding:2px 7px;">${item.health}</span>`);
+        if (item.is_native) tags.push(`<span class="${tagClass}">⭐ Native</span>`);
+        if (item.tags && item.tags.length) tags.push(...item.tags.slice(0,2).map(t => `<span class="${tagClass}">${t}</span>`));
+        if (item.bloom)     tags.push(`<span class="${tagClass}">🌸 ${item.bloom.slice(0,2).join(', ')}</span>`);
+        if (item.location)  tags.push(`<span class="${tagClass}">${item.location}</span>`);
+        if (item.health && (item.health === 'stressed' || item.health === 'sick')) tags.push(`<span class="tag health-bad">${item.health}</span>`);
 
         card.innerHTML = `
             ${imgEl}
@@ -184,6 +186,12 @@ export function renderInventory() {
             ${item.type === 'plant' ? `<button class="health-pulse-btn" onclick="event.stopPropagation();openHealthLog('${item.id}')" aria-label="Health check">💓</button>` : ''}`;
         grid.appendChild(card);
     });
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        grid.querySelectorAll('.garden-card').forEach((card, i) => {
+            card.style.animationDelay = `${i * 40}ms`;
+        });
+    }
 }
 
 export function showItemDetail(item) {
