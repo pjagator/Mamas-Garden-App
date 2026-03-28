@@ -1,0 +1,149 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap');
+
+@theme {
+  /* === Botanical Journal Color Palette === */
+  --color-green-deep: #1c3a2b;
+  --color-green-mid: #2d5a3d;
+  --color-green-sage: #7a9e7e;
+  --color-green-light: #c8dfc9;
+  --color-cream: #f5f0e8;
+  --color-cream-dark: #ece5d6;
+  --color-terra: #c4622d;
+  --color-terra-light: #e8a882;
+  --color-ink: #1a1a1a;
+  --color-ink-mid: #4a4a4a;
+  --color-ink-light: #9a9a9a;
+
+  /* === Shadows === */
+  --shadow-sm: 0 1px 3px rgba(28, 58, 43, 0.08);
+  --shadow-md: 0 4px 12px rgba(28, 58, 43, 0.12);
+  --shadow-lg: 0 8px 24px rgba(28, 58, 43, 0.16);
+
+  /* === Radius === */
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* === Typography === */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  /* === Spacing (4px base) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* === Layout === */
+  --nav-height: 72px;
+}
+
+/* === Base Styles === */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background-color: var(--color-green-deep);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background-color: var(--color-cream);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === Touch Targets === */
+button, a, [role="button"] {
+  min-height: 44px;
+  user-select: none;
+}
+
+input, select, textarea {
+  min-height: 44px;
+}
+
+/* === Display Font Utility === */
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* === Safe Area Insets === */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* === Smooth Animations === */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in {
+    animation: fadeIn 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-slide-up {
+    animation: slideUp 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === Scrollbar Styling === */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-green-sage);
+  border-radius: 4px;
+}
