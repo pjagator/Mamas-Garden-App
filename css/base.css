@@ -55,7 +55,7 @@
     --fab-shadow: 0 6px 20px rgba(var(--terra-rgb),0.35);
 }
 
-html { height: 100%; }
+html { height: 100%; background-color: #1c3a2b; }
 
 body {
     font-family: var(--font-body);
