@@ -365,6 +365,8 @@ DM Sans was removed. Body text now uses the system-ui font stack (`-apple-system
 
 11. ~~**Auth screen flash on load**~~ **FIXED** — Synchronous inline `<script>` in `index.html` runs before Supabase CDN loads, reads session from localStorage, immediately shows correct screen. Auth screen starts at `opacity:0` and fades in via CSS transition for unauthenticated users.
 
+12. ~~**iOS Collections photo selection does nothing**~~ **FIXED** — iOS Safari returns `file.type` as `""` when selecting photos from the Collections/Albums view. The `file.type.startsWith('image/')` guard was silently bailing out. Fixed in `capture.js:handlePhoto` to only reject files with a non-empty type that isn't an image.
+
 ### Incomplete / Not Yet Built Features
 
 From CLAUDE-CODE-PROMPT.md roadmap:

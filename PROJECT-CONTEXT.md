@@ -181,6 +181,7 @@ See `supabase/functions/identify-species/index.ts` for the current source code.
 - FAB offline state uses CSS class `.fab-offline` (not inline styles) to avoid conflicts with FAB scroll behavior.
 - iOS overscroll rubber-band color is controlled by `html { background-color }`, not `body`. Set it to the app's header color (`#1c3a2b`) so pulling past the top shows green rather than white.
 - Bottom nav safe area: use `height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px))` — never a fixed height alone. Padding-bottom handles the visual inset; the height must grow to preserve button space above the home indicator.
+- iOS Safari returns `file.type` as `""` (empty string) when selecting photos from the Collections/Albums view. Guard against this in file input handlers: check `if (file.type && !file.type.startsWith('image/'))` rather than `!file.type.startsWith('image/')` — the latter silently rejects all Collections photos.
 
 ---
 
