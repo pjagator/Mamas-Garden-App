@@ -165,7 +165,7 @@ Bucket `garden-images` (public). Final images at `{user_id}/{timestamp}.jpg`. Te
 - **Frontend**: `git push` to main (GitHub Pages auto-deploys)
 - **Edge functions**: `supabase functions deploy <function-name>` or paste in dashboard
 - **DB migrations**: Run SQL directly in Supabase SQL Editor
-- **Cache busting**: Manually increment `?v=N` (currently v19) on style.css and app.js links in index.html. Also bump CACHE_VERSION in sw.js to match.
+- **Cache busting**: Manually increment `?v=N` (currently v21) on CSS and app.js links in index.html. Also bump CACHE_VERSION in sw.js to match.
 
 ## Testing
 
