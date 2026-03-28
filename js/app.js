@@ -489,6 +489,7 @@ if (!isOnline()) {
 
 // ── Elastic title on iOS overscroll ─────────────────────────────
 (function() {
+    if (prefersReducedMotion) return;
     let overscrolling = false;
     window.addEventListener('scroll', () => {
         const y = window.scrollY;
