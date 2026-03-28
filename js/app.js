@@ -487,6 +487,29 @@ if (!isOnline()) {
     if (fab) fab.classList.add('fab-offline');
 }
 
+// ── Elastic title on iOS overscroll ─────────────────────────────
+(function() {
+    let overscrolling = false;
+    window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        const header = document.querySelector('.active-screen .garden-header, .active-screen .screen-header');
+        const titleEl = header?.querySelector('.screen-title');
+        if (!titleEl) return;
+
+        if (y < 0) {
+            const scale = 1 + Math.min(-y / 250, 0.25);
+            titleEl.style.transition = 'none';
+            titleEl.style.transform = `scale(${scale})`;
+            titleEl.style.transformOrigin = 'left bottom';
+            overscrolling = true;
+        } else if (overscrolling) {
+            titleEl.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            titleEl.style.transform = '';
+            overscrolling = false;
+        }
+    }, { passive: true });
+})();
+
 // ── Window bindings for HTML onclick/oninput/onchange handlers ──
 Object.assign(window, {
     // Auth
