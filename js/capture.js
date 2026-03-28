@@ -141,7 +141,8 @@ function buildEntry(result, imageUrl, notes) {
 
 export function handlePhoto(event) {
     const file = event.target.files[0];
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
+    if (file.type && !file.type.startsWith('image/')) return;
     const reader = new FileReader();
     reader.onload = e => renderPreview(e.target.result);
     reader.readAsDataURL(file);
