@@ -411,8 +411,11 @@ sb.auth.onAuthStateChange((event, session) => {
         loadInventory();
         renderTimeline();
     } else {
-        document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('app').style.display = 'none';
+        const authEl = document.getElementById('auth-screen');
+        authEl.classList.remove('hidden');  // clear if previously added by auth flow
+        authEl.style.display = '';          // clear inline style set by pre-check script
+        requestAnimationFrame(() => { authEl.style.opacity = '1'; });
     }
 });
 
