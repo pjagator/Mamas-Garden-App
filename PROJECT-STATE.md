@@ -1,6 +1,6 @@
 # PROJECT-STATE.md — Full Codebase Audit
 
-**Generated**: 2026-03-27
+**Generated**: 2026-03-28
 **Repo**: https://github.com/pjagator/Mamas-Garden-App
 **Total files**: 21 (excluding `.git/`)
 **Total lines**: ~6,200
@@ -13,7 +13,7 @@
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `js/app.js` | ~460 | Entry point. Supabase client, shared state (getters/setters), event system (on/emit), data arrays (65 quotes, 64 facts, 15 native plants, preset tags/locations), helpers, welcome screen (conditional — shown only after 1+ hour absence via `garden-last-visit` localStorage timestamp), SPA navigation, modal helpers, loadInventory, auth state change handler, window bindings for all HTML event handlers. connection toast UI, localStorage inventory caching, offline FAB state. |
+| `js/app.js` | ~460 | Entry point. Supabase client, shared state (getters/setters), event system (on/emit), data arrays (65 quotes, 64 facts, 15 native plants, preset tags/locations), helpers, welcome screen (conditional — shown only after 1+ hour absence via `garden-last-visit` localStorage timestamp), SPA navigation, modal helpers, loadInventory, auth state change handler (fades auth screen in via `requestAnimationFrame` when no session; for authenticated users the startup display is handled by the synchronous pre-check script in `index.html` before this module loads), window bindings for all HTML event handlers. connection toast UI, localStorage inventory caching, offline FAB state. |
 | `js/auth.js` | 83 | Auth flows: sign in, sign up, magic link OTP, password reset, sign out. Internal: setAuthMsg, otpEmail. |
 | `js/capture.js` | ~320 | Photo capture via camera/gallery, canvas preview (max 900px), image upload (temp 0.5 quality, final 0.82 quality), species ID via edge function, ID result cards, manual entry modal, save flow with care profile generation. resilientFetch for API calls, offline guards. |
 | `js/inventory.js` | ~400 | Garden grid rendering (2-column), search/filter/sort, item detail modal orchestration, delete, timeline, JSON/CSV export, native DB modal, clear all data. Module-local filter/search/sort state. DocumentFragment batch rendering, filter-by-hiding via data attributes. |
@@ -26,13 +26,13 @@
 |------|-------|---------|
 | `css/base.css` | 226 | Design system: reset, :root custom properties (colors, typography scale, spacing scale, shadows, radii, fonts), body, fields, 5 button variants, divider, checkbox row, spinner (deduplicated), iOS font-size fix. `--font-body` uses system-ui stack (`-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif`). |
 | `css/components.css` | ~660 | Reusable components: ID result cards (deduplicated), confidence badges, tags (all variants), tag editor, filter chips, garden cards, detail view, plant status, linked bugs, care profile, natives list, seasonal care reminders (checklist, checkboxes, add-row). connection toast, FAB offline state, filter-hidden utility. |
-| `css/screens.css` | 532 | Screen layouts: auth, welcome (safe-area-inset-top padding), app shell, screens base + animations, bottom nav, capture tab, garden tab (stats/collapsible search overlay/grid), timeline, settings, modals (overlay + sheet + slide-up animation), 360px breakpoint. |
+| `css/screens.css` | 533 | Screen layouts: auth, welcome (safe-area-inset-top padding), app shell, screens base + animations, bottom nav, capture tab, garden tab (stats/collapsible search overlay/grid), timeline, settings, modals (overlay + sheet + slide-up animation), 360px breakpoint. `#auth-screen` has `transition: opacity 300ms ease` for graceful fade-in when no session. |
 
 ### HTML
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | ~350 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=19`. connection toast element. `viewport-fit=cover` in viewport meta for iPhone status bar bleed. Collapsible search: magnifying glass icon button in garden header expands full-width frosted overlay. |
+| `index.html` | ~370 | HTML structure: auth screen, 5 screens (Welcome, Capture, Garden, Timeline, Settings), 3 modals, bottom tab nav, seasonal reminders section in Garden tab. Loads 3 CSS files via `<link>`, JS via `<script type="module">`. Cache-busted with `?v=20`. connection toast element. `viewport-fit=cover` in viewport meta for iPhone status bar bleed. Collapsible search: magnifying glass icon button in garden header expands full-width frosted overlay. **Auth flash fix**: `#auth-screen` starts with `style="opacity:0"`. Inline synchronous `<script>` before the Supabase CDN tag reads `sb-itjvgruwvlrrlhsknwiw-auth-token` from localStorage and immediately hides the auth screen and shows the correct app screen for authenticated users — runs before any async JS. |
 
 ### Edge Functions
 
@@ -363,6 +363,8 @@ DM Sans was removed. Body text now uses the system-ui font stack (`-apple-system
 
 10. ~~**No service worker**~~ **FIXED** — sw.js with dual-cache strategy (static + images), all JS modules in CORE_FILES for offline startup.
 
+11. ~~**Auth screen flash on load**~~ **FIXED** — Synchronous inline `<script>` in `index.html` runs before Supabase CDN loads, reads session from localStorage, immediately shows correct screen. Auth screen starts at `opacity:0` and fades in via CSS transition for unauthenticated users.
+
 ### Incomplete / Not Yet Built Features
 
 From CLAUDE-CODE-PROMPT.md roadmap:
@@ -408,7 +410,7 @@ From LEARNING-PLAN.md:
 | Live URL | GitHub Pages | `https://pjagator.github.io/Mamas-Garden-App/` |
 
 ### Cache Busting
-- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=19`)
+- CSS and JS files in `index.html` use `?v=N` query strings — manually incremented on deploys (currently `?v=20`)
 
 ### No Build Step
 - No bundler, no transpilation, no minification

@@ -169,6 +169,7 @@ See `supabase/functions/identify-species/index.ts` for the current source code.
 ### Auth
 - Supabase email confirmation redirects to `localhost` by default. Fix in Authentication > URL Configuration > Site URL.
 - If JWT tokens become invalid (e.g., after secret rotation), sign out and sign back in to get a fresh token.
+- **Auth screen flash fix**: `#auth-screen` starts with `style="opacity:0"`. A synchronous inline `<script>` before the Supabase CDN tag checks `localStorage.getItem('sb-itjvgruwvlrrlhsknwiw-auth-token')` — if present, immediately hides the auth screen and shows the correct app screen before any async JS runs. For unauthenticated users, `onAuthStateChange` fades the auth screen in via `requestAnimationFrame`. This avoids a visible flash of the login form on every load for authenticated users.
 
 ### General
 - Never expose the service role key in client code -- it bypasses all RLS. Only use the anon key in the browser.
