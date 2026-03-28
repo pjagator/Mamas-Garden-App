@@ -205,7 +205,7 @@
                         </label>
                         <label for="gallery-input">
                             🖼 Gallery
-                            <input type="file" id="gallery-input" accept="image/*" onchange="handlePhoto(event)" style="display:none">
+                            <input type="file" id="gallery-input" accept="image/*" onchange="handlePhoto(event)" oninput="handlePhoto(event)" style="display:none">
                         </label>
                     </div>
                 </div>
