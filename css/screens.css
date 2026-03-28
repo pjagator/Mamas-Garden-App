@@ -6,6 +6,7 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-6);
+    transition: opacity 300ms ease;
 }
 
 #auth-screen.hidden { display: none; }
