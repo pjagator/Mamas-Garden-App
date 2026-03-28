@@ -349,6 +349,19 @@
     </div>
 </div>
 
+<script>
+(function() {
+  var raw = localStorage.getItem('sb-itjvgruwvlrrlhsknwiw-auth-token');
+  if (!raw) return;
+  try {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    var lastVisit = parseInt(localStorage.getItem('garden-last-visit') || '0', 10);
+    var screenId = Date.now() - lastVisit < 3600000 ? 'tab-garden' : 'welcome-screen';
+    document.getElementById(screenId).classList.add('active-screen');
+  } catch(e) {}
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="js/app.js?v=19"></script>
 </body>
