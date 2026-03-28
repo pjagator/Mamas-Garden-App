@@ -297,7 +297,7 @@
 - Active/pressed states on all buttons and cards (scale transforms)
 - `user-select: none` on all interactive elements
 - `-webkit-tap-highlight-color: transparent` global reset
-- iOS safe area inset support on bottom nav and modal sheets
+- iOS safe area inset support on bottom nav and modal sheets. Bottom nav height uses `calc(var(--nav-height) + env(safe-area-inset-bottom, 0px))` so buttons clear the iPhone home indicator. `html { background-color: #1c3a2b }` fills the overscroll rubber-band zone green.
 
 ---
 
@@ -388,7 +388,7 @@ From LEARNING-PLAN.md:
 | 5. Empty States | **Partially done** — basic empty states exist but lack personality/illustrations |
 | 6. Image Optimization | **Not started** — no thumbnails, no blur-up loading, no `thumbnail_url` column |
 | 7. Error Handling | **Partially done** — resilientFetch with retries/timeouts, friendly error messages, connection toast, offline guards. Still using alert() for some messages (no toast system yet). |
-| 8. Gesture Support | **Not started** — no swipe-to-delete, no pull-to-refresh, no swipe-to-dismiss modals |
+| 8. Gesture Support | **Partially done** — overscroll elastic title (scroll listener scales `.screen-title` when `scrollY < 0`, respects `prefers-reduced-motion`). No swipe-to-delete or pull-to-refresh yet. |
 | 9. Accessibility | **Not started** — no ARIA labels, no focus management, no focus trapping in modals, no screen reader announcements |
 | 10. Performance | **Partially done** — DocumentFragment batch rendering, filter-by-hiding, lazy loading on detail hero image. No Lighthouse audit yet. |
 

@@ -179,6 +179,8 @@ See `supabase/functions/identify-species/index.ts` for the current source code.
 - Service worker (`sw.js`) manages two caches: `garden-static-vN` for core files and `garden-images-v1` for Supabase Storage photos. Bump CACHE_VERSION in sw.js and `?v=N` in index.html together.
 - Inventory data cached in localStorage, not service worker. `loadInventory()` renders from cache first, refreshes in background.
 - FAB offline state uses CSS class `.fab-offline` (not inline styles) to avoid conflicts with FAB scroll behavior.
+- iOS overscroll rubber-band color is controlled by `html { background-color }`, not `body`. Set it to the app's header color (`#1c3a2b`) so pulling past the top shows green rather than white.
+- Bottom nav safe area: use `height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px))` — never a fixed height alone. Padding-bottom handles the visual inset; the height must grow to preserve button space above the home indicator.
 
 ---
 
