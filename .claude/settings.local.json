@@ -45,7 +45,9 @@
       "Bash(git tag:*)",
       "Bash(gh api:*)",
       "Bash(npm create:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add card input label sheet sonner tabs)"
     ]
   },
   "hooks": {
