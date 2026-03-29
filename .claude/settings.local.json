@@ -51,7 +51,8 @@
       "Bash(npx vitest:*)",
       "Bash(npx shadcn@latest add badge collapsible checkbox scroll-area separator select -y)",
       "Bash(npx shadcn@latest add textarea toggle-group -y)",
-      "Bash(npx shadcn@latest add textarea toggle-group -yo)"
+      "Bash(npx shadcn@latest add textarea toggle-group -yo)",
+      "Bash(npx tsc:*)"
     ]
   },
   "hooks": {
