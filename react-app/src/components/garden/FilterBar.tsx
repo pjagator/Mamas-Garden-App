@@ -1,4 +1,5 @@
-import { getCurrentSeason } from '@/lib/constants'
+import { MapPin, X } from 'lucide-react'
+import { getCurrentSeason, LOCATION_ZONES, LOCATION_HABITATS } from '@/lib/constants'
 import type { InventoryItem } from '@/types'
 
 export type FilterType = 'all' | 'plant' | 'bug' | 'native' | 'blooming'
@@ -8,8 +9,10 @@ interface FilterBarProps {
   items: InventoryItem[]
   activeFilter: FilterType
   activeSort: SortType
+  activeLocation: string
   onFilterChange: (filter: FilterType) => void
   onSortChange: (sort: SortType) => void
+  onLocationChange: (location: string) => void
 }
 
 const FILTERS: { value: FilterType; label: string }[] = [
@@ -23,10 +26,34 @@ const FILTERS: { value: FilterType; label: string }[] = [
 const SORTS: { value: SortType; label: string }[] = [
   { value: 'date-desc', label: 'Newest' },
   { value: 'date-asc', label: 'Oldest' },
-  { value: 'name-asc', label: 'A \u2192 Z' },
-  { value: 'name-desc', label: 'Z \u2192 A' },
+  { value: 'name-asc', label: 'A → Z' },
+  { value: 'name-desc', label: 'Z → A' },
   { value: 'location', label: 'Location' },
 ]
+
+// Parse "Front, Hammock" into { zone: "Front", habitat: "Hammock" }
+export function parseLocation(loc: string): { zone: string; habitat: string } {
+  if (!loc) return { zone: '', habitat: '' }
+  const parts = loc.split(',').map(s => s.trim())
+  let zone = '', habitat = ''
+  for (const p of parts) {
+    if ((LOCATION_ZONES as readonly string[]).includes(p)) zone = p
+    else if ((LOCATION_HABITATS as readonly string[]).includes(p)) habitat = p
+  }
+  return { zone, habitat }
+}
+
+// Get all unique location parts (zones + habitats) that are actually in use
+function getLocationParts(items: InventoryItem[]): string[] {
+  const parts = new Set<string>()
+  for (const item of items) {
+    if (!item.location) continue
+    const { zone, habitat } = parseLocation(item.location)
+    if (zone) parts.add(zone)
+    if (habitat) parts.add(habitat)
+  }
+  return [...parts].sort()
+}
 
 function getFilterCount(items: InventoryItem[], filter: FilterType): number {
   const season = getCurrentSeason()
@@ -39,6 +66,14 @@ function getFilterCount(items: InventoryItem[], filter: FilterType): number {
   }
 }
 
+function getLocationCount(items: InventoryItem[], loc: string): number {
+  return items.filter(i => {
+    if (!i.location) return false
+    const { zone, habitat } = parseLocation(i.location)
+    return zone === loc || habitat === loc
+  }).length
+}
+
 export function applyFilter(items: InventoryItem[], filter: FilterType): InventoryItem[] {
   const season = getCurrentSeason()
   switch (filter) {
@@ -48,6 +83,15 @@ export function applyFilter(items: InventoryItem[], filter: FilterType): Invento
     case 'native': return items.filter(i => i.is_native)
     case 'blooming': return items.filter(i => i.bloom?.includes(season) || i.bloom?.includes('Year-round'))
   }
+}
+
+export function applyLocationFilter(items: InventoryItem[], location: string): InventoryItem[] {
+  if (!location) return items
+  return items.filter(i => {
+    if (!i.location) return false
+    const { zone, habitat } = parseLocation(i.location)
+    return zone === location || habitat === location
+  })
 }
 
 export function applySearch(items: InventoryItem[], query: string): InventoryItem[] {
@@ -74,9 +118,12 @@ export function applySort(items: InventoryItem[], sort: SortType): InventoryItem
   }
 }
 
-export default function FilterBar({ items, activeFilter, activeSort, onFilterChange, onSortChange }: FilterBarProps) {
+export default function FilterBar({ items, activeFilter, activeSort, activeLocation, onFilterChange, onSortChange, onLocationChange }: FilterBarProps) {
+  const locationParts = getLocationParts(items)
+
   return (
     <div className="space-y-3">
+      {/* Type filter chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {FILTERS.map(f => {
           const count = getFilterCount(items, f.value)
@@ -95,6 +142,42 @@ export default function FilterBar({ items, activeFilter, activeSort, onFilterCha
           )
         })}
       </div>
+
+      {/* Location filter chips */}
+      {locationParts.length > 0 && (
+        <div className="flex items-center gap-2">
+          <MapPin size={14} className="text-ink-light flex-shrink-0" />
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+            {locationParts.map(loc => {
+              const active = activeLocation === loc
+              const count = getLocationCount(items, loc)
+              return (
+                <button
+                  key={loc}
+                  onClick={() => onLocationChange(active ? '' : loc)}
+                  className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    active ? 'bg-sage text-white' : 'bg-white text-ink-mid border border-cream-dark hover:border-sage'
+                  }`}
+                >
+                  {loc}
+                  <span className={`ml-1 ${active ? 'text-white/70' : 'text-ink-light'}`}>{count}</span>
+                </button>
+              )
+            })}
+            {activeLocation && (
+              <button
+                onClick={() => onLocationChange('')}
+                className="flex-shrink-0 w-6 h-6 rounded-full bg-cream-dark text-ink-light flex items-center justify-center hover:text-ink min-h-0 min-w-0"
+                aria-label="Clear location filter"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sort */}
       <div className="flex items-center gap-2">
         <span className="text-xs text-ink-light">Sort:</span>
         <div className="flex gap-1.5">

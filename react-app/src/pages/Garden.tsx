@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import ScreenHeader from '@/components/layout/ScreenHeader'
 import SearchBar from '@/components/garden/SearchBar'
-import FilterBar, { applyFilter, applySearch, applySort } from '@/components/garden/FilterBar'
+import FilterBar, { applyFilter, applyLocationFilter, applySearch, applySort } from '@/components/garden/FilterBar'
 import type { FilterType, SortType } from '@/components/garden/FilterBar'
 import PlantCard from '@/components/garden/PlantCard'
 import PlantCardSkeleton from '@/components/garden/PlantCardSkeleton'
@@ -20,14 +20,16 @@ export default function Garden() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
   const [sort, setSort] = useState<SortType>('date-desc')
+  const [location, setLocation] = useState('')
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
 
   const filteredItems = useMemo(() => {
     let result = applyFilter(items, filter)
+    result = applyLocationFilter(result, location)
     result = applySearch(result, search)
     result = applySort(result, sort)
     return result
-  }, [items, filter, search, sort])
+  }, [items, filter, location, search, sort])
 
   const hasPlants = items.some(i => i.type === 'plant')
 
@@ -85,8 +87,10 @@ export default function Garden() {
             items={items}
             activeFilter={filter}
             activeSort={sort}
+            activeLocation={location}
             onFilterChange={setFilter}
             onSortChange={setSort}
+            onLocationChange={setLocation}
           />
         )}
 
