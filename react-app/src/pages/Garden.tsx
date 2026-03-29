@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import ScreenHeader from '@/components/layout/ScreenHeader'
+import SettingsSheet from '@/pages/Settings'
 import SearchBar from '@/components/garden/SearchBar'
 import FilterBar, { applyFilter, applyLocationFilter, applySearch, applySort } from '@/components/garden/FilterBar'
 import type { FilterType, SortType } from '@/components/garden/FilterBar'
@@ -24,6 +25,7 @@ export default function Garden() {
   const [location, setLocation] = useState('')
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const [healthItem, setHealthItem] = useState<InventoryItem | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const filteredItems = useMemo(() => {
     let result = applyFilter(items, filter)
@@ -63,7 +65,7 @@ export default function Garden() {
             <button
               className="w-10 h-10 flex items-center justify-center rounded-full text-white/80 hover:text-white transition-colors"
               aria-label="Settings"
-              onClick={() => toast.info('Settings coming soon')}
+              onClick={() => setSettingsOpen(true)}
             >
               <Settings size={20} />
             </button>
@@ -146,6 +148,7 @@ export default function Garden() {
         onClose={() => setHealthItem(null)}
         onSaved={() => refresh()}
       />
+      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   )
 }
