@@ -47,7 +47,8 @@
       "Bash(npm create:*)",
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest init -d)",
-      "Bash(npx shadcn@latest add card input label sheet sonner tabs)"
+      "Bash(npx shadcn@latest add card input label sheet sonner tabs)",
+      "Bash(npx vitest:*)"
     ]
   },
   "hooks": {
