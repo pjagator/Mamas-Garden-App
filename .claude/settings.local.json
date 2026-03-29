@@ -11,7 +11,55 @@
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(git log:*)",
-      "Bash(/Users/patrickalberts/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh --project-dir /Users/patrickalberts/Mamas-Garden-App)"
+      "Bash(/Users/patrickalberts/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh --project-dir /Users/patrickalberts/Mamas-Garden-App)",
+      "Bash(curl -s -X POST 'https://itjvgruwvlrrlhsknwiw.supabase.co/functions/v1/identify-species' -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0anZncnV3dmxycmxoc2tud2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTgzMTgsImV4cCI6MjA4OTY3NDMxOH0.I9nrbtfZqvd4Q9V9GIbUv1vWYWB9OfQwucGhBU8UP6c' -d '{}')",
+      "Bash(curl -s -X POST 'https://itjvgruwvlrrlhsknwiw.supabase.co/functions/v1/identify-species' -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0anZncnV3dmxycmxoc2tud2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTgzMTgsImV4cCI6MjA4OTY3NDMxOH0.I9nrbtfZqvd4Q9V9GIbUv1vWYWB9OfQwucGhBU8UP6c' -d '{\"\"imageUrl\"\":\"\"https://itjvgruwvlrrlhsknwiw.supabase.co/storage/v1/object/public/garden-images/test.jpg\"\"}' -w \"\\\\n%{http_code}\")",
+      "Bash(wc -l /Users/patrickalberts/Mamas-Garden-App/css/*.css)",
+      "Bash(wc -l /Users/patrickalberts/Mamas-Garden-App/index.html /Users/patrickalberts/Mamas-Garden-App/js/*.js)",
+      "Bash(grep -n \"setTimeout\\\\|setInterval\\\\|requestAnimationFrame\\\\|debounce\\\\|throttle\" /Users/patrickalberts/Mamas-Garden-App/js/*.js)",
+      "Bash(du -sh /Users/patrickalberts/Mamas-Garden-App/js/*.js)",
+      "Bash(wc -c /Users/patrickalberts/Mamas-Garden-App/js/*.js)",
+      "Bash(gzip -c /Users/patrickalberts/Mamas-Garden-App/index.html)",
+      "Bash(gzip -c /Users/patrickalberts/Mamas-Garden-App/js/app.js)",
+      "Bash(gzip -c /Users/patrickalberts/Mamas-Garden-App/css/base.css)",
+      "Bash(curl -s 'https://itjvgruwvlrrlhsknwiw.supabase.co/rest/v1/inventory?select=id,common,type&order=date.desc' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0anZncnV3dmxycmxoc2tud2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTgzMTgsImV4cCI6MjA4OTY3NDMxOH0.I9nrbtfZqvd4Q9V9GIbUv1vWYWB9OfQwucGhBU8UP6c' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0anZncnV3dmxycmxoc2tud2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTgzMTgsImV4cCI6MjA4OTY3NDMxOH0.I9nrbtfZqvd4Q9V9GIbUv1vWYWB9OfQwucGhBU8UP6c' -H 'Prefer: count=exact' -w \"\\\\n%{http_code}\")",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(jq -e '.hooks.PostToolUse[] | select\\(.matcher == \"\"Bash\"\"\\) | .hooks[] | select\\(.type == \"\"command\"\"\\) | .command' /Users/patrickalberts/Mamas-Garden-App/.claude/settings.local.json)",
+      "Bash(mv /Users/patrickalberts/Mamas-Garden-App/supabase/supabase/config.toml /Users/patrickalberts/Mamas-Garden-App/supabase/config.toml)",
+      "Bash(mv /Users/patrickalberts/Mamas-Garden-App/supabase/supabase/.gitignore /Users/patrickalberts/Mamas-Garden-App/supabase/.gitignore)",
+      "Bash(rm -rf /Users/patrickalberts/Mamas-Garden-App/supabase/supabase/)",
+      "Bash(supabase status:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase --version)",
+      "Bash(supabase functions:*)",
+      "Bash(grep -n \"auth-screen\" /Users/patrickalberts/Mamas-Garden-App/css/*.css)",
+      "Bash(grep -n \"opacity\" /Users/patrickalberts/Mamas-Garden-App/css/*.css)",
+      "Bash(gh repo:*)",
+      "Bash(gh project:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh search:*)",
+      "Bash(gh pr:*)",
+      "Bash(git tag:*)",
+      "Bash(gh api:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command' | grep -q '^git commit' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"You just committed code changes. Check if any documentation needs updating: CLAUDE.md (architecture/conventions), PROJECT-STATE.md (file inventory/features/bugs), PROJECT-CONTEXT.md (config/gotchas), .claude/docs/architectural_patterns.md (code patterns). Only update docs that are actually affected by your changes.\"}}' || true",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
