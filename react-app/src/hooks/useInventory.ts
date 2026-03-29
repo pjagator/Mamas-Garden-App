@@ -111,11 +111,31 @@ export function useInventory() {
     return data as InventoryItem
   }, [])
 
+  const insertItem = useCallback(async (entry: Omit<InventoryItem, 'id' | 'date'>) => {
+    const { data, error: err } = await supabase
+      .from('inventory')
+      .insert(entry)
+      .select()
+      .single()
+
+    if (err) {
+      setError(err.message)
+      return null
+    }
+
+    setItems(prev => {
+      const next = [data as InventoryItem, ...prev]
+      writeCache(next)
+      return next
+    })
+    return data as InventoryItem
+  }, [])
+
   const stats = {
     plants: items.filter(i => i.type === 'plant').length,
     insects: items.filter(i => i.type === 'bug').length,
     natives: items.filter(i => i.is_native).length,
   }
 
-  return { items, loading, error, stats, refresh, deleteItem, updateItem }
+  return { items, loading, error, stats, refresh, deleteItem, updateItem, insertItem }
 }
