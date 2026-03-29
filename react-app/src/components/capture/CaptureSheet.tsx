@@ -166,8 +166,8 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
       setResults(top3)
       setSelectedIndex(0)
       setStep('results')
-    } catch (err: any) {
-      setError(friendlyError(err.message))
+    } catch (err: unknown) {
+      setError(friendlyError(err instanceof Error ? err.message : String(err)))
       setStep('photo')
     }
   }
