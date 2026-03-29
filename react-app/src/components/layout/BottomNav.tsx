@@ -8,6 +8,7 @@ interface NavItem {
 
 interface BottomNavProps {
   onFabClick: () => void
+  offline?: boolean
 }
 
 function LeafIcon({ active }: { active: boolean }) {
@@ -63,7 +64,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Timeline', path: '/timeline', icon: null },
 ]
 
-export default function BottomNav({ onFabClick }: BottomNavProps) {
+export default function BottomNav({ onFabClick, offline }: BottomNavProps) {
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -109,8 +110,9 @@ export default function BottomNav({ onFabClick }: BottomNavProps) {
         {/* Center FAB */}
         <div className="flex-shrink-0 flex flex-col items-center justify-end pb-2" style={{ width: '80px' }}>
           <button
-            onClick={onFabClick}
-            className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg -mt-5"
+            onClick={offline ? undefined : onFabClick}
+            disabled={offline}
+            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg -mt-5 ${offline ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{ backgroundColor: 'var(--color-primary)' }}
             aria-label="Capture new species"
           >

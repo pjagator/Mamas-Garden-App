@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useConnection } from '@/hooks/useConnection'
 import { shouldShowWelcome, markVisit } from '@/lib/constants'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
 import Auth from '@/pages/Auth'
 import Welcome from '@/pages/Welcome'
 import CaptureSheet from '@/components/capture/CaptureSheet'
+import ConnectionToast from './ConnectionToast'
 
 const DESKTOP_BREAKPOINT = 768
 
 export default function AppShell() {
   const { user, loading } = useAuth()
+  const { online, showToast, toastMessage, toastType } = useConnection()
   const [isDesktop, setIsDesktop] = useState(
     () => window.innerWidth >= DESKTOP_BREAKPOINT
   )
@@ -56,6 +59,7 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <ConnectionToast visible={showToast} message={toastMessage} type={toastType} />
       {showWelcome && <Welcome onDismiss={handleDismissWelcome} />}
       <CaptureSheet open={captureOpen} onClose={() => setCaptureOpen(false)} />
 
@@ -71,7 +75,7 @@ export default function AppShell() {
           <main className="pb-20">
             <Outlet />
           </main>
-          <BottomNav onFabClick={handleFabClick} />
+          <BottomNav onFabClick={handleFabClick} offline={!online} />
         </>
       )}
     </div>
