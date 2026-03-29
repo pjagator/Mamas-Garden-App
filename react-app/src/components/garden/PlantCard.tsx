@@ -1,4 +1,4 @@
-import { Leaf, Bug, Heart } from 'lucide-react'
+import { Leaf, Bug, Heart, Activity } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { getCurrentSeason } from '@/lib/constants'
 import type { InventoryItem, HealthStatus } from '@/types'
@@ -7,6 +7,7 @@ interface PlantCardProps {
   item: InventoryItem
   index: number
   onClick: () => void
+  onHealthClick?: () => void
 }
 
 const HEALTH_COLORS: Record<HealthStatus, string> = {
@@ -23,7 +24,7 @@ function PlaceholderIcon({ type }: { type: string | null }) {
   return <Leaf size={32} className="text-ink-light" />
 }
 
-export default function PlantCard({ item, index, onClick }: PlantCardProps) {
+export default function PlantCard({ item, index, onClick, onHealthClick }: PlantCardProps) {
   const season = getCurrentSeason()
   const isBlooming = item.bloom?.includes(season) || item.bloom?.includes('Year-round')
 
@@ -52,6 +53,15 @@ export default function PlantCard({ item, index, onClick }: PlantCardProps) {
             style={{ backgroundColor: HEALTH_COLORS[item.health] }}
             title={item.health}
           />
+        )}
+        {item.type === 'plant' && onHealthClick && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onHealthClick() }}
+            className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center min-h-0 min-w-0"
+            title="Log health check"
+          >
+            <Activity size={14} className="text-sage" />
+          </button>
         )}
       </div>
       <div className="p-3">

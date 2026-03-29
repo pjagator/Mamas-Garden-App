@@ -8,13 +8,14 @@ import type { FilterType, SortType } from '@/components/garden/FilterBar'
 import PlantCard from '@/components/garden/PlantCard'
 import PlantCardSkeleton from '@/components/garden/PlantCardSkeleton'
 import ItemDetail from '@/components/garden/ItemDetail'
+import HealthLogSheet from '@/components/health/HealthLogSheet'
 import ReminderList from '@/components/reminders/ReminderList'
 import { useInventory } from '@/hooks/useInventory'
 import { useReminders } from '@/hooks/useReminders'
 import type { InventoryItem } from '@/types'
 
 export default function Garden() {
-  const { items, loading, stats, deleteItem } = useInventory()
+  const { items, loading, stats, deleteItem, refresh } = useInventory()
   const { reminders, loading: remindersLoading, toggle, addCustom, deleteReminder, generate, isStale } = useReminders(items)
 
   const [search, setSearch] = useState('')
@@ -22,6 +23,7 @@ export default function Garden() {
   const [sort, setSort] = useState<SortType>('date-desc')
   const [location, setLocation] = useState('')
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+  const [healthItem, setHealthItem] = useState<InventoryItem | null>(null)
 
   const filteredItems = useMemo(() => {
     let result = applyFilter(items, filter)
@@ -108,6 +110,7 @@ export default function Garden() {
                 item={item}
                 index={i}
                 onClick={() => setSelectedItem(item)}
+                onHealthClick={() => setHealthItem(item)}
               />
             ))}
           </div>
@@ -136,6 +139,12 @@ export default function Garden() {
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         onDelete={handleDelete}
+      />
+      <HealthLogSheet
+        item={healthItem}
+        open={!!healthItem}
+        onClose={() => setHealthItem(null)}
+        onSaved={() => refresh()}
       />
     </>
   )

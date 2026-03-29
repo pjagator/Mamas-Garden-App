@@ -7,6 +7,7 @@ import {
   Sprout, Scissors, Ruler, ShieldAlert, TreePine, Trash2
 } from 'lucide-react'
 import { confidenceClass } from '@/lib/constants'
+import HealthTimeline from '@/components/health/HealthTimeline'
 import type { InventoryItem, CareProfile } from '@/types'
 
 interface ItemDetailProps {
@@ -127,6 +128,13 @@ export default function ItemDetail({ item, open, onClose, onDelete }: ItemDetail
           {item.care_profile && (
             <>
               <CareSection care={item.care_profile} />
+              <Separator className="my-4" />
+            </>
+          )}
+
+          {item.type === 'plant' && (
+            <>
+              <HealthTimeline inventoryId={item.id} />
               <Separator className="my-4" />
             </>
           )}
