@@ -2,12 +2,14 @@ import { useState, useRef, useCallback } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Camera, Image as ImageIcon, X, Loader2, Leaf, Heart } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { resilientFetch } from '@/lib/api'
 import { matchNative, PRESET_TAGS } from '@/lib/constants'
 import { useInventory } from '@/hooks/useInventory'
+import { useWishlist } from '@/hooks/useWishlist'
 import IdResultCard from './IdResultCard'
 import type { IdResult } from './IdResultCard'
 import type { InventoryItem } from '@/types'
@@ -52,6 +54,7 @@ async function generateCareProfile(itemId: string, common: string | null, scient
 
 export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
   const { insertItem } = useInventory()
+  const { addItem: addToWishlist } = useWishlist()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
   const galleryRef = useRef<HTMLInputElement>(null)
@@ -62,6 +65,8 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<{ title: string; message: string } | null>(null)
+  const [showSpottedPrompt, setShowSpottedPrompt] = useState(false)
+  const [spottedAt, setSpottedAt] = useState('')
 
   const reset = useCallback(() => {
     setStep('photo')
@@ -70,6 +75,8 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
     setSelectedIndex(0)
     setNotes('')
     setError(null)
+    setShowSpottedPrompt(false)
+    setSpottedAt('')
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d')
       if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
@@ -174,6 +181,11 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
 
   async function handleSave(target: 'garden' | 'wishlist') {
     if (!canvasRef.current || !results.length) return
+
+    if (target === 'wishlist') {
+      setShowSpottedPrompt(true)
+      return
+    }
     setStep('saving')
 
     try {
@@ -183,10 +195,6 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
       const autoTags: string[] = []
       if (result.category && (PRESET_TAGS as readonly string[]).includes(result.category)) {
         autoTags.push(result.category)
-      }
-
-      if (target === 'wishlist') {
-        toast.info('Wishlist saving coming in a future update — saved to garden instead')
       }
 
       const { data: { user } } = await supabase.auth.getUser()
@@ -226,6 +234,47 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
         generateCareProfile(inserted.id, inserted.common, inserted.scientific, inserted.type, inserted.category)
       }
 
+      handleClose()
+    } catch (err: any) {
+      toast.error('Error saving: ' + err.message)
+      setStep('results')
+    }
+  }
+
+  async function handleSaveToWishlist() {
+    if (!canvasRef.current || !results.length) return
+    setStep('saving')
+    setShowSpottedPrompt(false)
+
+    try {
+      const result = results[selectedIndex]
+      const imageUrl = await uploadToStorage(canvasRef.current, 0.82, '')
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      await addToWishlist({
+        user_id: user.id,
+        common: result.common,
+        scientific: result.scientific,
+        type: result.type,
+        category: result.category,
+        confidence: result.confidence,
+        description: result.description,
+        image_url: imageUrl,
+        spotted_at: spottedAt.trim() || null,
+        notes: notes,
+        is_native: result.isNative,
+        bloom: result.bloom,
+        season: result.season,
+        care_profile: null,
+        suggested_zones: null,
+        sun_needs: null,
+        soil_needs: null,
+        moisture_needs: null,
+        source: 'Claude AI',
+      })
+
+      toast.success(`${result.common} saved as a friend of the garden`)
       handleClose()
     } catch (err: any) {
       toast.error('Error saving: ' + err.message)
@@ -308,6 +357,34 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
                 <Heart size={18} className="mr-2" /> Save as Friend
               </Button>
             </div>
+          </div>
+        )}
+
+        {showSpottedPrompt && (
+          <div className="space-y-3 mt-4">
+            <p className="font-display text-sm text-primary">Where did you spot this friend?</p>
+            <div className="flex flex-wrap gap-2">
+              {['Leu Gardens', 'Garden center', "Neighbor's yard", 'Botanical garden', 'Hiking trail'].map(place => (
+                <button
+                  key={place}
+                  onClick={() => setSpottedAt(place)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    spottedAt === place ? 'border-primary bg-sage-light/50 text-primary' : 'border-cream-dark text-ink-mid'
+                  }`}
+                >
+                  {place}
+                </button>
+              ))}
+            </div>
+            <Input
+              value={spottedAt}
+              onChange={(e) => setSpottedAt(e.target.value)}
+              placeholder="Or type a location..."
+              className="text-sm"
+            />
+            <Button onClick={handleSaveToWishlist} className="w-full" size="lg">
+              <Heart size={18} className="mr-2" /> Save as Friend
+            </Button>
           </div>
         )}
 
