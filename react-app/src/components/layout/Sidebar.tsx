@@ -1,30 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import { Leaf, Compass, Heart, Calendar, Camera } from 'lucide-react'
 
 interface SidebarProps {
   onFabClick: () => void
 }
 
-interface NavItem {
-  label: string
-  path: string
-  emoji: string
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Garden', path: '/', emoji: '🌿' },
-  { label: 'Map', path: '/map', emoji: '🧭' },
-  { label: 'Wishlist', path: '/wishlist', emoji: '💚' },
-  { label: 'Timeline', path: '/timeline', emoji: '📅' },
-]
-
-function CameraIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
-    </svg>
-  )
-}
+const NAV_ITEMS = [
+  { label: 'Garden', path: '/', icon: Leaf },
+  { label: 'Map', path: '/map', icon: Compass },
+  { label: 'Wishlist', path: '/wishlist', icon: Heart },
+  { label: 'Timeline', path: '/timeline', icon: Calendar },
+] as const
 
 export default function Sidebar({ onFabClick }: SidebarProps) {
   const location = useLocation()
@@ -36,50 +22,38 @@ export default function Sidebar({ onFabClick }: SidebarProps) {
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-56 bg-white border-r border-cream-dark flex flex-col z-50">
-      {/* Logo */}
       <div className="px-5 py-6 border-b border-cream-dark">
-        <span className="font-display text-xl font-bold" style={{ color: 'var(--color-primary)' }}>
-          Tampa Garden
-        </span>
+        <span className="font-display text-xl font-bold text-primary">Tampa Garden</span>
       </div>
 
-      {/* Nav items */}
       <nav className="flex-1 py-3 overflow-y-auto" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path)
+          const Icon = item.icon
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg mx-2 transition-colors"
-              style={{
-                width: 'calc(100% - 16px)',
-                backgroundColor: active ? 'var(--color-sage-light)' : 'transparent',
-                color: active ? 'var(--color-primary)' : 'var(--color-ink-mid)',
-              }}
+              className={`w-[calc(100%-16px)] flex items-center gap-3 px-4 py-3 text-left rounded-lg mx-2 transition-colors ${
+                active
+                  ? 'bg-sage-light text-primary'
+                  : 'text-ink-mid hover:bg-cream-dark'
+              }`}
               aria-current={active ? 'page' : undefined}
-              onMouseEnter={(e) => {
-                if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-cream-dark)'
-              }}
-              onMouseLeave={(e) => {
-                if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
-              }}
             >
-              <span className="text-lg leading-none" aria-hidden="true">{item.emoji}</span>
+              <Icon size={20} strokeWidth={active ? 2.5 : 2} />
               <span className="text-sm font-medium">{item.label}</span>
             </button>
           )
         })}
       </nav>
 
-      {/* Capture button */}
       <div className="p-4 border-t border-cream-dark">
         <button
           onClick={onFabClick}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-medium text-sm transition-opacity hover:opacity-90 active:opacity-80"
-          style={{ backgroundColor: 'var(--color-primary)' }}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white font-medium text-sm transition-opacity hover:opacity-90 active:scale-[0.97]"
         >
-          <CameraIcon />
+          <Camera size={18} />
           <span>Capture</span>
         </button>
       </div>

@@ -48,7 +48,8 @@
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest init -d)",
       "Bash(npx shadcn@latest add card input label sheet sonner tabs)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(npx shadcn@latest add badge collapsible checkbox scroll-area separator select -y)"
     ]
   },
   "hooks": {
