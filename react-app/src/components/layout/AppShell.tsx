@@ -6,6 +6,7 @@ import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
 import Auth from '@/pages/Auth'
 import Welcome from '@/pages/Welcome'
+import CaptureSheet from '@/components/capture/CaptureSheet'
 
 const DESKTOP_BREAKPOINT = 768
 
@@ -42,9 +43,8 @@ export default function AppShell() {
     setShowWelcome(false)
   }
 
-  const handleFabClick = () => {
-    console.log('FAB clicked — capture modal coming in Phase 4')
-  }
+  const [captureOpen, setCaptureOpen] = useState(false)
+  const handleFabClick = () => setCaptureOpen(true)
 
   if (loading) {
     return <div className="min-h-screen bg-primary" />
@@ -57,6 +57,7 @@ export default function AppShell() {
   return (
     <div className="min-h-screen bg-cream">
       {showWelcome && <Welcome onDismiss={handleDismissWelcome} />}
+      <CaptureSheet open={captureOpen} onClose={() => setCaptureOpen(false)} />
 
       {isDesktop ? (
         <>
