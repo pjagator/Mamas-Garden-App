@@ -78,8 +78,20 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
   }
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) { setEditingNickname(false); onClose() } }}>
-      <SheetContent side="bottom" className="h-[85vh] overflow-y-auto rounded-t-2xl p-0">
+    <Sheet open={open} onOpenChange={(v) => { if (!v) { setEditingNickname(false); setEditingNotes(false); setEditingLocation(false); onClose() } }}>
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl p-0 flex flex-col" showCloseButton={false}>
+        {/* Sticky header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2.5 bg-white/95 backdrop-blur-sm border-b border-cream-dark rounded-t-2xl flex-shrink-0">
+          <p className="font-display text-sm font-medium text-ink truncate flex-1 mr-3">{displayName}</p>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-cream-dark text-ink-mid hover:text-ink min-h-0 min-w-0 flex-shrink-0"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1">
         {item.image_url ? (
           <div className="relative h-56">
             <img src={item.image_url} alt={item.common ?? 'Species photo'} className="w-full h-full object-cover" />
@@ -251,6 +263,7 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
           >
             <Trash2 size={12} /> Remove from garden
           </button>
+        </div>
         </div>
       </SheetContent>
     </Sheet>
