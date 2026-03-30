@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
-import { Settings } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import ScreenHeader from '@/components/layout/ScreenHeader'
-import SettingsSheet from '@/pages/Settings'
+import CareDashboard from '@/components/garden/CareDashboard'
 import SearchBar from '@/components/garden/SearchBar'
 import FilterBar, { applyFilter, applyLocationFilter, applyZoneFilter, applySearch, applySort } from '@/components/garden/FilterBar'
 import type { FilterType, SortType } from '@/components/garden/FilterBar'
@@ -10,16 +10,17 @@ import PlantCard from '@/components/garden/PlantCard'
 import PlantCardSkeleton from '@/components/garden/PlantCardSkeleton'
 import ItemDetail from '@/components/garden/ItemDetail'
 import HealthLogSheet from '@/components/health/HealthLogSheet'
-import ReminderList from '@/components/reminders/ReminderList'
 import { useInventory } from '@/hooks/useInventory'
 import { useGardenMap } from '@/hooks/useGardenMap'
 import { useReminders } from '@/hooks/useReminders'
+import { useAuth } from '@/hooks/useAuth'
 import type { InventoryItem } from '@/types'
 
 export default function Garden() {
   const { items, loading, stats, deleteItem, refresh } = useInventory()
   const { beds, placements } = useGardenMap()
   const { reminders, loading: remindersLoading, toggle, addCustom, deleteReminder, generate, isStale } = useReminders(items)
+  const { signOut } = useAuth()
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
@@ -28,7 +29,7 @@ export default function Garden() {
   const [zone, setZone] = useState('')
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const [healthItem, setHealthItem] = useState<InventoryItem | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [view, setView] = useState<'plants' | 'care'>('plants')
 
   const filteredItems = useMemo(() => {
     let result = applyFilter(items, filter)
@@ -38,8 +39,6 @@ export default function Garden() {
     result = applySort(result, sort)
     return result
   }, [items, filter, location, zone, placements, beds, search, sort])
-
-  const hasPlants = items.some(i => i.type === 'plant')
 
   async function handleDelete(id: string, imageUrl?: string | null) {
     const ok = window.confirm('Remove this from your garden? This cannot be undone.')
@@ -68,28 +67,50 @@ export default function Garden() {
             <SearchBar value={search} onChange={setSearch} />
             <button
               className="w-10 h-10 flex items-center justify-center rounded-full text-white/80 hover:text-white transition-colors"
-              aria-label="Settings"
-              onClick={() => setSettingsOpen(true)}
+              aria-label="Sign out"
+              onClick={() => { if (window.confirm('Sign out?')) signOut() }}
             >
-              <Settings size={20} />
+              <LogOut size={20} />
             </button>
           </div>
         }
       />
 
-      <div className="p-4 space-y-4">
-        {hasPlants && (
-          <ReminderList
-            reminders={reminders}
-            loading={remindersLoading}
-            isStale={isStale()}
-            onToggle={toggle}
-            onAddCustom={addCustom}
-            onDelete={deleteReminder}
-            onGenerate={generate}
-          />
-        )}
+      <div className="px-4 pt-3">
+        <div className="flex bg-cream-dark rounded-full p-0.5">
+          <button
+            onClick={() => setView('plants')}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-colors ${
+              view === 'plants' ? 'bg-primary text-white' : 'text-ink-mid'
+            }`}
+          >
+            Plants
+          </button>
+          <button
+            onClick={() => setView('care')}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-colors ${
+              view === 'care' ? 'bg-primary text-white' : 'text-ink-mid'
+            }`}
+          >
+            Care
+          </button>
+        </div>
+      </div>
 
+      <div className="p-4 space-y-4">
+        {view === 'care' ? (
+          <CareDashboard
+            inventory={items}
+            reminders={reminders}
+            remindersLoading={remindersLoading}
+            isStaleReminders={isStale()}
+            onToggleReminder={toggle}
+            onAddCustomReminder={addCustom}
+            onDeleteReminder={deleteReminder}
+            onGenerateReminders={generate}
+          />
+        ) : (
+        <>
         {items.length > 0 && (
           <FilterBar
             items={items}
@@ -142,6 +163,8 @@ export default function Garden() {
             </p>
           </div>
         )}
+        </>
+        )}
       </div>
 
       <ItemDetail
@@ -156,7 +179,6 @@ export default function Garden() {
         onClose={() => setHealthItem(null)}
         onSaved={() => refresh()}
       />
-      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   )
 }
