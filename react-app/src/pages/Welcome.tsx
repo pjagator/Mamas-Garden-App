@@ -25,6 +25,7 @@ export default function Welcome({ onDismiss }: WelcomeProps) {
     >
       <div className="max-w-sm mx-auto flex flex-col items-center gap-8">
         <div>
+          <img src="/logo.svg" alt="" className="w-16 h-16 mx-auto mb-4 opacity-90" />
           <p className="text-sage-light text-sm mb-1">{greeting}</p>
           <h1 className="font-display text-3xl font-bold text-white">Tampa Garden</h1>
           {seasonalNote && (

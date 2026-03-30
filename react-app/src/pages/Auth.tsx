@@ -72,6 +72,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary via-primary-mid to-sage flex flex-col items-center justify-center p-6">
       <div className="mb-8 text-center">
+        <img src="/logo.svg" alt="" className="w-20 h-20 mx-auto mb-2" />
         <h1 className="font-display text-4xl font-bold text-white mb-2">Tampa Garden</h1>
         <p className="text-sage-light text-sm italic font-display">A botanical journal</p>
       </div>
