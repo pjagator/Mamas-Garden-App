@@ -316,23 +316,19 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
           </div>
         )}
 
-        {hasImage && step !== 'saving' && (
-          <div className="space-y-4">
-            <div className="relative">
-              <canvas ref={canvasRef} className="w-full rounded-[--radius-card]" />
-              <button onClick={removeImage} className="absolute top-2 right-2 w-11 h-11 rounded-full bg-black/50 text-white flex items-center justify-center">
-                <X size={16} />
-              </button>
-            </div>
-            {step === 'photo' && (
-              <Button onClick={handleIdentify} className="w-full" size="lg">
-                <Leaf size={20} className="mr-2" /> Identify species
-              </Button>
-            )}
+        <div className={hasImage && step !== 'saving' ? 'space-y-4' : 'hidden'}>
+          <div className="relative">
+            <canvas ref={canvasRef} className="w-full rounded-[--radius-card]" />
+            <button onClick={removeImage} className="absolute top-2 right-2 w-11 h-11 rounded-full bg-black/50 text-white flex items-center justify-center">
+              <X size={16} />
+            </button>
           </div>
-        )}
-
-        {!hasImage && <canvas ref={canvasRef} className="hidden" />}
+          {step === 'photo' && (
+            <Button onClick={handleIdentify} className="w-full" size="lg">
+              <Leaf size={20} className="mr-2" /> Identify species
+            </Button>
+          )}
+        </div>
 
         {step === 'identifying' && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
