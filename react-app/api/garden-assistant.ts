@@ -94,6 +94,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!jsonMatch) throw new Error('Failed to generate placement suggestion')
       return res.status(200).json({ placement: JSON.parse(jsonMatch[0]) })
 
+    } else if (action === 'seasonal_care') {
+      const { month, year, plants: seasonalPlants, weather } = data
+      const plantList = seasonalPlants.map((p: any) => `- ${p.common}${p.scientific ? ` (${p.scientific})` : ''}`).join('\n')
+      const weatherContext = weather ? ` Current weather: ${weather}.` : ''
+      const text = await callClaude('claude-haiku-4-5-20251001',
+        'You are an expert Tampa Bay, Florida gardener.',
+        `You are an expert Tampa Bay, Florida gardener. It is ${month} ${year}.${weatherContext}
+
+The gardener has these plants:
+${plantList}
+
+Generate a seasonal care guide. Return JSON with this exact structure:
+{
+  "garden_summary": "2-3 sentence overview of what's happening in Tampa Bay gardens this month",
+  "plant_tips": [
+    {
+      "common": "Plant Name",
+      "tips": ["tip 1", "tip 2", "tip 3"]
+    }
+  ]
+}
+
+For each plant, provide 2-3 specific, actionable tips for this month in Tampa Bay. Consider the weather, season, and each plant's needs. Tips should be concise (one sentence each).`,
+        2048)
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('Failed to generate seasonal care guide')
+      return res.status(200).json(JSON.parse(jsonMatch[0]))
+
     } else {
       return res.status(400).json({ error: `Unknown action: ${action}` })
     }
