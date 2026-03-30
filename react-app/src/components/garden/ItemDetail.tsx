@@ -79,30 +79,35 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) { setEditingNickname(false); setEditingNotes(false); setEditingLocation(false); onClose() } }}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl p-0" showCloseButton={false}>
+      <SheetContent side="bottom" className="max-h-[75vh] rounded-t-2xl p-0" showCloseButton={false}>
         <div className="h-full overflow-y-auto">
-        {item.image_url ? (
-          <div className="relative h-56">
-            <img src={item.image_url} alt={item.common ?? 'Species photo'} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
+        {/* Drag handle + close row */}
+        <div className="sticky top-0 z-10 bg-white rounded-t-2xl">
+          <div className="flex justify-center pt-2 pb-1">
+            <div className="w-10 h-1 rounded-full bg-cream-dark" />
           </div>
-        ) : (
-          <div className="h-32 bg-cream-dark flex items-center justify-center">
-            <TypeIcon size={48} className="text-ink-light/30" />
-          </div>
-        )}
-
-        <div className="px-5 pb-8 -mt-6 relative">
-          {/* Close button — in the content area, always reachable */}
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-end px-3 pb-1">
             <button
               onClick={onClose}
-              className="w-11 h-11 flex items-center justify-center rounded-full bg-cream-dark text-ink-mid hover:text-ink"
+              className="w-11 h-11 flex items-center justify-center rounded-full text-ink-mid hover:text-ink"
             >
               <X size={18} />
             </button>
           </div>
+        </div>
 
+        {item.image_url ? (
+          <div className="relative h-48">
+            <img src={item.image_url} alt={item.common ?? 'Species photo'} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
+          </div>
+        ) : (
+          <div className="h-24 bg-cream-dark flex items-center justify-center">
+            <TypeIcon size={40} className="text-ink-light/30" />
+          </div>
+        )}
+
+        <div className="px-5 pb-8 -mt-4 relative">
           <SheetHeader className="mb-4">
             <SheetTitle className="font-display text-xl text-left">{displayName}</SheetTitle>
             {item.nickname && item.common && <p className="text-sm text-ink-mid">{item.common}</p>}

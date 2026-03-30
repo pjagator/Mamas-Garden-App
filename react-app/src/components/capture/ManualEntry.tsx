@@ -92,7 +92,7 @@ export default function ManualEntry({ open, onClose }: ManualEntryProps) {
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <SheetContent side="bottom" className="h-[80vh] overflow-y-auto rounded-t-2xl">
+      <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader className="mb-4">
           <SheetTitle className="font-display">Add Manually</SheetTitle>
         </SheetHeader>

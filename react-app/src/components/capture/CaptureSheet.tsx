@@ -285,7 +285,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-2xl">
+      <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader className="mb-4">
           <SheetTitle className="font-display">
             {step === 'photo' && 'Capture a Species'}
@@ -301,16 +301,16 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
               <Leaf size={48} className="text-ink-light/30" />
               <p className="text-sm text-ink-light">Take a photo or choose from your gallery</p>
             </div>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <label htmlFor="capture-camera"
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary text-white font-medium text-sm h-11 px-4 cursor-pointer active:scale-[0.98] transition-transform"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-white font-medium text-sm h-11 cursor-pointer active:scale-[0.98] transition-transform"
               >
-                <Camera size={20} /> Camera
+                <Camera size={18} /> Camera
               </label>
               <label htmlFor="capture-gallery"
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-cream-dark text-ink font-medium text-sm h-11 px-4 cursor-pointer active:scale-[0.98] transition-transform"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-cream-dark text-ink font-medium text-sm h-11 cursor-pointer active:scale-[0.98] transition-transform"
               >
-                <ImageIcon size={20} /> Gallery
+                <ImageIcon size={18} /> Gallery
               </label>
             </div>
           </div>

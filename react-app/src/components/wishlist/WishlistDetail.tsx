@@ -46,7 +46,7 @@ export default function WishlistDetail({ item, open, onClose, onGraduate, onDele
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-      <SheetContent side="bottom" className="h-[85vh] overflow-y-auto rounded-t-2xl p-0">
+      <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto rounded-t-2xl p-0">
         {item.image_url ? (
           <div className="relative h-56">
             <img src={item.image_url} alt={item.common ?? 'Species photo'} className="w-full h-full object-cover opacity-90" />
