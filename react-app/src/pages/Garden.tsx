@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth'
 import type { InventoryItem } from '@/types'
 
 export default function Garden() {
-  const { items, loading, stats, deleteItem, refresh } = useInventory()
+  const { items, loading, stats, deleteItem, updateItem, refresh } = useInventory()
   const { beds, placements } = useGardenMap()
   const { reminders, loading: remindersLoading, toggle, addCustom, deleteReminder, generate, isStale } = useReminders(items)
   const { signOut } = useAuth()
@@ -172,6 +172,10 @@ export default function Garden() {
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         onDelete={handleDelete}
+        onUpdate={(id, updates) => {
+          updateItem(id, updates)
+          if (selectedItem && selectedItem.id === id) setSelectedItem({ ...selectedItem, ...updates })
+        }}
       />
       <HealthLogSheet
         item={healthItem}

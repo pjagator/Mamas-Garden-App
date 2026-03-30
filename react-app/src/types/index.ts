@@ -2,6 +2,7 @@
 export interface InventoryItem {
   id: string
   user_id: string
+  nickname: string | null
   common: string | null
   scientific: string | null
   type: 'plant' | 'bug' | null

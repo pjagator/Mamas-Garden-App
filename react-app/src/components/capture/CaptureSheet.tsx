@@ -223,6 +223,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
         height: null,
         features: null,
         linked_plant_id: null,
+        nickname: null,
       }
 
       const inserted = await insertItem(entry)

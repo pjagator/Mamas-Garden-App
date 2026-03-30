@@ -50,7 +50,8 @@ export default function PlantCareCard({ item, tips }: PlantCareCardProps) {
           <div className="w-10 h-10 rounded-full bg-cream-dark flex-shrink-0" />
         )}
         <div className="flex-1 min-w-0">
-          <h4 className="font-display text-sm font-medium text-ink truncate">{item.common ?? 'Unknown'}</h4>
+          <h4 className="font-display text-sm font-medium text-ink truncate">{item.nickname ?? item.common ?? 'Unknown'}</h4>
+          {item.nickname && item.common && <p className="text-[10px] text-ink-light truncate">{item.common}</p>}
           {item.scientific && <p className="text-[10px] text-ink-light italic truncate">{item.scientific}</p>}
         </div>
       </div>

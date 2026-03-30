@@ -84,7 +84,7 @@ export default function Map() {
     if (result.placement) {
       const item = inventory.find(i => i.id === selectedPlant)
       const zoneName = containingBed?.name
-      toast.success(`${item?.common ?? 'Plant'} placed${zoneName ? ` in ${zoneName}` : ' on map'}`)
+      toast.success(`${item?.nickname ?? item?.common ?? 'Plant'} placed${zoneName ? ` in ${zoneName}` : ' on map'}`)
       setSelectedPlant(null)
       setPaletteOpen(true)
     } else if (result.error === 'duplicate') {

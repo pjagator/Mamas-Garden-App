@@ -233,7 +233,7 @@ const GardenCanvas = forwardRef<GardenCanvasRef, GardenCanvasProps>(function Gar
               const item = inventory.find(i => i.id === p.inventory_id)
               if (!item) return null
               return (
-                <Text key={`label-${p.id}`} x={p.x - 30} y={p.y + 22} text={item.common ?? '?'}
+                <Text key={`label-${p.id}`} x={p.x - 30} y={p.y + 22} text={item.nickname ?? item.common ?? '?'}
                   fontSize={9} fontFamily="system-ui, sans-serif" fill="#1c3a2b" align="center" width={60} />
               )
             })}

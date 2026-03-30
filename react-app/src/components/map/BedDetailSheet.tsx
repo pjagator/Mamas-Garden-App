@@ -122,7 +122,7 @@ export default function BedDetailSheet({ bed, open, onClose, onSave, onDelete, p
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate text-ink">{item.common ?? 'Unknown'}</p>
+                          <p className="text-xs font-medium truncate text-ink">{item.nickname ?? item.common ?? 'Unknown'}</p>
                           {item.scientific && <p className="text-[10px] text-ink-light italic truncate">{item.scientific}</p>}
                         </div>
                       </div>

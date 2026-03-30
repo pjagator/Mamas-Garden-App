@@ -141,7 +141,7 @@ function PlantRow({ item, selected, placed, onSelect }: {
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className={`text-xs font-medium truncate ${placed ? 'text-ink-light' : 'text-ink'}`}>{item.common ?? 'Unknown'}</p>
+        <p className={`text-xs font-medium truncate ${placed ? 'text-ink-light' : 'text-ink'}`}>{item.nickname ?? item.common ?? 'Unknown'}</p>
         {item.scientific && <p className="text-[10px] text-ink-light italic truncate">{item.scientific}</p>}
       </div>
       {placed && <Check size={14} className="text-sage flex-shrink-0" />}

@@ -66,8 +66,11 @@ export default function PlantCard({ item, index, onClick, onHealthClick }: Plant
       </div>
       <div className="p-3">
         <h3 className="font-display text-sm font-medium text-ink leading-tight truncate">
-          {item.common ?? 'Unknown species'}
+          {item.nickname ?? item.common ?? 'Unknown species'}
         </h3>
+        {item.nickname && item.common && (
+          <p className="text-xs text-ink-light truncate mt-0.5">{item.common}</p>
+        )}
         {item.scientific && (
           <p className="text-xs text-ink-light italic truncate mt-0.5">{item.scientific}</p>
         )}
