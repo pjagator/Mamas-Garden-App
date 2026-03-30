@@ -423,8 +423,14 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
 - Vercel API routes (instead of Supabase Edge Functions)
 - Vercel deployment from `firebush` branch
 
+### Map Features
+- **Plant placement**: Select a plant from the palette, tap the map. Plants dropped inside a zone rectangle are automatically linked to that zone (`bed_id` set on the placement row).
+- **Zone detail sheet**: Shows all plants placed in the zone with thumbnail, name, and scientific name.
+- **Plant palette grouping**: Plants grouped by zone placement — "Not yet placed", then each zone name with its plants, then "Placed outside zones" for plants on the map but not in a zone.
+
 ### Known Issues Fixed
 - **Map plant placement**: The PlantPalette Sheet overlay intercepted canvas taps. Fixed by auto-closing the palette when a plant is selected, keeping placement mode active. `useGardenMap.placeItem()` now returns structured `{ placement, error }` with real error messages instead of silently returning null.
+- **Mobile plant placement**: Two issues prevented placement on mobile: (1) PlantPalette's `onOpenChange` called `onSelectPlant(null)` when the sheet closed, clearing the selection on mobile before the user could tap the map. Fixed by moving selection clearing to the parent's `onClose` handler. (2) Konva's `getPointerPosition()` can return `null` on touch devices after `touchend`. Fixed with a `lastTouchPos` ref fallback and null guards on all callers.
 
 ---
 

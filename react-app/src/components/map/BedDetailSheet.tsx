@@ -3,9 +3,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Leaf, Bug } from 'lucide-react'
 import { toast } from 'sonner'
-import type { GardenBed, SunExposure, SoilType, MoistureLevel, WindExposure, ZoneType } from '@/types'
+import type { GardenBed, GardenPlacement, InventoryItem, SunExposure, SoilType, MoistureLevel, WindExposure, ZoneType } from '@/types'
 
 interface BedDetailSheetProps {
   bed: GardenBed | null
@@ -13,6 +13,8 @@ interface BedDetailSheetProps {
   onClose: () => void
   onSave: (id: string, updates: Partial<GardenBed>) => void
   onDelete: (id: string) => void
+  placements: GardenPlacement[]
+  inventory: InventoryItem[]
 }
 
 const SUN_OPTIONS: { value: SunExposure; label: string }[] = [
@@ -52,7 +54,7 @@ function PillGroup<T extends string>({ label, options, value, onChange }: {
   )
 }
 
-export default function BedDetailSheet({ bed, open, onClose, onSave, onDelete }: BedDetailSheetProps) {
+export default function BedDetailSheet({ bed, open, onClose, onSave, onDelete, placements, inventory }: BedDetailSheetProps) {
   const [name, setName] = useState('')
   const [sun, setSun] = useState<SunExposure | null>(null)
   const [soil, setSoil] = useState<SoilType | null>(null)
@@ -98,6 +100,44 @@ export default function BedDetailSheet({ bed, open, onClose, onSave, onDelete }:
           <PillGroup label="Moisture level" options={MOISTURE_OPTIONS} value={moisture} onChange={setMoisture} />
           <PillGroup label="Wind exposure" options={WIND_OPTIONS} value={wind} onChange={setWind} />
           <PillGroup label="Zone type" options={ZONE_TYPES} value={zoneType} onChange={setZoneType} />
+
+          {bed && (() => {
+            const zonePlants = placements
+              .filter(p => p.bed_id === bed.id)
+              .map(p => inventory.find(i => i.id === p.inventory_id))
+              .filter(Boolean) as InventoryItem[]
+            return zonePlants.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-xs text-ink-light font-medium">Plants in this zone ({zonePlants.length})</p>
+                <div className="space-y-1">
+                  {zonePlants.map(item => {
+                    const Icon = item.type === 'bug' ? Bug : Leaf
+                    return (
+                      <div key={item.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-cream-dark/50">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-cream-dark flex items-center justify-center flex-shrink-0">
+                            <Icon size={14} className="text-ink-light" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate text-ink">{item.common ?? 'Unknown'}</p>
+                          {item.scientific && <p className="text-[10px] text-ink-light italic truncate">{item.scientific}</p>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <p className="text-xs text-ink-light font-medium">Plants in this zone</p>
+                <p className="text-xs text-ink-light/70 italic">No plants placed in this zone yet</p>
+              </div>
+            )
+          })()}
+
           <div className="flex gap-3 pt-2">
             <Button onClick={handleSave} className="flex-1" size="lg">Save Zone</Button>
             <Button onClick={handleDelete} variant="destructive" size="lg"><Trash2 size={16} /></Button>

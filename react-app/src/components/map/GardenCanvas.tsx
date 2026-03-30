@@ -31,6 +31,7 @@ export default function GardenCanvas({
   selectedPlant, onBedDrawn, onPlantPlaced, onPlacementMoved, onPlacementTapped, onBedTapped,
 }: GardenCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const lastTouchPos = useRef<{ x: number; y: number } | null>(null)
   const [stageSize, setStageSize] = useState({ width: 390, height: 500 })
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
   const [scale, setScale] = useState(1)
@@ -65,15 +66,24 @@ export default function GardenCanvas({
     img.src = map.image_url
   }, [map.image_url])
 
-  function getPointerPos(e: any): { x: number; y: number } {
+  function getPointerPos(e: any): { x: number; y: number } | null {
     const stage = e.target.getStage()
     const pointer = stage.getPointerPosition()
+    if (!pointer) {
+      // Fallback: use last known touch position (getPointerPosition() can return null on mobile after touchend)
+      if (lastTouchPos.current) {
+        return { x: (lastTouchPos.current.x - position.x) / scale, y: (lastTouchPos.current.y - position.y) / scale }
+      }
+      return null
+    }
+    lastTouchPos.current = pointer
     return { x: (pointer.x - position.x) / scale, y: (pointer.y - position.y) / scale }
   }
 
   function handleStageMouseDown(e: any) {
     if (mode === 'draw') {
       const pos = getPointerPos(e)
+      if (!pos) return
       setDrawing(true)
       setDrawStart(pos)
       setDrawRect({ type: 'rect', x: pos.x, y: pos.y, width: 0, height: 0 })
@@ -83,6 +93,7 @@ export default function GardenCanvas({
   function handleStageMouseMove(e: any) {
     if (mode === 'draw' && drawing) {
       const pos = getPointerPos(e)
+      if (!pos) return
       setDrawRect({
         type: 'rect',
         x: Math.min(drawStart.x, pos.x), y: Math.min(drawStart.y, pos.y),
@@ -102,6 +113,7 @@ export default function GardenCanvas({
   function handleStageTap(e: any) {
     if (mode === 'place' && selectedPlant) {
       const pos = getPointerPos(e)
+      if (!pos) return
       onPlantPlaced(pos.x, pos.y)
     }
   }

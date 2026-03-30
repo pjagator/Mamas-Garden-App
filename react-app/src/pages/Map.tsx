@@ -73,10 +73,16 @@ export default function Map() {
 
   async function handlePlantPlaced(x: number, y: number) {
     if (!selectedPlant) return
-    const result = await placeItem(selectedPlant, x, y)
+    // Auto-detect which zone the plant was dropped into
+    const containingBed = beds.find(b =>
+      x >= b.shape.x && x <= b.shape.x + b.shape.width &&
+      y >= b.shape.y && y <= b.shape.y + b.shape.height
+    )
+    const result = await placeItem(selectedPlant, x, y, containingBed?.id)
     if (result.placement) {
       const item = inventory.find(i => i.id === selectedPlant)
-      toast.success(`${item?.common ?? 'Plant'} placed on map`)
+      const zoneName = containingBed?.name
+      toast.success(`${item?.common ?? 'Plant'} placed${zoneName ? ` in ${zoneName}` : ' on map'}`)
       setSelectedPlant(null)
       setPaletteOpen(true)
     } else if (result.error === 'duplicate') {
@@ -222,9 +228,10 @@ export default function Map() {
 
       <PlantPalette
         open={paletteOpen}
-        onClose={() => { setPaletteOpen(false); if (!selectedPlant) setMode('view') }}
+        onClose={() => { setPaletteOpen(false); setSelectedPlant(null); setMode('view') }}
         inventory={inventory}
         placements={placements}
+        beds={beds}
         selectedPlant={selectedPlant}
         onSelectPlant={handlePlantSelected}
       />
@@ -235,6 +242,8 @@ export default function Map() {
         onClose={() => setSelectedBed(null)}
         onSave={(id, updates) => updateBed(id, updates)}
         onDelete={deleteBed}
+        placements={placements}
+        inventory={inventory}
       />
     </div>
   )

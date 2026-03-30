@@ -261,13 +261,17 @@ A React/TypeScript rewrite on the `firebush` branch, deployed to Vercel. Shares 
 - `react-app/src/components/map/` — GardenCanvas (Konva), PlantPalette (Sheet), MapToolbar, PlantMarker, BedDetailSheet, ZoneLegend
 
 ### Map Placement Flow
-1. User enters place mode → PlantPalette sheet opens
+1. User enters place mode → PlantPalette sheet opens (plants grouped by zone)
 2. User selects a plant → **sheet auto-closes** to avoid overlay blocking canvas taps
-3. User taps map → coordinates captured via Konva → `placeItem()` inserts into `garden_placements`
-4. On success, palette reopens for next plant. On error, real error message shown in toast.
+3. User taps map → coordinates captured via Konva → auto-detects containing zone → `placeItem()` inserts into `garden_placements` with `bed_id`
+4. On success, palette reopens for next plant. Toast shows zone name if placed in a zone.
+5. Zone detail sheet shows all plants placed within that zone.
 
 ### Gotcha: Sheet Overlays Block Canvas Events
 shadcn Sheet components render a full-screen overlay. If you need to interact with content behind a Sheet, close the Sheet first — taps on the overlay close the Sheet rather than passing through.
+
+### Gotcha: Konva Touch Events on Mobile
+`stage.getPointerPosition()` can return `null` on mobile after `touchend`. GardenCanvas uses a `lastTouchPos` ref to cache the last known pointer position as a fallback. All `getPointerPos()` callers must handle the `null` return. Additionally, PlantPalette must NOT clear the selected plant in its `onOpenChange` handler — on mobile, `onOpenChange(false)` can fire when the sheet is programmatically closed (not just user-dismissed), which would clear the selection before the user taps the map.
 
 ---
 

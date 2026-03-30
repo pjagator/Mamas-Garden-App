@@ -1,21 +1,24 @@
 import { useState } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
-import { Search, Check, Leaf, Bug } from 'lucide-react'
-import type { InventoryItem, GardenPlacement } from '@/types'
+import { Search, Check, Leaf, Bug, MapPin } from 'lucide-react'
+import type { InventoryItem, GardenPlacement, GardenBed } from '@/types'
 
 interface PlantPaletteProps {
   open: boolean
   onClose: () => void
   inventory: InventoryItem[]
   placements: GardenPlacement[]
+  beds: GardenBed[]
   selectedPlant: string | null
   onSelectPlant: (inventoryId: string | null) => void
 }
 
-export default function PlantPalette({ open, onClose, inventory, placements, selectedPlant, onSelectPlant }: PlantPaletteProps) {
+export default function PlantPalette({ open, onClose, inventory, placements, beds, selectedPlant, onSelectPlant }: PlantPaletteProps) {
   const [search, setSearch] = useState('')
-  const placedIds = new Set(placements.map(p => p.inventory_id))
+
+  const placementMap = new Map(placements.map(p => [p.inventory_id, p]))
+  const bedMap = new Map(beds.map(b => [b.id, b]))
 
   const filtered = inventory.filter(i => {
     if (!search.trim()) return true
@@ -23,15 +26,32 @@ export default function PlantPalette({ open, onClose, inventory, placements, sel
     return (i.common?.toLowerCase().includes(q)) || (i.scientific?.toLowerCase().includes(q))
   })
 
-  const notPlaced = filtered.filter(i => !placedIds.has(i.id))
-  const placed = filtered.filter(i => placedIds.has(i.id))
+  const notPlaced = filtered.filter(i => !placementMap.has(i.id))
+
+  // Group placed plants by zone
+  const placedByZone = new Map<string, InventoryItem[]>()
+  const placedNoZone: InventoryItem[] = []
+
+  for (const item of filtered) {
+    const placement = placementMap.get(item.id)
+    if (!placement) continue
+    if (placement.bed_id) {
+      const list = placedByZone.get(placement.bed_id) ?? []
+      list.push(item)
+      placedByZone.set(placement.bed_id, list)
+    } else {
+      placedNoZone.push(item)
+    }
+  }
+
+  const hasPlaced = placedByZone.size > 0 || placedNoZone.length > 0
 
   function handleSelect(id: string) {
     onSelectPlant(selectedPlant === id ? null : id)
   }
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) { onSelectPlant(null); onClose() } }}>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose() }}>
       <SheetContent side="right" className="w-72 p-0">
         <SheetHeader className="px-4 pt-4 pb-2">
           <SheetTitle className="font-display text-base">Place Plants</SheetTitle>
@@ -56,16 +76,43 @@ export default function PlantPalette({ open, onClose, inventory, placements, sel
               </div>
             </div>
           )}
-          {placed.length > 0 && (
-            <div>
-              <p className="text-[10px] text-ink-light font-medium uppercase tracking-wide mb-2">Already placed ({placed.length})</p>
-              <div className="space-y-1">
-                {placed.map(item => (
-                  <PlantRow key={item.id} item={item} selected={selectedPlant === item.id} placed={true} onSelect={() => handleSelect(item.id)} />
-                ))}
-              </div>
+
+          {hasPlaced && (
+            <div className="space-y-3">
+              {Array.from(placedByZone.entries()).map(([bedId, items]) => {
+                const bed = bedMap.get(bedId)
+                return (
+                  <div key={bedId}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <MapPin size={10} className="text-sage" />
+                      <p className="text-[10px] text-ink-light font-medium uppercase tracking-wide">
+                        {bed?.name ?? 'Unnamed zone'} ({items.length})
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      {items.map(item => (
+                        <PlantRow key={item.id} item={item} selected={selectedPlant === item.id} placed onSelect={() => handleSelect(item.id)} />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {placedNoZone.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-ink-light font-medium uppercase tracking-wide mb-2">
+                    Placed outside zones ({placedNoZone.length})
+                  </p>
+                  <div className="space-y-1">
+                    {placedNoZone.map(item => (
+                      <PlantRow key={item.id} item={item} selected={selectedPlant === item.id} placed onSelect={() => handleSelect(item.id)} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
+
           {filtered.length === 0 && (
             <p className="text-xs text-ink-light text-center py-4">
               {inventory.length === 0 ? 'No plants in your garden yet.' : 'No matches.'}
