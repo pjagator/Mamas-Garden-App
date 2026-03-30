@@ -1,7 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="80" fill="#1c3a2b"/>
-  <g transform="translate(106, 80) scale(2.67)" fill="none" stroke="#c8dfc9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M56 110A42 42 0 0 1 48.8 26.6C82 22 92 18.9 104 6c6 12 12 25 12 48 0 33-28.7 60-60 60z"/>
-    <path d="M6 120c0-18 11.1-32.2 30.5-36C46 80.7 61 71.7 67 65.7"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Main stem -->
+  <path d="M32 60 C32 52, 31 44, 32 36 C33 28, 32 22, 32 14"
+    stroke="#1c3a2b" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Lower leaf pair - left (fuller oval shape) -->
+  <path d="M32 46 C28 44, 22 41, 18 38 C17 36, 18 34, 20 35 C24 37, 29 41, 32 43 Z"
+    stroke="#1c3a2b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"
+    fill="#1c3a2b" fill-opacity="0.12"/>
+  <!-- Lower leaf pair - right -->
+  <path d="M32 46 C36 44, 42 41, 46 38 C47 36, 46 34, 44 35 C40 37, 35 41, 32 43 Z"
+    stroke="#1c3a2b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"
+    fill="#1c3a2b" fill-opacity="0.12"/>
+
+  <!-- Upper leaf pair - left (smaller) -->
+  <path d="M32 34 C28 32, 23 29, 20 27 C19 25, 20 23, 22 24 C25 26, 29 30, 32 32 Z"
+    stroke="#1c3a2b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"
+    fill="#1c3a2b" fill-opacity="0.12"/>
+  <!-- Upper leaf pair - right (smaller) -->
+  <path d="M32 34 C36 32, 41 29, 44 27 C45 25, 44 23, 42 24 C39 26, 35 30, 32 32 Z"
+    stroke="#1c3a2b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"
+    fill="#1c3a2b" fill-opacity="0.12"/>
+
+  <!-- Leaf veins - lower left -->
+  <path d="M32 45 C28 42, 22 39, 19 37"
+    stroke="#1c3a2b" stroke-width="0.75" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <!-- Leaf veins - lower right -->
+  <path d="M32 45 C36 42, 42 39, 45 37"
+    stroke="#1c3a2b" stroke-width="0.75" stroke-linecap="round" fill="none" opacity="0.5"/>
+
+  <!-- Flower stem branch - slight fork at top -->
+  <path d="M32 14 C32 13, 31 12, 31 11"
+    stroke="#1c3a2b" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Tubular flowers radiating from cluster point -->
+  <!-- Center flower - straight up -->
+  <path d="M32 13 L32 5"
+    stroke="#c4622d" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Left-center flower -->
+  <path d="M32 13 L28.5 5.5"
+    stroke="#c4622d" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Right-center flower -->
+  <path d="M32 13 L35.5 5.5"
+    stroke="#c4622d" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Far left flower -->
+  <path d="M32 14 L26 7"
+    stroke="#c4622d" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Far right flower -->
+  <path d="M32 14 L38 7"
+    stroke="#c4622d" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Flower tips (small filled circles at tube ends) -->
+  <circle cx="32" cy="4.5" r="1.8" fill="#c4622d"/>
+  <circle cx="28.2" cy="5" r="1.6" fill="#c4622d"/>
+  <circle cx="35.8" cy="5" r="1.6" fill="#c4622d"/>
+  <circle cx="25.5" cy="6.5" r="1.5" fill="#c4622d"/>
+  <circle cx="38.5" cy="6.5" r="1.5" fill="#c4622d"/>
+
+  <!-- Small highlight dot on flower tips -->
+  <circle cx="32" cy="4.5" r="0.6" fill="#e8845a" opacity="0.7"/>
+  <circle cx="28.2" cy="5" r="0.5" fill="#e8845a" opacity="0.7"/>
+  <circle cx="35.8" cy="5" r="0.5" fill="#e8845a" opacity="0.7"/>
 </svg>
