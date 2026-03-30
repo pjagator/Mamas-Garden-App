@@ -167,13 +167,18 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 - **Stack**: React + TypeScript + Vite + shadcn/ui + Tailwind + Konva (garden map canvas)
 - **Deploy**: `git push` to `firebush` (Vercel auto-deploys)
 - **Shares**: Same Supabase project and database as the vanilla app
-- **Extra tables**: `garden_maps`, `garden_beds`, `garden_placements`, `wishlist` (SQL in `docs/firebush-deployment-guide.md`)
-- **API routes**: Uses Vercel API routes (in `react-app/api/`) instead of Supabase Edge Functions
+- **Extra tables**: `garden_maps`, `garden_beds`, `garden_placements`, `wishlist`, `seasonal_care` (SQL in `docs/firebush-deployment-guide.md`)
+- **API routes**: Uses Vercel API routes (in `react-app/api/`) instead of Supabase Edge Functions. Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`
+- **Weather**: Open-Meteo API (no key needed) for Tampa Bay rain forecast + monthly total, cached 4hrs in localStorage
+- **Logo**: Firebush botanical SVG at `public/logo.svg`, used as PWA icons + favicon + branding
 - **Setup guide**: `docs/firebush-deployment-guide.md`
 
 ### React App Gotchas
 - shadcn Sheet overlays block canvas events — close sheets before expecting taps to reach Konva canvas
 - `useGardenMap.placeItem()` returns `{ placement, error }` (not null) — always check `result.error` for real error messages
+- Garden page Settings sheet was removed — sign-out is now a button in the header. If you need export/clear-data features, re-import Settings.tsx
+- Care dashboard weather depends on Open-Meteo API availability. If it's down, the weather card silently fails and the rest of the Care view still renders
+- `useSeasonalCare.generate()` must be called after weather loads — weather data is passed as context to the AI batch call
 
 ## Deploy
 

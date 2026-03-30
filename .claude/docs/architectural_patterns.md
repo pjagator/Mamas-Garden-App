@@ -140,6 +140,18 @@ GardenCanvas uses `forwardRef`/`useImperativeHandle` to expose imperative method
 
 This replaces the previous hidden button trigger pattern (`#fit-view-trigger`).
 
+## React App: Care Dashboard Data Flow
+
+The Garden page has a "Plants" | "Care" segmented toggle (`view` state). The Care view renders CareDashboard which orchestrates three data sources:
+
+1. **Weather** (`useWeather`): Open-Meteo API → localStorage cache (4hr TTL) → `WeatherData` with forecast, monthly total, takeaway line
+2. **Seasonal care** (`useSeasonalCare`): Supabase `seasonal_care` table → monthly AI tips. Generation: fetch weather first → call `/api/garden-assistant` action `seasonal_care` with all plants + weather context → store response with `plant_hash` for staleness detection
+3. **Reminders** (`useReminders`): Passed as props from Garden.tsx (same hook as before, just rendered in CareDashboard instead of Plants view)
+
+Dependency chain for generation: weather loads → user clicks generate → weather data passed to AI call → AI returns tips → stored in Supabase
+
+The `seasonal_care` API action follows the same pattern as `reminders`: system prompt with Tampa Bay expertise, user prompt with plant list + month + weather, Claude Haiku model, JSON response parsed via regex.
+
 ## CSS Design System
 
 All colors, radii, fonts, and spacing defined as CSS custom properties (`style.css:4-25`). Components reference variables, never raw values. The three brand colors are:

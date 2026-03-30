@@ -113,9 +113,25 @@ ALTER TABLE wishlist ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users own their wishlist" ON wishlist FOR ALL USING (auth.uid() = user_id);
 ```
 
+### 1e. `seasonal_care` table
+
+```sql
+CREATE TABLE seasonal_care (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  month_key text NOT NULL,
+  garden_summary text NOT NULL,
+  plant_tips jsonb NOT NULL,
+  plant_hash text DEFAULT '',
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE seasonal_care ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users own their seasonal care" ON seasonal_care FOR ALL USING (auth.uid() = user_id);
+```
+
 ### How to verify
 
-After running all 4 blocks, go to **Table Editor** in Supabase. You should see 4 new tables: `garden_maps`, `garden_beds`, `garden_placements`, `wishlist`. All should show 0 rows and have RLS enabled (green shield icon).
+After running all 5 blocks, go to **Table Editor** in Supabase. You should see 5 new tables: `garden_maps`, `garden_beds`, `garden_placements`, `wishlist`, `seasonal_care`. All should show 0 rows and have RLS enabled (green shield icon).
 
 ---
 
@@ -246,7 +262,11 @@ If you skipped the env vars during project creation, or need to fix them:
 - [ ] Garden page shows your inventory
 - [ ] Garden page filter bar shows garden zone chips (if zones exist on map) with plant counts
 - [ ] Tapping a zone chip filters the plant list to plants placed in that zone
-- [ ] Plant detail sheet shows care guidelines collapsed by default, expandable via chevron
+- [ ] Plant detail sheet shows compact sun/water badges (not full care section)
+- [ ] Garden page "Plants" | "Care" toggle switches between inventory and care dashboard
+- [ ] Care tab shows weather card with 7-day rain forecast and raindrop icons
+- [ ] Care tab shows per-plant seasonal tips (after generating)
+- [ ] Firebush logo appears on Welcome and Auth screens
 - [ ] Capture (FAB) → take photo → identify species → save works
 - [ ] Map tab shows "Upload your garden" prompt (or map if already set up)
 - [ ] Map view shows full aerial photo on load (not zoomed to width)
@@ -254,7 +274,7 @@ If you skipped the env vars during project creation, or need to fix them:
 - [ ] "All" chip on zone selector resets to full view
 - [ ] Wishlist tab shows empty state
 - [ ] Timeline shows seasonal grouping
-- [ ] Settings (gear icon) → export JSON works
+- [ ] Sign-out button (top right of Garden header) works
 - [ ] The vanilla app at `pjagator.github.io/Mamas-Garden-App` still works perfectly
 
 ### If something goes wrong
@@ -268,6 +288,9 @@ If you skipped the env vars during project creation, or need to fix them:
 | Can't place plants on map | Fixed — the PlantPalette Sheet overlay was intercepting taps. Now the palette auto-closes when you select a plant so taps reach the canvas. |
 | Zone filter shows 0 plants | Plants must be placed on the map AND inside a zone rectangle for the zone filter to include them. Plants placed outside zones won't appear in any zone filter. |
 | Map too zoomed in on load | Map should show full aerial photo (contain-fit). If it doesn't, check GardenCanvas initial scale calculation uses `Math.min(width/img.width, height/img.height)`. |
+| Care tab shows no weather data | Open-Meteo API may be down. Weather is cached for 4 hours in localStorage (`garden-weather-cache`). Clear cache and retry. |
+| Seasonal tips won't generate | Requires `seasonal_care` table in Supabase (run migration 1e). Also requires `ANTHROPIC_API_KEY` set in Vercel env vars. Check Vercel function logs. |
+| Care tab shows "Add your first plant" | Only plants (not insects) appear in the Care dashboard. Ensure inventory has items with `type = 'plant'`. |
 | Vanilla app broken | This shouldn't happen. If it does, nothing in this process modifies the vanilla app. Check GitHub Pages deployment status. |
 
 ---

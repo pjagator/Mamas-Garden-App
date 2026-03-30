@@ -413,6 +413,7 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 | `garden_beds` | Garden zones with shapes, sun/soil/moisture properties |
 | `garden_placements` | Plant placement coordinates on the map (unique per map+plant) |
 | `wishlist` | Plants the user wants to add to their garden |
+| `seasonal_care` | Monthly AI-generated garden care tips (garden_summary + per-plant tips) |
 
 All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-guide.md`.
 
@@ -433,8 +434,17 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
 ### Garden Page — Zone Filter
 - **Garden zone filter**: FilterBar on the Garden page includes a row of zone chips (with Map icon) showing each garden bed name and its plant count. Selecting a zone filters the plant list to only show plants placed in that zone on the map. Uses data from `garden_beds` and `garden_placements` tables via `useGardenMap` hook. Zone filter is combinable with type, location, search, and sort filters.
 
-### Care Guidelines
-- **Collapsible care section**: The "Tampa Bay Care Guide" in the plant detail sheet is collapsed by default with a chevron toggle. Users tap to expand and view care details.
+### Care Dashboard
+- **Plants/Care toggle**: Garden page has a segmented "Plants" | "Care" toggle below the header. Plants view shows the inventory grid with filters. Care view shows the CareDashboard.
+- **Weather card**: 7-day rain forecast from Open-Meteo API with custom raindrop line icons (empty/light/heavy), monthly rainfall progress bar vs Tampa Bay average, and a client-side takeaway line. Cached in localStorage for 4 hours.
+- **Seasonal AI tips**: Monthly batch Claude Haiku call generates a garden-wide summary and 2-3 per-plant seasonal tips. Stored in `seasonal_care` table with staleness detection (plant_hash). Weather data passed as context to the AI call.
+- **Per-plant care cards**: Each plant shows seasonal tips + expandable full care reference (the 8-field care profile moved here from ItemDetail).
+- **Reminders integration**: Existing monthly reminders moved from Plants view to Care dashboard.
+- **Item detail slimmed down**: Full care section removed from ItemDetail, replaced with compact sun/water quick-reference badges.
+- **Settings simplified**: Gear icon replaced with sign-out button in Garden header. Settings sheet removed.
+
+### Logo
+- **Firebush botanical logo**: Hand-crafted SVG line drawing of Hamelia patens flower cluster. Forest green (#1c3a2b) stems/leaves, terracotta (#c4622d) flowers. Used as PWA icons (192/512), favicon, and on Welcome/Auth screens. Replaces the default Vite lightning bolt icon.
 
 ### Known Issues Fixed
 - **Map plant placement**: The PlantPalette Sheet overlay intercepted canvas taps. Fixed by auto-closing the palette when a plant is selected, keeping placement mode active. `useGardenMap.placeItem()` now returns structured `{ placement, error }` with real error messages instead of silently returning null.

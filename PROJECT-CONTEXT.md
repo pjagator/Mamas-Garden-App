@@ -257,11 +257,16 @@ A React/TypeScript rewrite on the `firebush` branch, deployed to Vercel. Shares 
 
 ### React App Architecture
 - `react-app/src/pages/Map.tsx` — Garden map page with aerial photo upload, zone drawing, plant placement, zone selector chips for centering/zooming
-- `react-app/src/pages/Garden.tsx` — Garden inventory page with type/zone/location filters via `useGardenMap` hook for zone data
+- `react-app/src/pages/Garden.tsx` — Garden page with Plants/Care segmented toggle, type/zone/location filters, sign-out button (replaces Settings)
 - `react-app/src/hooks/useGardenMap.ts` — CRUD hook for maps, beds, placements (returns structured errors)
 - `react-app/src/components/map/` — GardenCanvas (Konva, forwardRef with focusBed/fitView), PlantPalette (Sheet), MapToolbar, PlantMarker, BedDetailSheet, ZoneLegend
 - `react-app/src/components/garden/FilterBar.tsx` — Type filters (All/Plants/Insects/Natives/Blooming), garden zone filters (from beds), location filters (Front/Back/Side/Pot/Hammock/Sandhill), sort options. Includes `applyZoneFilter()` for filtering by map zone placement.
-- `react-app/src/components/garden/ItemDetail.tsx` — Plant detail sheet with collapsible care guidelines (collapsed by default)
+- `react-app/src/components/garden/ItemDetail.tsx` — Plant detail sheet with sun/water quick-reference badges (full care section moved to CareDashboard)
+- `react-app/src/components/garden/CareDashboard.tsx` — Care view: weather card, reminders, seasonal AI summary, per-plant care cards
+- `react-app/src/components/garden/WeatherCard.tsx` — 7-day rain forecast with custom RaindropIcon SVGs, monthly rainfall progress bar
+- `react-app/src/components/garden/PlantCareCard.tsx` — Per-plant seasonal tips with expandable full care reference
+- `react-app/src/hooks/useWeather.ts` — Open-Meteo API for Tampa Bay forecast + monthly rainfall, 4hr localStorage cache
+- `react-app/src/hooks/useSeasonalCare.ts` — Monthly batch AI tips from `seasonal_care` table, staleness detection via plant_hash
 
 ### Map Placement Flow
 1. User enters place mode → PlantPalette sheet opens (plants grouped by zone)
@@ -284,8 +289,15 @@ shadcn Sheet components render a full-screen overlay. If you need to interact wi
 - `applyZoneFilter()` filters inventory items by checking which items have placements with matching `bed_id`.
 - Zone filter is combinable with all other filters (type, location, search, sort).
 
-### Care Guidelines
-- ItemDetail's "Tampa Bay Care Guide" section is collapsed by default. Uses local `useState(false)` with a chevron toggle button.
+### Care Dashboard
+- Garden page has a "Plants" | "Care" segmented toggle. Care view shows the CareDashboard component.
+- **Weather**: `useWeather` hook fetches 7-day forecast + monthly rainfall from Open-Meteo API (Tampa Bay coords hardcoded, no API key). Cached in localStorage for 4 hours. WeatherCard renders raindrop icons (RaindropIcon component: empty/light/heavy), monthly progress bar, and client-side takeaway line.
+- **Seasonal AI tips**: `useSeasonalCare` hook manages monthly batch Claude Haiku calls. One call per month generates `garden_summary` + `plant_tips[]` for all plants. Weather data fetched first, passed as context. Stored in `seasonal_care` Supabase table with `plant_hash` staleness detection (same pattern as reminders). API action: `seasonal_care` in `/api/garden-assistant`.
+- **ItemDetail slimmed down**: Full CareSection removed, replaced with two compact badges (sun exposure + watering frequency) from `care_profile`. Full care reference now lives in expandable section of PlantCareCard on the Care dashboard.
+- **Settings simplified**: Gear icon and SettingsSheet removed from Garden page. Sign-out button (LogOut icon) in header with `window.confirm()`. Export/advanced features accessible via Settings.tsx if re-imported later.
+
+### Logo
+- Firebush (Hamelia patens) botanical line art SVG at `public/logo.svg`. Forest green stems/leaves, terracotta flowers. Used as favicon, PWA icons (192/512 SVG via vite-plugin-pwa), and `<img>` on Welcome and Auth screens.
 
 ### Gotcha: Konva Touch Events on Mobile
 `stage.getPointerPosition()` can return `null` on mobile after `touchend`. GardenCanvas uses a `lastTouchPos` ref to cache the last known pointer position as a fallback. All `getPointerPos()` callers must handle the `null` return. Additionally, PlantPalette must NOT clear the selected plant in its `onOpenChange` handler — on mobile, `onOpenChange(false)` can fire when the sheet is programmatically closed (not just user-dismissed), which would clear the selection before the user taps the map.
