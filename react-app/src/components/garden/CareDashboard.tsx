@@ -12,7 +12,7 @@ interface CareDashboardProps {
   reminders: Reminder[]
   remindersLoading: boolean
   isStaleReminders: boolean
-  onToggleReminder: (id: string) => void
+  onToggleReminder: (id: string, done: boolean) => void
   onAddCustomReminder: (title: string) => void
   onDeleteReminder: (id: string) => void
   onGenerateReminders: () => void
@@ -23,7 +23,7 @@ export default function CareDashboard({
   onToggleReminder, onAddCustomReminder, onDeleteReminder, onGenerateReminders,
 }: CareDashboardProps) {
   const { weather, loading: weatherLoading } = useWeather()
-  const { care, loading: careLoading, generating, isStale, generate } = useSeasonalCare(inventory, weather)
+  const { care, generating, isStale, generate } = useSeasonalCare(inventory, weather)
 
   const plants = inventory.filter(i => i.type === 'plant').sort((a, b) => (a.common ?? '').localeCompare(b.common ?? ''))
 

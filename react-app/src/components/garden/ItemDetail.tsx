@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { confidenceClass } from '@/lib/constants'
 import HealthTimeline from '@/components/health/HealthTimeline'
-import type { InventoryItem, CareProfile } from '@/types'
+import type { InventoryItem } from '@/types'
 
 interface ItemDetailProps {
   item: InventoryItem | null
