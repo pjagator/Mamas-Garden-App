@@ -160,9 +160,25 @@ Bucket `garden-images` (public). Final images at `{user_id}/{timestamp}.jpg`. Te
 
 - `ANTHROPIC_API_KEY`
 
+## React App (Firebush Branch)
+
+A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. Deployed to Vercel separately from the vanilla app.
+
+- **Stack**: React + TypeScript + Vite + shadcn/ui + Tailwind + Konva (garden map canvas)
+- **Deploy**: `git push` to `firebush` (Vercel auto-deploys)
+- **Shares**: Same Supabase project and database as the vanilla app
+- **Extra tables**: `garden_maps`, `garden_beds`, `garden_placements`, `wishlist` (SQL in `docs/firebush-deployment-guide.md`)
+- **API routes**: Uses Vercel API routes (in `react-app/api/`) instead of Supabase Edge Functions
+- **Setup guide**: `docs/firebush-deployment-guide.md`
+
+### React App Gotchas
+- shadcn Sheet overlays block canvas events — close sheets before expecting taps to reach Konva canvas
+- `useGardenMap.placeItem()` returns `{ placement, error }` (not null) — always check `result.error` for real error messages
+
 ## Deploy
 
-- **Frontend**: `git push` to main (GitHub Pages auto-deploys)
+- **Vanilla frontend**: `git push` to main (GitHub Pages auto-deploys)
+- **React frontend**: `git push` to firebush (Vercel auto-deploys)
 - **Edge functions**: `supabase functions deploy <function-name>` or paste in dashboard
 - **DB migrations**: Run SQL directly in Supabase SQL Editor
 - **Cache busting**: Manually increment `?v=N` (currently v21) on CSS and app.js links in index.html. Also bump CACHE_VERSION in sw.js to match.

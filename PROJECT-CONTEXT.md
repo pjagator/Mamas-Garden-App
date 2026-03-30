@@ -251,6 +251,26 @@ fetch('https://itjvgruwvlrrlhsknwiw.supabase.co/functions/v1/identify-species', 
 
 ---
 
+## React App (Firebush Branch)
+
+A React/TypeScript rewrite on the `firebush` branch, deployed to Vercel. Shares the same Supabase project and database. See `docs/firebush-deployment-guide.md` for setup.
+
+### React App Architecture
+- `react-app/src/pages/Map.tsx` — Garden map page with aerial photo upload, zone drawing, plant placement
+- `react-app/src/hooks/useGardenMap.ts` — CRUD hook for maps, beds, placements (returns structured errors)
+- `react-app/src/components/map/` — GardenCanvas (Konva), PlantPalette (Sheet), MapToolbar, PlantMarker, BedDetailSheet, ZoneLegend
+
+### Map Placement Flow
+1. User enters place mode → PlantPalette sheet opens
+2. User selects a plant → **sheet auto-closes** to avoid overlay blocking canvas taps
+3. User taps map → coordinates captured via Konva → `placeItem()` inserts into `garden_placements`
+4. On success, palette reopens for next plant. On error, real error message shown in toast.
+
+### Gotcha: Sheet Overlays Block Canvas Events
+shadcn Sheet components render a full-screen overlay. If you need to interact with content behind a Sheet, close the Sheet first — taps on the overlay close the Sheet rather than passing through.
+
+---
+
 ## Planned / In-Progress Features
 
 ### Plant Tags

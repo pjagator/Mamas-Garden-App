@@ -12,21 +12,25 @@ export function useGardenMap() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setLoading(false); return }
 
-    const { data: maps } = await supabase
+    const { data: maps, error: mapsErr } = await supabase
       .from('garden_maps').select('*').eq('user_id', user.id)
       .order('created_at', { ascending: false }).limit(1)
+
+    if (mapsErr) console.error('garden_maps query failed:', mapsErr)
 
     const currentMap = maps?.[0] as GardenMap | undefined
     setMap(currentMap ?? null)
 
     if (currentMap) {
-      const { data: bedsData } = await supabase
+      const { data: bedsData, error: bedsErr } = await supabase
         .from('garden_beds').select('*').eq('map_id', currentMap.id)
         .order('created_at', { ascending: true })
+      if (bedsErr) console.error('garden_beds query failed:', bedsErr)
       setBeds((bedsData as GardenBed[]) ?? [])
 
-      const { data: placementsData } = await supabase
+      const { data: placementsData, error: placementsErr } = await supabase
         .from('garden_placements').select('*').eq('map_id', currentMap.id)
+      if (placementsErr) console.error('garden_placements query failed:', placementsErr)
       setPlacements((placementsData as GardenPlacement[]) ?? [])
     }
 
@@ -77,17 +81,22 @@ export function useGardenMap() {
     setPlacements(prev => prev.map(p => p.bed_id === id ? { ...p, bed_id: null } : p))
   }, [])
 
-  const placeItem = useCallback(async (inventoryId: string, x: number, y: number, bedId?: string): Promise<GardenPlacement | null> => {
-    if (!map) return null
+  const placeItem = useCallback(async (inventoryId: string, x: number, y: number, bedId?: string): Promise<{ placement?: GardenPlacement; error?: string }> => {
+    if (!map) return { error: 'No map loaded' }
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return null
+    if (!user) return { error: 'Not authenticated' }
     const { data, error } = await supabase
       .from('garden_placements').insert({ user_id: user.id, map_id: map.id, inventory_id: inventoryId, bed_id: bedId ?? null, x, y })
       .select().single()
-    if (error || !data) return null
+    if (error) {
+      if (error.code === '23505') return { error: 'duplicate' }
+      console.error('placeItem error:', error)
+      return { error: error.message }
+    }
+    if (!data) return { error: 'No data returned' }
     const newPlacement = data as GardenPlacement
     setPlacements(prev => [...prev, newPlacement])
-    return newPlacement
+    return { placement: newPlacement }
   }, [map])
 
   const movePlacement = useCallback(async (id: string, x: number, y: number) => {

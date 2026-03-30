@@ -74,13 +74,21 @@ export default function Map() {
   async function handlePlantPlaced(x: number, y: number) {
     if (!selectedPlant) return
     const result = await placeItem(selectedPlant, x, y)
-    if (result) {
+    if (result.placement) {
       const item = inventory.find(i => i.id === selectedPlant)
       toast.success(`${item?.common ?? 'Plant'} placed on map`)
       setSelectedPlant(null)
-    } else {
+      setPaletteOpen(true)
+    } else if (result.error === 'duplicate') {
       toast.error('This plant is already on the map')
+    } else {
+      toast.error(`Couldn't place plant: ${result.error}`)
     }
+  }
+
+  function handlePlantSelected(id: string | null) {
+    setSelectedPlant(id)
+    if (id) setPaletteOpen(false)
   }
 
   function handleModeChange(newMode: MapMode) {
@@ -194,8 +202,12 @@ export default function Map() {
         )}
 
         {mode === 'place' && selectedPlant && (
-          <div className="absolute top-3 left-3 bg-white/90 rounded-lg px-3 py-1.5 text-xs text-primary font-medium shadow-sm">
-            Tap on the map to place
+          <div className="absolute top-3 left-3 right-3 bg-white/90 rounded-lg px-3 py-2 text-xs text-primary font-medium shadow-sm flex items-center justify-between">
+            <span>Tap on the map to place {inventory.find(i => i.id === selectedPlant)?.common ?? 'plant'}</span>
+            <div className="flex gap-2 ml-2">
+              <button onClick={() => setPaletteOpen(true)} className="text-[10px] text-sage underline">Switch</button>
+              <button onClick={() => { setSelectedPlant(null); setMode('view') }} className="text-[10px] text-ink-light underline">Cancel</button>
+            </div>
           </div>
         )}
       </div>
@@ -210,11 +222,11 @@ export default function Map() {
 
       <PlantPalette
         open={paletteOpen}
-        onClose={() => { setPaletteOpen(false); setMode('view') }}
+        onClose={() => { setPaletteOpen(false); if (!selectedPlant) setMode('view') }}
         inventory={inventory}
         placements={placements}
         selectedPlant={selectedPlant}
-        onSelectPlant={setSelectedPlant}
+        onSelectPlant={handlePlantSelected}
       />
 
       <BedDetailSheet

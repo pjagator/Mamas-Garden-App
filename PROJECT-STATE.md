@@ -401,7 +401,34 @@ From LEARNING-PLAN.md:
 
 ---
 
-## 6. Deployment Setup
+## 6. React App (Firebush Branch)
+
+A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. Deployed to Vercel (separate from the vanilla app on GitHub Pages). Both apps share the same Supabase database.
+
+### Additional Supabase Tables (React app only)
+
+| Table | Purpose |
+|-------|---------|
+| `garden_maps` | Garden map metadata (aerial photo, dimensions) |
+| `garden_beds` | Garden zones with shapes, sun/soil/moisture properties |
+| `garden_placements` | Plant placement coordinates on the map (unique per map+plant) |
+| `wishlist` | Plants the user wants to add to their garden |
+
+All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-guide.md`.
+
+### React App Stack
+- React + TypeScript + Vite (in `react-app/`)
+- shadcn/ui components + Tailwind CSS
+- Konva (react-konva) for garden map canvas
+- Vercel API routes (instead of Supabase Edge Functions)
+- Vercel deployment from `firebush` branch
+
+### Known Issues Fixed
+- **Map plant placement**: The PlantPalette Sheet overlay intercepted canvas taps. Fixed by auto-closing the palette when a plant is selected, keeping placement mode active. `useGardenMap.placeItem()` now returns structured `{ placement, error }` with real error messages instead of silently returning null.
+
+---
+
+## 7. Deployment Setup
 
 | Component | Platform | Method |
 |-----------|----------|--------|
