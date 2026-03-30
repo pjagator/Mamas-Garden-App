@@ -102,7 +102,16 @@ export function applyZoneFilter(items: InventoryItem[], zone: string, placements
   if (!zone) return items
   const bed = beds.find(b => b.id === zone)
   if (!bed) return items
-  const placedIds = new Set(placements.filter(p => p.bed_id === zone).map(p => p.inventory_id))
+  // Include plants explicitly assigned to the zone OR whose placement coordinates fall within the zone rectangle
+  const placedIds = new Set(
+    placements
+      .filter(p =>
+        p.bed_id === zone ||
+        (p.x >= bed.shape.x && p.x <= bed.shape.x + bed.shape.width &&
+         p.y >= bed.shape.y && p.y <= bed.shape.y + bed.shape.height)
+      )
+      .map(p => p.inventory_id)
+  )
   return items.filter(i => placedIds.has(i.id))
 }
 
@@ -134,7 +143,13 @@ export default function FilterBar({ items, activeFilter, activeSort, activeLocat
   const locationParts = getLocationParts(items)
 
   function getZonePlantCount(bedId: string): number {
-    return placements.filter(p => p.bed_id === bedId).length
+    const bed = beds.find(b => b.id === bedId)
+    if (!bed) return 0
+    return placements.filter(p =>
+      p.bed_id === bedId ||
+      (p.x >= bed.shape.x && p.x <= bed.shape.x + bed.shape.width &&
+       p.y >= bed.shape.y && p.y <= bed.shape.y + bed.shape.height)
+    ).length
   }
 
   return (
