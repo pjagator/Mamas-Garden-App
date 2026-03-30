@@ -79,19 +79,8 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) { setEditingNickname(false); setEditingNotes(false); setEditingLocation(false); onClose() } }}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl p-0 flex flex-col" showCloseButton={false}>
-        {/* Sticky header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2.5 bg-white/95 backdrop-blur-sm border-b border-cream-dark rounded-t-2xl flex-shrink-0">
-          <p className="font-display text-sm font-medium text-ink truncate flex-1 mr-3">{displayName}</p>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-cream-dark text-ink-mid hover:text-ink min-h-0 min-w-0 flex-shrink-0"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="overflow-y-auto flex-1">
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl p-0" showCloseButton={false}>
+        <div className="h-full overflow-y-auto">
         {item.image_url ? (
           <div className="relative h-56">
             <img src={item.image_url} alt={item.common ?? 'Species photo'} className="w-full h-full object-cover" />
@@ -104,37 +93,44 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
         )}
 
         <div className="px-5 pb-8 -mt-6 relative">
+          {/* Close button — in the content area, always reachable */}
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={onClose}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-cream-dark text-ink-mid hover:text-ink min-h-0 min-w-0"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
           <SheetHeader className="mb-4">
-            {editingNickname ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={nicknameValue}
-                  onChange={e => setNicknameValue(e.target.value)}
-                  placeholder="Nickname (e.g. Front Coffee)"
-                  className="h-8 text-sm flex-1"
-                  autoFocus
-                  onKeyDown={e => { if (e.key === 'Enter') saveNickname(); if (e.key === 'Escape') setEditingNickname(false) }}
-                />
-                <button onClick={saveNickname} className="w-7 h-7 flex items-center justify-center rounded-full bg-sage-light text-primary min-h-0 min-w-0">
-                  <Check size={14} />
-                </button>
-                <button onClick={() => setEditingNickname(false)} className="w-7 h-7 flex items-center justify-center rounded-full bg-cream-dark text-ink-light min-h-0 min-w-0">
-                  <X size={14} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-start gap-2">
-                <div className="flex-1">
-                  <SheetTitle className="font-display text-xl text-left">{displayName}</SheetTitle>
-                  {item.nickname && item.common && <p className="text-sm text-ink-mid">{item.common}</p>}
-                  {item.scientific && <p className="text-sm text-ink-light italic">{item.scientific}</p>}
-                </div>
-                {onUpdate && (
-                  <button onClick={startEditNickname} className="mt-1 w-7 h-7 flex items-center justify-center rounded-full text-ink-light hover:text-ink-mid min-h-0 min-w-0" title="Add nickname">
-                    <Pencil size={14} />
+            <SheetTitle className="font-display text-xl text-left">{displayName}</SheetTitle>
+            {item.nickname && item.common && <p className="text-sm text-ink-mid">{item.common}</p>}
+            {item.scientific && <p className="text-sm text-ink-light italic">{item.scientific}</p>}
+            {/* Nickname edit row */}
+            {onUpdate && (
+              editingNickname ? (
+                <div className="flex items-center gap-2 mt-2">
+                  <Input
+                    value={nicknameValue}
+                    onChange={e => setNicknameValue(e.target.value)}
+                    placeholder="Nickname (e.g. Front Coffee)"
+                    className="h-8 text-sm flex-1"
+                    autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') saveNickname(); if (e.key === 'Escape') setEditingNickname(false) }}
+                  />
+                  <button onClick={saveNickname} className="w-8 h-8 flex items-center justify-center rounded-full bg-sage-light text-primary min-h-0 min-w-0">
+                    <Check size={14} />
                   </button>
-                )}
-              </div>
+                  <button onClick={() => setEditingNickname(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-cream-dark text-ink-light min-h-0 min-w-0">
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={startEditNickname} className="flex items-center gap-1.5 mt-1.5 text-xs text-ink-light hover:text-ink-mid">
+                  <Pencil size={11} /> {item.nickname ? 'Edit nickname' : 'Add nickname'}
+                </button>
+              )
             )}
           </SheetHeader>
 
