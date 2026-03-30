@@ -97,7 +97,7 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
           <div className="flex justify-end mb-2">
             <button
               onClick={onClose}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-cream-dark text-ink-mid hover:text-ink min-h-0 min-w-0"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-cream-dark text-ink-mid hover:text-ink"
             >
               <X size={18} />
             </button>
@@ -119,10 +119,10 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
                     autoFocus
                     onKeyDown={e => { if (e.key === 'Enter') saveNickname(); if (e.key === 'Escape') setEditingNickname(false) }}
                   />
-                  <button onClick={saveNickname} className="w-8 h-8 flex items-center justify-center rounded-full bg-sage-light text-primary min-h-0 min-w-0">
+                  <button onClick={saveNickname} className="w-11 h-11 flex items-center justify-center rounded-full bg-sage-light text-primary">
                     <Check size={14} />
                   </button>
-                  <button onClick={() => setEditingNickname(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-cream-dark text-ink-light min-h-0 min-w-0">
+                  <button onClick={() => setEditingNickname(false)} className="w-11 h-11 flex items-center justify-center rounded-full bg-cream-dark text-ink-light">
                     <X size={14} />
                   </button>
                 </div>

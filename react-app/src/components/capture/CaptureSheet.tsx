@@ -302,12 +302,16 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
               <p className="text-sm text-ink-light">Take a photo or choose from your gallery</p>
             </div>
             <div className="flex gap-3">
-              <Button onClick={() => cameraRef.current?.click()} className="flex-1" size="lg">
-                <Camera size={20} className="mr-2" /> Camera
-              </Button>
-              <Button onClick={() => galleryRef.current?.click()} variant="outline" className="flex-1" size="lg">
-                <ImageIcon size={20} className="mr-2" /> Gallery
-              </Button>
+              <label htmlFor="capture-camera"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary text-white font-medium text-sm h-11 px-4 cursor-pointer active:scale-[0.98] transition-transform"
+              >
+                <Camera size={20} /> Camera
+              </label>
+              <label htmlFor="capture-gallery"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-cream-dark text-ink font-medium text-sm h-11 px-4 cursor-pointer active:scale-[0.98] transition-transform"
+              >
+                <ImageIcon size={20} /> Gallery
+              </label>
             </div>
           </div>
         )}
@@ -316,7 +320,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
           <div className="space-y-4">
             <div className="relative">
               <canvas ref={canvasRef} className="w-full rounded-[--radius-card]" />
-              <button onClick={removeImage} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center min-h-0 min-w-0">
+              <button onClick={removeImage} className="absolute top-2 right-2 w-11 h-11 rounded-full bg-black/50 text-white flex items-center justify-center">
                 <X size={16} />
               </button>
             </div>
@@ -396,8 +400,8 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
           </div>
         )}
 
-        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhoto} />
-        <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+        <input id="capture-camera" ref={cameraRef} type="file" accept="image/*" capture="environment" className="sr-only" onChange={handlePhoto} />
+        <input id="capture-gallery" ref={galleryRef} type="file" accept="image/*" className="sr-only" onChange={handlePhoto} />
       </SheetContent>
     </Sheet>
   )

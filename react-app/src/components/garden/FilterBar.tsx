@@ -198,7 +198,7 @@ export default function FilterBar({ items, activeFilter, activeSort, activeLocat
             {activeZone && (
               <button
                 onClick={() => onZoneChange('')}
-                className="flex-shrink-0 w-6 h-6 rounded-full bg-cream-dark text-ink-light flex items-center justify-center hover:text-ink min-h-0 min-w-0"
+                className="flex-shrink-0 w-11 h-11 rounded-full bg-cream-dark text-ink-light flex items-center justify-center hover:text-ink"
                 aria-label="Clear zone filter"
               >
                 <X size={12} />
@@ -232,7 +232,7 @@ export default function FilterBar({ items, activeFilter, activeSort, activeLocat
             {activeLocation && (
               <button
                 onClick={() => onLocationChange('')}
-                className="flex-shrink-0 w-6 h-6 rounded-full bg-cream-dark text-ink-light flex items-center justify-center hover:text-ink min-h-0 min-w-0"
+                className="flex-shrink-0 w-11 h-11 rounded-full bg-cream-dark text-ink-light flex items-center justify-center hover:text-ink"
                 aria-label="Clear location filter"
               >
                 <X size={12} />
@@ -250,7 +250,7 @@ export default function FilterBar({ items, activeFilter, activeSort, activeLocat
             <button
               key={s.value}
               onClick={() => onSortChange(s.value)}
-              className={`text-xs px-2 py-1 rounded transition-colors min-h-0 min-w-0 ${
+              className={`text-xs px-2 py-2.5 rounded transition-colors ${
                 activeSort === s.value ? 'text-primary font-medium' : 'text-ink-light hover:text-ink-mid'
               }`}
             >

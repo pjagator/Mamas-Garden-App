@@ -57,7 +57,7 @@ export default function PlantCard({ item, index, onClick, onHealthClick }: Plant
         {item.type === 'plant' && onHealthClick && (
           <button
             onClick={(e) => { e.stopPropagation(); onHealthClick() }}
-            className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center min-h-0 min-w-0"
+            className="absolute bottom-2 right-2 w-11 h-11 rounded-full bg-white/90 shadow-sm flex items-center justify-center"
             title="Log health check"
           >
             <Activity size={14} className="text-sage" />

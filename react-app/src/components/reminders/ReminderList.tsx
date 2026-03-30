@@ -65,7 +65,7 @@ export default function ReminderList({ reminders, loading, isStale, onToggle, on
                 {r.plant && !r.done && <p className="text-xs text-sage italic mt-0.5">{r.plant}</p>}
               </div>
               {r.source === 'custom' && (
-                <button onClick={() => onDelete(r.id)} className="text-ink-light hover:text-terra min-h-0 min-w-0 p-1" aria-label="Delete reminder">
+                <button onClick={() => onDelete(r.id)} className="text-ink-light hover:text-terra p-3" aria-label="Delete reminder">
                   <Trash2 size={14} />
                 </button>
               )}
@@ -75,14 +75,14 @@ export default function ReminderList({ reminders, loading, isStale, onToggle, on
           {reminders.length > 0 && (
             <div className="flex items-center gap-2 mt-2 pt-2 border-t border-cream-dark">
               <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAdd() }} placeholder="Add a task..." className="h-8 text-xs" />
-              <button onClick={handleAdd} disabled={!newTitle.trim()} className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-30 min-h-0 min-w-0">
+              <button onClick={handleAdd} disabled={!newTitle.trim()} className="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-30">
                 <Plus size={16} />
               </button>
             </div>
           )}
 
           {isStale && reminders.length > 0 && (
-            <button onClick={onGenerate} disabled={loading} className="w-full text-xs text-sage hover:text-primary py-1 min-h-0">
+            <button onClick={onGenerate} disabled={loading} className="w-full text-xs text-sage hover:text-primary py-2.5">
               <Sparkles size={12} className="inline mr-1" /> Your garden has changed \u2014 refresh tasks
             </button>
           )}

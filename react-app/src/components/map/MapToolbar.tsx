@@ -35,13 +35,13 @@ export default function MapToolbar({ mode, onModeChange, onFitView, onToggleLege
         })}
       </div>
       <div className="flex gap-1">
-        <button onClick={onFitView} className="w-9 h-9 flex items-center justify-center rounded-lg text-ink-mid hover:text-primary min-h-0 min-w-0" title="Fit view">
+        <button onClick={onFitView} className="w-11 h-11 flex items-center justify-center rounded-lg text-ink-mid hover:text-primary" title="Fit view">
           <Maximize size={18} />
         </button>
-        <button onClick={onToggleLegend} className="w-9 h-9 flex items-center justify-center rounded-lg text-ink-mid hover:text-primary min-h-0 min-w-0" title="Legend">
+        <button onClick={onToggleLegend} className="w-11 h-11 flex items-center justify-center rounded-lg text-ink-mid hover:text-primary" title="Legend">
           <Map size={18} />
         </button>
-        <button onClick={onSettings} className="w-9 h-9 flex items-center justify-center rounded-lg text-ink-mid hover:text-primary min-h-0 min-w-0" title="Map settings">
+        <button onClick={onSettings} className="w-11 h-11 flex items-center justify-center rounded-lg text-ink-mid hover:text-primary" title="Map settings">
           <Settings size={18} />
         </button>
       </div>

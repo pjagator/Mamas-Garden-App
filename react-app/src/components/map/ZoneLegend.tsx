@@ -15,7 +15,7 @@ export default function ZoneLegend({ onClose }: ZoneLegendProps) {
     <div className="absolute top-3 right-3 bg-white rounded-[--radius-card] shadow-md p-3 z-10 min-w-[160px]">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-xs font-medium text-primary">Zone Legend</h3>
-        <button onClick={onClose} className="w-6 h-6 flex items-center justify-center text-ink-light hover:text-ink min-h-0 min-w-0">
+        <button onClick={onClose} className="w-11 h-11 flex items-center justify-center text-ink-light hover:text-ink">
           <X size={14} />
         </button>
       </div>
