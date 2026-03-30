@@ -117,6 +117,29 @@ Offline behavior:
 - Read operations: work from localStorage cache + service worker image cache
 - FAB: disabled via `.fab-offline` CSS class (not inline styles, to avoid scroll handler conflicts)
 
+## React App: Garden Page Filter Data Flow
+
+The Garden page combines data from two hooks to power zone filtering:
+- `useInventory()` — provides plant/insect items with their `location` field
+- `useGardenMap()` — provides `beds` (garden zones) and `placements` (which items are placed in which zones)
+
+Filter chain in `Garden.tsx` via `useMemo`:
+```
+items → applyFilter(type) → applyLocationFilter(location) → applyZoneFilter(zone, placements, beds) → applySearch(query) → applySort(sort)
+```
+
+`applyZoneFilter()` works by finding all placements with matching `bed_id`, collecting their `inventory_id` values, and filtering items to that set. This bridges the map's spatial data with the inventory list.
+
+Zone filter state (`zone`) is ephemeral — resets on page reload, not persisted to localStorage.
+
+## React App: GardenCanvas Ref Pattern
+
+GardenCanvas uses `forwardRef`/`useImperativeHandle` to expose imperative methods to Map.tsx:
+- `focusBed(bedId)` — calculates the bed's center and scale to fit it in view, then sets scale and position
+- `fitView()` — resets to contain-fit of the full aerial image with centering
+
+This replaces the previous hidden button trigger pattern (`#fit-view-trigger`).
+
 ## CSS Design System
 
 All colors, radii, fonts, and spacing defined as CSS custom properties (`style.css:4-25`). Components reference variables, never raw values. The three brand colors are:

@@ -244,8 +244,14 @@ If you skipped the env vars during project creation, or need to fix them:
 - [ ] Vercel URL loads the auth page
 - [ ] Sign in with existing credentials works
 - [ ] Garden page shows your inventory
+- [ ] Garden page filter bar shows garden zone chips (if zones exist on map) with plant counts
+- [ ] Tapping a zone chip filters the plant list to plants placed in that zone
+- [ ] Plant detail sheet shows care guidelines collapsed by default, expandable via chevron
 - [ ] Capture (FAB) → take photo → identify species → save works
-- [ ] Map tab shows "Upload your garden" prompt
+- [ ] Map tab shows "Upload your garden" prompt (or map if already set up)
+- [ ] Map view shows full aerial photo on load (not zoomed to width)
+- [ ] Zone selector chips above map toolbar center/zoom to selected zone
+- [ ] "All" chip on zone selector resets to full view
 - [ ] Wishlist tab shows empty state
 - [ ] Timeline shows seasonal grouping
 - [ ] Settings (gear icon) → export JSON works
@@ -260,6 +266,8 @@ If you skipped the env vars during project creation, or need to fix them:
 | New tables not found (map/wishlist errors) | Run the SQL migrations from Step 1. |
 | Auth doesn't work | Make sure the Vercel URL is allowed in Supabase → Authentication → URL Configuration → Redirect URLs. Add your Vercel URL there. |
 | Can't place plants on map | Fixed — the PlantPalette Sheet overlay was intercepting taps. Now the palette auto-closes when you select a plant so taps reach the canvas. |
+| Zone filter shows 0 plants | Plants must be placed on the map AND inside a zone rectangle for the zone filter to include them. Plants placed outside zones won't appear in any zone filter. |
+| Map too zoomed in on load | Map should show full aerial photo (contain-fit). If it doesn't, check GardenCanvas initial scale calculation uses `Math.min(width/img.width, height/img.height)`. |
 | Vanilla app broken | This shouldn't happen. If it does, nothing in this process modifies the vanilla app. Check GitHub Pages deployment status. |
 
 ---

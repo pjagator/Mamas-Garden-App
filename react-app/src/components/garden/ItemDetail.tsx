@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import {
   Leaf, Bug, Heart, MapPin, Calendar, Sparkles, Sun, Droplets,
-  Sprout, Scissors, Ruler, ShieldAlert, TreePine, Trash2
+  Sprout, Scissors, Ruler, ShieldAlert, TreePine, Trash2, ChevronDown
 } from 'lucide-react'
 import { confidenceClass } from '@/lib/constants'
 import HealthTimeline from '@/components/health/HealthTimeline'
@@ -31,6 +32,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ siz
 }
 
 function CareSection({ care }: { care: CareProfile }) {
+  const [open, setOpen] = useState(false)
   const sections = [
     { icon: Droplets, label: 'Watering', value: care.watering ? `${care.watering.frequency}${care.watering.notes ? ` \u2014 ${care.watering.notes}` : ''}` : null },
     { icon: Sun, label: 'Sun', value: care.sun },
@@ -42,9 +44,19 @@ function CareSection({ care }: { care: CareProfile }) {
     { icon: TreePine, label: 'Companion plants', value: care.companions },
   ]
   return (
-    <div className="space-y-1">
-      <h3 className="font-display text-sm font-medium text-primary mb-2">Tampa Bay Care Guide</h3>
-      {sections.map(s => <InfoRow key={s.label} icon={s.icon} label={s.label} value={s.value} />)}
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between py-1"
+      >
+        <h3 className="font-display text-sm font-medium text-primary">Tampa Bay Care Guide</h3>
+        <ChevronDown size={16} className={`text-ink-light transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="space-y-1 mt-2">
+          {sections.map(s => <InfoRow key={s.label} icon={s.icon} label={s.label} value={s.value} />)}
+        </div>
+      )}
     </div>
   )
 }

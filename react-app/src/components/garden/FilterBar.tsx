@@ -1,6 +1,6 @@
-import { MapPin, X } from 'lucide-react'
+import { MapPin, X, Map } from 'lucide-react'
 import { getCurrentSeason, LOCATION_ZONES, LOCATION_HABITATS } from '@/lib/constants'
-import type { InventoryItem } from '@/types'
+import type { InventoryItem, GardenBed, GardenPlacement } from '@/types'
 
 export type FilterType = 'all' | 'plant' | 'bug' | 'native' | 'blooming'
 export type SortType = 'date-desc' | 'date-asc' | 'name-asc' | 'name-desc' | 'location'
@@ -10,9 +10,13 @@ interface FilterBarProps {
   activeFilter: FilterType
   activeSort: SortType
   activeLocation: string
+  activeZone: string
+  beds: GardenBed[]
+  placements: GardenPlacement[]
   onFilterChange: (filter: FilterType) => void
   onSortChange: (sort: SortType) => void
   onLocationChange: (location: string) => void
+  onZoneChange: (zone: string) => void
 }
 
 const FILTERS: { value: FilterType; label: string }[] = [
@@ -94,6 +98,14 @@ export function applyLocationFilter(items: InventoryItem[], location: string): I
   })
 }
 
+export function applyZoneFilter(items: InventoryItem[], zone: string, placements: GardenPlacement[], beds: GardenBed[]): InventoryItem[] {
+  if (!zone) return items
+  const bed = beds.find(b => b.id === zone)
+  if (!bed) return items
+  const placedIds = new Set(placements.filter(p => p.bed_id === zone).map(p => p.inventory_id))
+  return items.filter(i => placedIds.has(i.id))
+}
+
 export function applySearch(items: InventoryItem[], query: string): InventoryItem[] {
   if (!query.trim()) return items
   const q = query.toLowerCase()
@@ -118,8 +130,12 @@ export function applySort(items: InventoryItem[], sort: SortType): InventoryItem
   }
 }
 
-export default function FilterBar({ items, activeFilter, activeSort, activeLocation, onFilterChange, onSortChange, onLocationChange }: FilterBarProps) {
+export default function FilterBar({ items, activeFilter, activeSort, activeLocation, activeZone, beds, placements, onFilterChange, onSortChange, onLocationChange, onZoneChange }: FilterBarProps) {
   const locationParts = getLocationParts(items)
+
+  function getZonePlantCount(bedId: string): number {
+    return placements.filter(p => p.bed_id === bedId).length
+  }
 
   return (
     <div className="space-y-3">
@@ -142,6 +158,40 @@ export default function FilterBar({ items, activeFilter, activeSort, activeLocat
           )
         })}
       </div>
+
+      {/* Garden zone filter chips */}
+      {beds.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Map size={14} className="text-ink-light flex-shrink-0" />
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+            {beds.map(bed => {
+              const active = activeZone === bed.id
+              const count = getZonePlantCount(bed.id)
+              return (
+                <button
+                  key={bed.id}
+                  onClick={() => onZoneChange(active ? '' : bed.id)}
+                  className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    active ? 'bg-sage text-white' : 'bg-white text-ink-mid border border-cream-dark hover:border-sage'
+                  }`}
+                >
+                  {bed.name ?? 'Unnamed'}
+                  <span className={`ml-1 ${active ? 'text-white/70' : 'text-ink-light'}`}>{count}</span>
+                </button>
+              )
+            })}
+            {activeZone && (
+              <button
+                onClick={() => onZoneChange('')}
+                className="flex-shrink-0 w-6 h-6 rounded-full bg-cream-dark text-ink-light flex items-center justify-center hover:text-ink min-h-0 min-w-0"
+                aria-label="Clear zone filter"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Location filter chips */}
       {locationParts.length > 0 && (

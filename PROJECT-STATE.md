@@ -427,6 +427,14 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
 - **Plant placement**: Select a plant from the palette, tap the map. Plants dropped inside a zone rectangle are automatically linked to that zone (`bed_id` set on the placement row).
 - **Zone detail sheet**: Shows all plants placed in the zone with thumbnail, name, and scientific name.
 - **Plant palette grouping**: Plants grouped by zone placement — "Not yet placed", then each zone name with its plants, then "Placed outside zones" for plants on the map but not in a zone.
+- **Default zoom**: Map initially fits the entire aerial photo in view (contain mode at 95% with centering), showing the full yard rather than zooming to image width. Fit View button uses the same behavior.
+- **Zone selector**: Row of zone name chips above the map toolbar. Tapping a zone name centers and zooms the map onto that zone. "All" button resets to full view. Uses `forwardRef`/`useImperativeHandle` on GardenCanvas to expose `focusBed()` and `fitView()` methods.
+
+### Garden Page — Zone Filter
+- **Garden zone filter**: FilterBar on the Garden page includes a row of zone chips (with Map icon) showing each garden bed name and its plant count. Selecting a zone filters the plant list to only show plants placed in that zone on the map. Uses data from `garden_beds` and `garden_placements` tables via `useGardenMap` hook. Zone filter is combinable with type, location, search, and sort filters.
+
+### Care Guidelines
+- **Collapsible care section**: The "Tampa Bay Care Guide" in the plant detail sheet is collapsed by default with a chevron toggle. Users tap to expand and view care details.
 
 ### Known Issues Fixed
 - **Map plant placement**: The PlantPalette Sheet overlay intercepted canvas taps. Fixed by auto-closing the palette when a plant is selected, keeping placement mode active. `useGardenMap.placeItem()` now returns structured `{ placement, error }` with real error messages instead of silently returning null.

@@ -256,9 +256,12 @@ fetch('https://itjvgruwvlrrlhsknwiw.supabase.co/functions/v1/identify-species', 
 A React/TypeScript rewrite on the `firebush` branch, deployed to Vercel. Shares the same Supabase project and database. See `docs/firebush-deployment-guide.md` for setup.
 
 ### React App Architecture
-- `react-app/src/pages/Map.tsx` — Garden map page with aerial photo upload, zone drawing, plant placement
+- `react-app/src/pages/Map.tsx` — Garden map page with aerial photo upload, zone drawing, plant placement, zone selector chips for centering/zooming
+- `react-app/src/pages/Garden.tsx` — Garden inventory page with type/zone/location filters via `useGardenMap` hook for zone data
 - `react-app/src/hooks/useGardenMap.ts` — CRUD hook for maps, beds, placements (returns structured errors)
-- `react-app/src/components/map/` — GardenCanvas (Konva), PlantPalette (Sheet), MapToolbar, PlantMarker, BedDetailSheet, ZoneLegend
+- `react-app/src/components/map/` — GardenCanvas (Konva, forwardRef with focusBed/fitView), PlantPalette (Sheet), MapToolbar, PlantMarker, BedDetailSheet, ZoneLegend
+- `react-app/src/components/garden/FilterBar.tsx` — Type filters (All/Plants/Insects/Natives/Blooming), garden zone filters (from beds), location filters (Front/Back/Side/Pot/Hammock/Sandhill), sort options. Includes `applyZoneFilter()` for filtering by map zone placement.
+- `react-app/src/components/garden/ItemDetail.tsx` — Plant detail sheet with collapsible care guidelines (collapsed by default)
 
 ### Map Placement Flow
 1. User enters place mode → PlantPalette sheet opens (plants grouped by zone)
@@ -269,6 +272,20 @@ A React/TypeScript rewrite on the `firebush` branch, deployed to Vercel. Shares 
 
 ### Gotcha: Sheet Overlays Block Canvas Events
 shadcn Sheet components render a full-screen overlay. If you need to interact with content behind a Sheet, close the Sheet first — taps on the overlay close the Sheet rather than passing through.
+
+### Map View & Zone Navigation
+- **Default zoom**: GardenCanvas fits entire aerial photo in view (contain mode, 95% scale with centering) instead of fitting to width. Shows the full yard on load.
+- **Zone selector**: Row of zone chips above the toolbar in Map.tsx. Tapping a zone centers and zooms the map onto that zone's bounding rectangle. "All" resets to full view. GardenCanvas exposes `focusBed(bedId)` and `fitView()` via `forwardRef`/`useImperativeHandle`.
+- **Fit View**: Toolbar button and zone "All" chip both call `fitView()` which uses contain-fit logic.
+
+### Garden Page Zone Filter
+- Garden page (`Garden.tsx`) imports `useGardenMap` hook to get beds and placements data.
+- FilterBar renders garden zone chips (with Map icon) between type filters and location filters.
+- `applyZoneFilter()` filters inventory items by checking which items have placements with matching `bed_id`.
+- Zone filter is combinable with all other filters (type, location, search, sort).
+
+### Care Guidelines
+- ItemDetail's "Tampa Bay Care Guide" section is collapsed by default. Uses local `useState(false)` with a chevron toggle button.
 
 ### Gotcha: Konva Touch Events on Mobile
 `stage.getPointerPosition()` can return `null` on mobile after `touchend`. GardenCanvas uses a `lastTouchPos` ref to cache the last known pointer position as a fallback. All `getPointerPos()` callers must handle the `null` return. Additionally, PlantPalette must NOT clear the selected plant in its `onOpenChange` handler — on mobile, `onOpenChange(false)` can fire when the sheet is programmatically closed (not just user-dismissed), which would clear the selection before the user taps the map.

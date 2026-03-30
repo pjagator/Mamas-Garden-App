@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import { Stage, Layer, Rect, Image as KonvaImage, Text, Group } from 'react-konva'
 import PlantMarker from './PlantMarker'
 import type { GardenMap, GardenBed, GardenPlacement, BedShape, InventoryItem } from '@/types'
@@ -26,10 +26,15 @@ const SUN_COLORS: Record<string, string> = {
   full_shade: 'rgba(148, 163, 184, 0.25)',
 }
 
-export default function GardenCanvas({
+export interface GardenCanvasRef {
+  focusBed: (bedId: string) => void
+  fitView: () => void
+}
+
+const GardenCanvas = forwardRef<GardenCanvasRef, GardenCanvasProps>(function GardenCanvas({
   map, beds, placements, inventory, mode, showSatellite, showLabels,
   selectedPlant, onBedDrawn, onPlantPlaced, onPlacementMoved, onPlacementTapped, onBedTapped,
-}: GardenCanvasProps) {
+}, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const lastTouchPos = useRef<{ x: number; y: number } | null>(null)
   const [stageSize, setStageSize] = useState({ width: 390, height: 500 })
@@ -59,8 +64,14 @@ export default function GardenCanvas({
     img.onload = () => {
       setBgImage(img)
       if (containerRef.current) {
-        const { width } = containerRef.current.getBoundingClientRect()
-        setScale(width / img.width)
+        const { width, height } = containerRef.current.getBoundingClientRect()
+        // Fit entire image in view (contain), showing the full aerial photo
+        const fitScale = Math.min(width / img.width, height / img.height) * 0.95
+        setScale(fitScale)
+        // Center the image
+        const offsetX = (width - img.width * fitScale) / 2
+        const offsetY = (height - img.height * fitScale) / 2
+        setPosition({ x: offsetX, y: offsetY })
       }
     }
     img.src = map.image_url
@@ -133,6 +144,34 @@ export default function GardenCanvas({
     })
   }
 
+  useImperativeHandle(ref, () => ({
+    focusBed(bedId: string) {
+      const bed = beds.find(b => b.id === bedId)
+      if (!bed || !containerRef.current) return
+      const { width, height } = containerRef.current.getBoundingClientRect()
+      const padding = 40
+      const bedCenterX = bed.shape.x + bed.shape.width / 2
+      const bedCenterY = bed.shape.y + bed.shape.height / 2
+      const newScale = Math.min(
+        (width - padding * 2) / bed.shape.width,
+        (height - padding * 2) / bed.shape.height,
+        3 // max zoom
+      )
+      setScale(newScale)
+      setPosition({
+        x: width / 2 - bedCenterX * newScale,
+        y: height / 2 - bedCenterY * newScale,
+      })
+    },
+    fitView() {
+      if (!bgImage || !containerRef.current) return
+      const { width, height } = containerRef.current.getBoundingClientRect()
+      const fitScale = Math.min(width / bgImage.width, height / bgImage.height) * 0.95
+      setScale(fitScale)
+      setPosition({ x: (width - bgImage.width * fitScale) / 2, y: (height - bgImage.height * fitScale) / 2 })
+    },
+  }), [beds, bgImage])
+
   const imageOpacity = showSatellite ? 1 : 0.18
 
   return (
@@ -202,12 +241,8 @@ export default function GardenCanvas({
         )}
       </Stage>
 
-      <button id="fit-view-trigger" className="hidden" onClick={() => {
-        if (!bgImage || !containerRef.current) return
-        const { width } = containerRef.current.getBoundingClientRect()
-        setScale(width / bgImage.width)
-        setPosition({ x: 0, y: 0 })
-      }} />
     </div>
   )
-}
+})
+
+export default GardenCanvas

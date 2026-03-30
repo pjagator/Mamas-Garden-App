@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import ScreenHeader from '@/components/layout/ScreenHeader'
 import SettingsSheet from '@/pages/Settings'
 import SearchBar from '@/components/garden/SearchBar'
-import FilterBar, { applyFilter, applyLocationFilter, applySearch, applySort } from '@/components/garden/FilterBar'
+import FilterBar, { applyFilter, applyLocationFilter, applyZoneFilter, applySearch, applySort } from '@/components/garden/FilterBar'
 import type { FilterType, SortType } from '@/components/garden/FilterBar'
 import PlantCard from '@/components/garden/PlantCard'
 import PlantCardSkeleton from '@/components/garden/PlantCardSkeleton'
@@ -12,17 +12,20 @@ import ItemDetail from '@/components/garden/ItemDetail'
 import HealthLogSheet from '@/components/health/HealthLogSheet'
 import ReminderList from '@/components/reminders/ReminderList'
 import { useInventory } from '@/hooks/useInventory'
+import { useGardenMap } from '@/hooks/useGardenMap'
 import { useReminders } from '@/hooks/useReminders'
 import type { InventoryItem } from '@/types'
 
 export default function Garden() {
   const { items, loading, stats, deleteItem, refresh } = useInventory()
+  const { beds, placements } = useGardenMap()
   const { reminders, loading: remindersLoading, toggle, addCustom, deleteReminder, generate, isStale } = useReminders(items)
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
   const [sort, setSort] = useState<SortType>('date-desc')
   const [location, setLocation] = useState('')
+  const [zone, setZone] = useState('')
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const [healthItem, setHealthItem] = useState<InventoryItem | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -30,10 +33,11 @@ export default function Garden() {
   const filteredItems = useMemo(() => {
     let result = applyFilter(items, filter)
     result = applyLocationFilter(result, location)
+    result = applyZoneFilter(result, zone, placements, beds)
     result = applySearch(result, search)
     result = applySort(result, sort)
     return result
-  }, [items, filter, location, search, sort])
+  }, [items, filter, location, zone, placements, beds, search, sort])
 
   const hasPlants = items.some(i => i.type === 'plant')
 
@@ -92,9 +96,13 @@ export default function Garden() {
             activeFilter={filter}
             activeSort={sort}
             activeLocation={location}
+            activeZone={zone}
+            beds={beds}
+            placements={placements}
             onFilterChange={setFilter}
             onSortChange={setSort}
             onLocationChange={setLocation}
+            onZoneChange={setZone}
           />
         )}
 

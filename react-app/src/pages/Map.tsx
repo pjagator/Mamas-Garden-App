@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Upload, Eye, EyeOff, Tag, Tags } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import ScreenHeader from '@/components/layout/ScreenHeader'
 import GardenCanvas from '@/components/map/GardenCanvas'
+import type { GardenCanvasRef } from '@/components/map/GardenCanvas'
 import MapToolbar from '@/components/map/MapToolbar'
 import type { MapMode } from '@/components/map/MapToolbar'
 import BedDetailSheet from '@/components/map/BedDetailSheet'
@@ -18,6 +19,7 @@ export default function Map() {
   const { map, beds, placements, loading, createMap, addBed, updateBed, deleteBed, placeItem, movePlacement, removePlacement } = useGardenMap()
   const { items: inventory } = useInventory()
 
+  const canvasRef = useRef<GardenCanvasRef>(null)
   const [mode, setMode] = useState<MapMode>('view')
   const [showSatellite, setShowSatellite] = useState(false)
   const [showLabels, setShowLabels] = useState(true)
@@ -184,6 +186,7 @@ export default function Map() {
 
       <div className="relative flex-1">
         <GardenCanvas
+          ref={canvasRef}
           map={map}
           beds={beds}
           placements={placements}
@@ -218,10 +221,30 @@ export default function Map() {
         )}
       </div>
 
+      {beds.length > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-white/95 border-t border-cream-dark overflow-x-auto scrollbar-none">
+          <button
+            onClick={() => canvasRef.current?.fitView()}
+            className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium bg-cream-dark text-ink-mid hover:text-ink transition-colors"
+          >
+            All
+          </button>
+          {beds.map(bed => (
+            <button
+              key={bed.id}
+              onClick={() => canvasRef.current?.focusBed(bed.id)}
+              className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium bg-white text-ink-mid border border-cream-dark hover:border-sage transition-colors"
+            >
+              {bed.name ?? 'Unnamed'}
+            </button>
+          ))}
+        </div>
+      )}
+
       <MapToolbar
         mode={mode}
         onModeChange={handleModeChange}
-        onFitView={() => document.getElementById('fit-view-trigger')?.click()}
+        onFitView={() => canvasRef.current?.fitView()}
         onToggleLegend={() => setShowLegend(!showLegend)}
         onSettings={() => toast.info('Map settings coming soon')}
       />
