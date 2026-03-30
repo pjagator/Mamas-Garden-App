@@ -1,11 +1,10 @@
-import { useState } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import {
   Leaf, Bug, Heart, MapPin, Calendar, Sparkles, Sun, Droplets,
-  Sprout, Scissors, Ruler, ShieldAlert, TreePine, Trash2, ChevronDown
+  Trash2
 } from 'lucide-react'
 import { confidenceClass } from '@/lib/constants'
 import HealthTimeline from '@/components/health/HealthTimeline'
@@ -27,36 +26,6 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ siz
         <p className="text-xs text-ink-light">{label}</p>
         <p className="text-sm text-ink">{value}</p>
       </div>
-    </div>
-  )
-}
-
-function CareSection({ care }: { care: CareProfile }) {
-  const [open, setOpen] = useState(false)
-  const sections = [
-    { icon: Droplets, label: 'Watering', value: care.watering ? `${care.watering.frequency}${care.watering.notes ? ` \u2014 ${care.watering.notes}` : ''}` : null },
-    { icon: Sun, label: 'Sun', value: care.sun },
-    { icon: Sprout, label: 'Soil', value: care.soil },
-    { icon: Calendar, label: 'Fertilizing', value: care.fertilizing ? `${care.fertilizing.schedule}${care.fertilizing.type ? ` (${care.fertilizing.type})` : ''}` : null },
-    { icon: Scissors, label: 'Pruning', value: care.pruning ? `${care.pruning.timing}${care.pruning.method ? ` \u2014 ${care.pruning.method}` : ''}` : null },
-    { icon: Ruler, label: 'Mature size', value: care.mature_size ? `${care.mature_size.height} tall, ${care.mature_size.spread} spread` : null },
-    { icon: ShieldAlert, label: 'Pests & diseases', value: care.pests_diseases },
-    { icon: TreePine, label: 'Companion plants', value: care.companions },
-  ]
-  return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-1"
-      >
-        <h3 className="font-display text-sm font-medium text-primary">Tampa Bay Care Guide</h3>
-        <ChevronDown size={16} className={`text-ink-light transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="space-y-1 mt-2">
-          {sections.map(s => <InfoRow key={s.label} icon={s.icon} label={s.label} value={s.value} />)}
-        </div>
-      )}
     </div>
   )
 }
@@ -135,14 +104,22 @@ export default function ItemDetail({ item, open, onClose, onDelete }: ItemDetail
             </div>
           ) : null}
 
-          <Separator className="mb-4" />
-
           {item.care_profile && (
-            <>
-              <CareSection care={item.care_profile} />
-              <Separator className="my-4" />
-            </>
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {item.care_profile.sun && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-cream border-0">
+                  <Sun size={10} className="mr-0.5" /> {item.care_profile.sun}
+                </Badge>
+              )}
+              {item.care_profile.watering?.frequency && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-cream border-0">
+                  <Droplets size={10} className="mr-0.5" /> {item.care_profile.watering.frequency}
+                </Badge>
+              )}
+            </div>
           )}
+
+          <Separator className="mb-4" />
 
           {item.type === 'plant' && (
             <>
