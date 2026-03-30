@@ -1,5 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+export const config = {
+  maxDuration: 60,
+}
+
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 
 async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
