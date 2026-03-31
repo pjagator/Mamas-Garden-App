@@ -58,7 +58,7 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className={isDesktop ? 'min-h-screen bg-cream' : 'h-dvh flex flex-col bg-cream overflow-hidden'}>
       <ConnectionToast visible={showToast} message={toastMessage} type={toastType} />
       {showWelcome && <Welcome onDismiss={handleDismissWelcome} />}
       <CaptureSheet open={captureOpen} onClose={() => setCaptureOpen(false)} />
@@ -72,7 +72,7 @@ export default function AppShell() {
         </>
       ) : (
         <>
-          <main className="pb-20">
+          <main className="flex-1 overflow-y-auto">
             <Outlet />
           </main>
           <BottomNav onFabClick={handleFabClick} offline={!online} />

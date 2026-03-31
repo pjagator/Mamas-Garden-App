@@ -83,7 +83,7 @@ export default function BottomNav({ onFabClick, offline }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white border-t border-cream-dark z-50"
+      className="flex-shrink-0 bg-white border-t border-cream-dark z-50"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Main navigation"
     >
