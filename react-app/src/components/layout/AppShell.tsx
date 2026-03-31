@@ -72,7 +72,7 @@ export default function AppShell() {
         </>
       ) : (
         <>
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto flex flex-col min-h-0">
             <Outlet />
           </main>
           <BottomNav onFabClick={handleFabClick} offline={!online} />

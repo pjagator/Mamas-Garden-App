@@ -160,7 +160,7 @@ export default function Map() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] md:h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       <ScreenHeader
         title={map.name}
         subtitle={`${beds.length} zones · ${placements.length} plants placed`}
