@@ -344,7 +344,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
           </div>
         )}
 
-        {step === 'results' && results.length > 0 && (
+        {step === 'results' && results.length > 0 && !showSpottedPrompt && (
           <div className="space-y-3 mt-4">
             {results.map((r, i) => (
               <IdResultCard key={i} result={r} selected={selectedIndex === i} onSelect={() => setSelectedIndex(i)} />
