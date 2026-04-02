@@ -181,6 +181,7 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 - Garden page Settings sheet was removed — sign-out is now a button in the header. If you need export/clear-data features, re-import Settings.tsx
 - Care dashboard weather depends on Open-Meteo API availability. If it's down, the weather card silently fails and the rest of the Care view still renders
 - `useSeasonalCare.generate()` must be called after weather loads — weather data is passed as context to the AI batch call
+- Zone assignment from ItemDetail: ItemDetail accepts optional `onPlaceInZone` and `onRemovePlacement` props. Tapping a zone pill either creates a map placement (center of the zone) or shows a move confirmation. Tapping the currently-selected zone removes the placement. Garden.tsx wires these to `useGardenMap.placeItem()` and `useGardenMap.removePlacement()`.
 
 ## Deploy
 

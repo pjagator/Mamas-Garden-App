@@ -442,6 +442,7 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
 - **Per-plant care cards**: Each plant shows seasonal tips + expandable full care reference (the 8-field care profile moved here from ItemDetail).
 - **Reminders integration**: Existing monthly reminders moved from Plants view to Care dashboard.
 - **Item detail slimmed down**: Full care section removed from ItemDetail, replaced with compact sun/water quick-reference badges.
+- **Zone assignment from detail view**: ItemDetail component includes a "Garden Zone" pill selector matching the Location editor pattern. Tapping a zone pill creates a map placement at the zone center; if already placed, a confirmation prompt appears before moving. Tapping the currently-selected zone removes the placement. Enabled via optional `onPlaceInZone` and `onRemovePlacement` props (wired by Garden.tsx to `useGardenMap` hooks).
 - **Propagation advice**: `PropagationCard.tsx` collapsible component shown in ItemDetail (plants) and WishlistDetail. Calls the `propagation` action on the `garden-assistant` Vercel API route (Claude Haiku), returns `{ method, timing, steps[], garden_tip }`. Result stored in `propagation_advice` JSONB column on both `inventory` and `wishlist` tables.
 - **Settings simplified**: Gear icon replaced with sign-out button in Garden header. Settings sheet removed.
 
