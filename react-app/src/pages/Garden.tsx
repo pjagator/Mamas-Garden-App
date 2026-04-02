@@ -18,7 +18,7 @@ import type { InventoryItem } from '@/types'
 
 export default function Garden() {
   const { items, loading, stats, deleteItem, updateItem, refresh } = useInventory()
-  const { beds, placements } = useGardenMap()
+  const { beds, placements, placeItem, removePlacement } = useGardenMap()
   const { reminders, loading: remindersLoading, toggle, addCustom, deleteReminder, generate, isStale } = useReminders(items)
   const { signOut } = useAuth()
 
@@ -178,6 +178,16 @@ export default function Garden() {
         }}
         placements={placements}
         beds={beds}
+        onPlaceInZone={async (inventoryId, bedId, x, y) => {
+          const result = await placeItem(inventoryId, x, y, bedId)
+          if (result.error && result.error !== 'duplicate') {
+            toast.error('Failed to place in zone')
+          }
+          return { error: result.error }
+        }}
+        onRemovePlacement={async (placementId) => {
+          await removePlacement(placementId)
+        }}
       />
       <HealthLogSheet
         item={healthItem}
