@@ -37,7 +37,7 @@ export default function PropagationCard({ item, table, zone, onAdviceLoaded }: P
             common: item.common,
             scientific: item.scientific,
             type: item.type,
-            category: 'category' in item ? item.category : null,
+            category: item.category ?? null,
             zone: zone ?? undefined,
           },
         }),
@@ -79,8 +79,10 @@ export default function PropagationCard({ item, table, zone, onAdviceLoaded }: P
           <span className="text-sm font-semibold text-primary">Propagation</span>
         </div>
         <div className="flex items-center gap-2">
-          {advice && !expanded && (
-            <span className="text-xs text-sage bg-sage-light/40 px-2.5 py-0.5 rounded-full">{advice.method}</span>
+          {!expanded && (
+            <span className="text-xs text-sage bg-sage-light/40 px-2.5 py-0.5 rounded-full">
+              {advice ? advice.method : 'Tap to learn'}
+            </span>
           )}
           <ChevronDown size={16} className={`text-ink-light transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </div>
@@ -139,7 +141,8 @@ export default function PropagationCard({ item, table, zone, onAdviceLoaded }: P
 
               <button
                 onClick={handleRegenerate}
-                className="flex items-center gap-1 text-[10px] text-ink-light hover:text-ink-mid pt-1"
+                disabled={loading}
+                className="flex items-center gap-1 text-[10px] text-ink-light hover:text-ink-mid pt-1 disabled:opacity-50"
               >
                 <RefreshCw size={10} /> Regenerate
               </button>
