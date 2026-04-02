@@ -224,6 +224,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
         features: null,
         linked_plant_id: null,
         nickname: null,
+        propagation_advice: null,
       }
 
       const inserted = await insertItem(entry)
@@ -273,6 +274,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
         soil_needs: null,
         moisture_needs: null,
         source: 'Claude AI',
+        propagation_advice: null,
       })
 
       toast.success(`${result.common} saved as a friend of the garden`)

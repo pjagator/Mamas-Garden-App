@@ -78,6 +78,7 @@ export default function ManualEntry({ open, onClose }: ManualEntryProps) {
         features: null,
         linked_plant_id: null,
         nickname: null,
+        propagation_advice: null,
       })
 
       if (!inserted) throw new Error('Failed to save')
