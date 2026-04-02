@@ -126,6 +126,25 @@ For each plant, provide 2-3 specific, actionable tips for this month in Tampa Ba
       if (!jsonMatch) throw new Error('Failed to generate seasonal care guide')
       return res.status(200).json(JSON.parse(jsonMatch[0]))
 
+    } else if (action === 'propagation') {
+      const { common, scientific, type, category, zone } = data
+      let zoneContext = ''
+      if (zone) {
+        const parts = [
+          zone.sun_exposure ? `Sun: ${zone.sun_exposure.replace('_', ' ')}` : null,
+          zone.soil_type ? `Soil: ${zone.soil_type.replace('_', ' ')}` : null,
+          zone.moisture_level ? `Moisture: ${zone.moisture_level}` : null,
+          zone.wind_exposure ? `Wind: ${zone.wind_exposure}` : null,
+        ].filter(Boolean).join(', ')
+        zoneContext = `\n\nThis plant is currently growing in a garden zone with these conditions: ${parts}. Include a "garden_tip" field with a 1-2 sentence tip specific to propagating in these conditions.`
+      }
+      const text = await callClaude('claude-haiku-4-5-20251001',
+        'You are a Tampa Bay, Florida (USDA Zone 9b-10a) garden propagation expert.',
+        `How should a home gardener propagate ${common} (${scientific}), a ${category || type}? Return a JSON object with these exact fields: { "method": "best propagation method (e.g. Stem cuttings, Seed, Division, Layering)", "timing": "best time of year in Tampa Bay", "steps": ["step 1", "step 2", "step 3"], "garden_tip": ${zone ? '"1-2 sentence tip for their specific zone conditions"' : 'null'} }. Provide 3-5 concise steps. Return ONLY the JSON object.${zoneContext}`)
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('Failed to generate propagation advice')
+      return res.status(200).json({ propagation: JSON.parse(jsonMatch[0]) })
+
     } else {
       return res.status(400).json({ error: `Unknown action: ${action}` })
     }
