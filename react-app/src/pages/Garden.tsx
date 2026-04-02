@@ -176,6 +176,8 @@ export default function Garden() {
           updateItem(id, updates)
           if (selectedItem && selectedItem.id === id) setSelectedItem({ ...selectedItem, ...updates })
         }}
+        placements={placements}
+        beds={beds}
       />
       <HealthLogSheet
         item={healthItem}
