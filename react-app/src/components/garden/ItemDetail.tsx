@@ -21,6 +21,8 @@ interface ItemDetailProps {
   onUpdate?: (id: string, updates: Partial<InventoryItem>) => void
   placements?: GardenPlacement[]
   beds?: GardenBed[]
+  onPlaceInZone?: (inventoryId: string, bedId: string, x: number, y: number) => Promise<{ error?: string }>
+  onRemovePlacement?: (placementId: string) => Promise<void>
 }
 
 function InfoRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string; value: string | null | undefined }) {
@@ -42,7 +44,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   return <Badge variant="secondary" className={`text-[10px] ${colors[level]} border-0`}>{confidence}% match</Badge>
 }
 
-export default function ItemDetail({ item, open, onClose, onDelete, onUpdate, placements, beds }: ItemDetailProps) {
+export default function ItemDetail({ item, open, onClose, onDelete, onUpdate, placements, beds, onPlaceInZone, onRemovePlacement }: ItemDetailProps) {
   const [editingNickname, setEditingNickname] = useState(false)
   const [nicknameValue, setNicknameValue] = useState('')
   const [editingNotes, setEditingNotes] = useState(false)
@@ -66,6 +68,9 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate, pl
       wind_exposure: bed.wind_exposure,
     }
   })()
+
+  const currentPlacement = placements?.find(p => p.inventory_id === item.id) ?? null
+  const currentBed = currentPlacement?.bed_id ? beds?.find(b => b.id === currentPlacement.bed_id) ?? null : null
 
   function startEditNickname() {
     setNicknameValue(item!.nickname ?? '')
@@ -92,6 +97,31 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate, pl
     const current = item!.location ? item!.location.split(',').map(s => s.trim()).filter(Boolean) : []
     const updated = current.includes(part) ? current.filter(p => p !== part) : [...current, part]
     onUpdate?.(item!.id, { location: updated.join(', ') })
+  }
+
+  async function handleZoneTap(bed: GardenBed) {
+    if (!item) return
+    const centerX = bed.shape.x + bed.shape.width / 2
+    const centerY = bed.shape.y + bed.shape.height / 2
+
+    if (currentPlacement && currentPlacement.bed_id === bed.id) {
+      // Tapping current zone — unassign
+      await onRemovePlacement?.(currentPlacement.id)
+      return
+    }
+
+    if (currentPlacement) {
+      // Already placed elsewhere — confirm move
+      const bedName = bed.name || 'this zone'
+      if (!window.confirm(`Move ${displayName} to ${bedName}?`)) return
+      await onRemovePlacement?.(currentPlacement.id)
+    }
+
+    // Place in new zone
+    const result = await onPlaceInZone?.(item.id, bed.id, centerX, centerY)
+    if (result?.error === 'duplicate') {
+      // Already placed (race condition) — ignore silently
+    }
   }
 
   return (
@@ -201,6 +231,29 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate, pl
                 <div>
                   <p className="text-xs text-ink-light">Location</p>
                   <p className="text-sm text-ink">{item.location || <span className="text-ink-light italic">Tap to set</span>}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Garden zone selector */}
+            {beds && beds.length > 0 && onPlaceInZone && (
+              <div className="py-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin size={16} className="text-sage flex-shrink-0" />
+                  <p className="text-xs text-ink-light">Garden Zone</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {beds.map(bed => {
+                    const active = currentBed?.id === bed.id
+                    return (
+                      <button key={bed.id} onClick={() => handleZoneTap(bed)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                          active ? 'bg-sage text-white' : 'bg-cream-dark text-ink-mid'
+                        }`}>
+                        {bed.name || 'Unnamed zone'}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
