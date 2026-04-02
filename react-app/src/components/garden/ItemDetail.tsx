@@ -10,7 +10,8 @@ import {
 import { LOCATION_ZONES, LOCATION_HABITATS } from '@/lib/constants'
 import { confidenceClass } from '@/lib/constants'
 import HealthTimeline from '@/components/health/HealthTimeline'
-import type { InventoryItem } from '@/types'
+import PropagationCard from '@/components/garden/PropagationCard'
+import type { InventoryItem, GardenBed, GardenPlacement, PropagationAdvice } from '@/types'
 
 interface ItemDetailProps {
   item: InventoryItem | null
@@ -18,6 +19,8 @@ interface ItemDetailProps {
   onClose: () => void
   onDelete: (id: string, imageUrl?: string | null) => void
   onUpdate?: (id: string, updates: Partial<InventoryItem>) => void
+  placements?: GardenPlacement[]
+  beds?: GardenBed[]
 }
 
 function InfoRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string; value: string | null | undefined }) {
@@ -39,7 +42,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   return <Badge variant="secondary" className={`text-[10px] ${colors[level]} border-0`}>{confidence}% match</Badge>
 }
 
-export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: ItemDetailProps) {
+export default function ItemDetail({ item, open, onClose, onDelete, onUpdate, placements, beds }: ItemDetailProps) {
   const [editingNickname, setEditingNickname] = useState(false)
   const [nicknameValue, setNicknameValue] = useState('')
   const [editingNotes, setEditingNotes] = useState(false)
@@ -49,6 +52,20 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
   if (!item) return null
   const TypeIcon = item.type === 'bug' ? Bug : Leaf
   const displayName = item.nickname ?? item.common ?? 'Unknown species'
+
+  const zone = (() => {
+    if (!placements || !beds || !item) return null
+    const placement = placements.find(p => p.inventory_id === item.id)
+    if (!placement?.bed_id) return null
+    const bed = beds.find(b => b.id === placement.bed_id)
+    if (!bed) return null
+    return {
+      sun_exposure: bed.sun_exposure,
+      soil_type: bed.soil_type,
+      moisture_level: bed.moisture_level,
+      wind_exposure: bed.wind_exposure,
+    }
+  })()
 
   function startEditNickname() {
     setNicknameValue(item!.nickname ?? '')
@@ -247,6 +264,17 @@ export default function ItemDetail({ item, open, onClose, onDelete, onUpdate }: 
                 </Badge>
               )}
             </div>
+          )}
+
+          {item.type === 'plant' && (
+            <PropagationCard
+              item={item}
+              table="inventory"
+              zone={zone}
+              onAdviceLoaded={(advice: PropagationAdvice) => {
+                onUpdate?.(item.id, { propagation_advice: advice })
+              }}
+            />
           )}
 
           <Separator className="mb-4" />
