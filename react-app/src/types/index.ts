@@ -25,6 +25,7 @@ export interface InventoryItem {
   height: string | null
   features: string | null
   linked_plant_id: string | null
+  propagation_advice: PropagationAdvice | null
 }
 
 export type HealthStatus = 'thriving' | 'healthy' | 'stressed' | 'sick' | 'dormant' | 'new'
@@ -39,6 +40,13 @@ export interface CareProfile {
   mature_size: { height: string; spread: string }
   pests_diseases: string
   companions: string
+}
+
+export interface PropagationAdvice {
+  method: string
+  timing: string
+  steps: string[]
+  garden_tip: string | null
 }
 
 export interface Reminder {
@@ -146,6 +154,7 @@ export interface WishlistItem {
   soil_needs: string | null
   moisture_needs: string | null
   source: 'Claude AI' | 'Manual' | null
+  propagation_advice: PropagationAdvice | null
   created_at: string
 }
 
