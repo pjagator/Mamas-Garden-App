@@ -19,6 +19,7 @@ A mobile-first web app for tracking native plants and wildlife in a Tampa Bay, F
 - **Species ID**: Claude Sonnet (claude-sonnet-4-20250514) via `identify-species` edge function -- handles both plants and insects from photos
 - **Care Profiles**: Claude Haiku (claude-haiku-4-5-20251001) via `garden-assistant` edge function -- generates Tampa Bay-specific plant care data
 - **Seasonal Reminders**: Claude Haiku via `garden-assistant` edge function (action: `"reminders"`) -- generates monthly care tasks based on user's plant inventory
+- **Propagation Advice**: Claude Haiku via `garden-assistant` API route (action: `"propagation"`) -- generates species-specific propagation advice with optional zone-aware tips
 - **Hosting**: GitHub Pages (push to main = deploy)
 
 ## Architecture
@@ -115,6 +116,7 @@ LEARNING-PLAN.md        -- 10-lesson curriculum for professional app polish (2 o
 | `height` | text | | Free text |
 | `features` | text | | Free text observations |
 | `linked_plant_id` | uuid/text | | FK to inventory(id) or `'ground'` for bugs |
+| `propagation_advice` | jsonb | | AI propagation advice (method, timing, steps, garden_tip) |
 
 RLS enabled: users can only read/write/delete their own rows.
 
@@ -168,7 +170,7 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 - **Deploy**: `git push` to `firebush` (Vercel auto-deploys)
 - **Shares**: Same Supabase project and database as the vanilla app
 - **Extra tables**: `garden_maps`, `garden_beds`, `garden_placements`, `wishlist`, `seasonal_care` (SQL in `docs/firebush-deployment-guide.md`)
-- **API routes**: Uses Vercel API routes (in `react-app/api/`) instead of Supabase Edge Functions. Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`
+- **API routes**: Uses Vercel API routes (in `react-app/api/`) instead of Supabase Edge Functions. Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`, `propagation`
 - **Weather**: Open-Meteo API (no key needed) for Tampa Bay rain forecast + monthly total, cached 4hrs in localStorage
 - **Logo**: Firebush botanical SVG at `public/logo.svg`, used as PWA icons + favicon + branding
 - **Setup guide**: `docs/firebush-deployment-guide.md`

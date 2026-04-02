@@ -108,6 +108,7 @@
 | `height` | text | | Free text, e.g. "3 feet" |
 | `features` | text | | Free text observations |
 | `linked_plant_id` | uuid or text | | FK → `inventory(id)` ON DELETE SET NULL, or `'ground'` |
+| `propagation_advice` | jsonb | | AI propagation advice (method, timing, steps, garden_tip) |
 
 **RLS**: Enabled. Users can only read/write/delete rows where `user_id` = their own ID.
 
@@ -421,7 +422,7 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
 - React + TypeScript + Vite (in `react-app/`)
 - shadcn/ui components + Tailwind CSS
 - Konva (react-konva) for garden map canvas
-- Vercel API routes (instead of Supabase Edge Functions)
+- Vercel API routes (instead of Supabase Edge Functions). Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`, `propagation`
 - Vercel deployment from `firebush` branch
 
 ### Map Features
@@ -441,6 +442,7 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
 - **Per-plant care cards**: Each plant shows seasonal tips + expandable full care reference (the 8-field care profile moved here from ItemDetail).
 - **Reminders integration**: Existing monthly reminders moved from Plants view to Care dashboard.
 - **Item detail slimmed down**: Full care section removed from ItemDetail, replaced with compact sun/water quick-reference badges.
+- **Propagation advice**: `PropagationCard.tsx` collapsible component shown in ItemDetail (plants) and WishlistDetail. Calls the `propagation` action on the `garden-assistant` Vercel API route (Claude Haiku), returns `{ method, timing, steps[], garden_tip }`. Result stored in `propagation_advice` JSONB column on both `inventory` and `wishlist` tables.
 - **Settings simplified**: Gear icon replaced with sign-out button in Garden header. Settings sheet removed.
 
 ### Logo
