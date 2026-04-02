@@ -10,7 +10,7 @@ import { useInventory } from '@/hooks/useInventory'
 import type { WishlistItem } from '@/types'
 
 export default function Wishlist() {
-  const { items, loading, deleteItem, suggestPlacement, graduateToGarden } = useWishlist()
+  const { items, loading, deleteItem, updateItem, suggestPlacement, graduateToGarden } = useWishlist()
   const { beds } = useGardenMap()
   const { refresh: refreshInventory } = useInventory()
   const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null)
@@ -69,6 +69,10 @@ export default function Wishlist() {
         onDelete={handleDelete}
         onSuggestPlacement={suggestPlacement}
         gardenZones={beds}
+        onUpdateItem={(id, updates) => {
+          updateItem(id, updates)
+          if (selectedItem && selectedItem.id === id) setSelectedItem({ ...selectedItem, ...updates })
+        }}
       />
     </>
   )
