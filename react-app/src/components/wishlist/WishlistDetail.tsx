@@ -5,7 +5,8 @@ import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Leaf, Bug, Heart, MapPin, Calendar, Sparkles, Loader2, Trash2 } from 'lucide-react'
 import { confidenceClass } from '@/lib/constants'
-import type { WishlistItem, GardenBed } from '@/types'
+import PropagationCard from '@/components/garden/PropagationCard'
+import type { WishlistItem, GardenBed, PropagationAdvice } from '@/types'
 
 interface WishlistDetailProps {
   item: WishlistItem | null
@@ -18,6 +19,7 @@ interface WishlistDetailProps {
     zones: GardenBed[]
   ) => Promise<{ suggestion: string; best_zones: string[]; avoid_zones: string[] } | null>
   gardenZones: GardenBed[]
+  onUpdateItem: (id: string, updates: Partial<WishlistItem>) => void
 }
 
 function ConfidenceBadge({ confidence }: { confidence: number }) {
@@ -26,7 +28,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   return <Badge variant="secondary" className={`text-[10px] ${colors[level]} border-0`}>{confidence}% match</Badge>
 }
 
-export default function WishlistDetail({ item, open, onClose, onGraduate, onDelete, onSuggestPlacement, gardenZones }: WishlistDetailProps) {
+export default function WishlistDetail({ item, open, onClose, onGraduate, onDelete, onSuggestPlacement, gardenZones, onUpdateItem }: WishlistDetailProps) {
   const [suggestion, setSuggestion] = useState<{ suggestion: string; best_zones: string[]; avoid_zones: string[] } | null>(null)
   const [loadingSuggestion, setLoadingSuggestion] = useState(false)
 
@@ -91,6 +93,16 @@ export default function WishlistDetail({ item, open, onClose, onGraduate, onDele
               <p className="text-xs text-ink-light mb-1">Notes</p>
               <p className="text-sm text-ink">{item.notes}</p>
             </div>
+          )}
+
+          {item.type !== 'bug' && (
+            <PropagationCard
+              item={item}
+              table="wishlist"
+              onAdviceLoaded={(advice: PropagationAdvice) => {
+                onUpdateItem(item.id, { propagation_advice: advice })
+              }}
+            />
           )}
 
           <Separator className="mb-4" />
