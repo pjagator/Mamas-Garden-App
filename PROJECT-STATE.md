@@ -422,8 +422,26 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
 - React + TypeScript + Vite (in `react-app/`)
 - shadcn/ui components + Tailwind CSS
 - Konva (react-konva) for garden map canvas
-- Vercel API routes (instead of Supabase Edge Functions). Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`, `propagation`
+- Vercel API routes (instead of Supabase Edge Functions). Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`, `propagation`, `identify-species`
 - Vercel deployment from `firebush` branch
+
+### Capture & Identification
+- **Components** (in `react-app/src/components/capture/`):
+  - `CaptureSheet.tsx` — Modal for photo capture and identification workflow
+  - `ViewfinderOverlay.tsx` — Darkened edges with center cutout for camera viewfinder guidance
+  - `ImageCropper.tsx` — Drag/zoom positioning for gallery images, crops to viewfinder area
+  - `IdResultCard.tsx` — Selectable result cards with confidence badges and native indicator
+  - `ManualEntry.tsx` — Form for manual species entry (common name, scientific name, type, category)
+- **Improved identification prompt**: `identify-species` API accepts optional `hints` object with:
+  - `growthForm` (Tree, Shrub, Vine, Wildflower, Grass, Herbaceous perennial, etc.)
+  - `lifeStage` (Seedling, Juvenile, Mature, Flowering/Fruiting, Dormant, etc.)
+  - `partPhotographed` (Whole plant, Leaves, Flowers, Fruit, Bark, Stem, Root, etc.)
+  - Prompt includes detailed guidelines for distinguishing growth forms, life stages, and conservative confidence scoring
+- **Hint pills**: Three optional toggle rows above the photo on CaptureSheet. Selected hints are passed to identify-species API for improved accuracy.
+- **Manual entry with photo**:
+  - "I know what this is" button on photo screen bypasses AI identification
+  - "Not right? Enter manually" button on results screen allows manual entry with photo
+  - Both flows save with photo and trigger background care profile generation (same as AI-identified plants)
 
 ### Map Features
 - **Plant placement**: Select a plant from the palette, tap the map. Plants dropped inside a zone rectangle are automatically linked to that zone (`bed_id` set on the placement row).

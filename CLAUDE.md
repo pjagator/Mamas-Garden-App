@@ -170,10 +170,18 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 - **Deploy**: `git push` to `firebush` (Vercel auto-deploys)
 - **Shares**: Same Supabase project and database as the vanilla app
 - **Extra tables**: `garden_maps`, `garden_beds`, `garden_placements`, `wishlist`, `seasonal_care` (SQL in `docs/firebush-deployment-guide.md`)
-- **API routes**: Uses Vercel API routes (in `react-app/api/`) instead of Supabase Edge Functions. Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`, `propagation`
+- **API routes**: Uses Vercel API routes (in `react-app/api/`) instead of Supabase Edge Functions. Actions: `care_profile`, `reminders`, `diagnosis`, `suggest_placement`, `seasonal_care`, `propagation`, `identify-species`
+- **Species identification**: `identify-species` API route accepts optional `hints` object with `growthForm`, `lifeStage`, `partPhotographed` to improve accuracy. Prompt includes detailed guidelines for growth form, life stage, confidence scoring.
 - **Weather**: Open-Meteo API (no key needed) for Tampa Bay rain forecast + monthly total, cached 4hrs in localStorage
 - **Logo**: Firebush botanical SVG at `public/logo.svg`, used as PWA icons + favicon + branding
 - **Setup guide**: `docs/firebush-deployment-guide.md`
+
+### Capture & Identification (React App)
+- **ViewfinderOverlay**: Shown in camera mode with darkened edges and center cutout to guide framing
+- **ImageCropper**: Shown in gallery mode for drag/zoom positioning; crops to viewfinder area
+- **Hint pills**: Three optional toggle rows on photo screen: growth form (Tree, Shrub, Vine, etc.), life stage (Seedling, Mature, etc.), part photographed (Whole plant, Leaves, etc.). Selected hints are passed to `identify-species` API
+- **Manual entry with photo**: "I know what this is" button on photo screen bypasses identification. "Not right? Enter manually" button on results screen lets user type common/scientific name. Both save with photo and trigger background care profile generation.
+- **New components**: `ViewfinderOverlay.tsx`, `ImageCropper.tsx` in `react-app/src/components/capture/`
 
 ### React App Gotchas
 - shadcn Sheet overlays block canvas events — close sheets before expecting taps to reach Konva canvas
