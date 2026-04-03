@@ -30,6 +30,10 @@ function friendlyError(msg: string): { title: string; message: string } {
   return { title: 'Identification failed', message: msg }
 }
 
+const GROWTH_FORMS = ['Tree', 'Shrub', 'Vine', 'Wildflower', 'Grass/Sedge', 'Fern', 'Palm'] as const
+const LIFE_STAGES = ['Seedling', 'Mature', 'Dormant', 'In bloom', 'Fruiting'] as const
+const PARTS_PHOTOGRAPHED = ['Whole plant', 'Leaves', 'Flower', 'Bark', 'Fruit/seed'] as const
+
 async function generateCareProfile(itemId: string, common: string | null, scientific: string | null, type: string | null, category: string | null) {
   if (type !== 'plant') return
   try {
@@ -52,6 +56,30 @@ async function generateCareProfile(itemId: string, common: string | null, scient
   }
 }
 
+function HintPills({ label, options, value, onChange }: {
+  label: string
+  options: readonly string[]
+  value: string | null
+  onChange: (v: string | null) => void
+}) {
+  return (
+    <div>
+      <p className="text-[10px] text-ink-light uppercase tracking-wide mb-1.5">{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(opt => (
+          <button key={opt} type="button"
+            onClick={() => onChange(value === opt ? null : opt)}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+              value === opt ? 'bg-sage text-white' : 'bg-cream-dark text-ink-mid'
+            }`}>
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
   const { insertItem } = useInventory()
   const { addItem: addToWishlist } = useWishlist()
@@ -67,6 +95,9 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
   const [error, setError] = useState<{ title: string; message: string } | null>(null)
   const [showSpottedPrompt, setShowSpottedPrompt] = useState(false)
   const [spottedAt, setSpottedAt] = useState('')
+  const [growthForm, setGrowthForm] = useState<string | null>(null)
+  const [lifeStage, setLifeStage] = useState<string | null>(null)
+  const [partPhotographed, setPartPhotographed] = useState<string | null>(null)
 
   const reset = useCallback(() => {
     setStep('photo')
@@ -77,6 +108,9 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
     setError(null)
     setShowSpottedPrompt(false)
     setSpottedAt('')
+    setGrowthForm(null)
+    setLifeStage(null)
+    setPartPhotographed(null)
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d')
       if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
@@ -152,7 +186,14 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
       const response = await resilientFetch('/api/identify-species', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: tempUrl }),
+        body: JSON.stringify({
+          imageUrl: tempUrl,
+          hints: (growthForm || lifeStage || partPhotographed) ? {
+            growthForm: growthForm ?? undefined,
+            lifeStage: lifeStage ?? undefined,
+            partPhotographed: partPhotographed ?? undefined,
+          } : undefined,
+        }),
       }, { retries: 2, timeoutMs: 30000 })
 
       const data = await response.json()
@@ -326,9 +367,16 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
             </button>
           </div>
           {step === 'photo' && (
-            <Button onClick={handleIdentify} className="w-full" size="lg">
-              <Leaf size={20} className="mr-2" /> Identify species
-            </Button>
+            <div className="space-y-3 mt-3">
+              <div className="space-y-2.5">
+                <HintPills label="What is it?" options={GROWTH_FORMS} value={growthForm} onChange={setGrowthForm} />
+                <HintPills label="Life stage" options={LIFE_STAGES} value={lifeStage} onChange={setLifeStage} />
+                <HintPills label="Photographing" options={PARTS_PHOTOGRAPHED} value={partPhotographed} onChange={setPartPhotographed} />
+              </div>
+              <Button onClick={handleIdentify} className="w-full" size="lg">
+                <Leaf size={20} className="mr-2" /> Identify species
+              </Button>
+            </div>
           )}
         </div>
 
