@@ -102,6 +102,9 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
   const [partPhotographed, setPartPhotographed] = useState<string | null>(null)
   const [galleryDataUrl, setGalleryDataUrl] = useState<string | null>(null)
   const [isCropping, setIsCropping] = useState(false)
+  const [manualMode, setManualMode] = useState(false)
+  const [manualCommon, setManualCommon] = useState('')
+  const [manualScientific, setManualScientific] = useState('')
 
   const reset = useCallback(() => {
     setStep('photo')
@@ -117,6 +120,9 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
     setPartPhotographed(null)
     setGalleryDataUrl(null)
     setIsCropping(false)
+    setManualMode(false)
+    setManualCommon('')
+    setManualScientific('')
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d')
       if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
@@ -319,6 +325,117 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
     }
   }
 
+  async function handleManualSave(target: 'garden' | 'wishlist') {
+    if (!canvasRef.current || !manualCommon.trim()) return
+
+    if (target === 'wishlist') {
+      setShowSpottedPrompt(true)
+      return
+    }
+    setStep('saving')
+
+    try {
+      const imageUrl = await uploadToStorage(canvasRef.current, 0.82, '')
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const common = manualCommon.trim()
+      const scientific = manualScientific.trim() || null
+      const nativeMatch = matchNative(common, scientific ?? '')
+      const finalCommon = nativeMatch?.name || common
+      const finalScientific = scientific || nativeMatch?.scientific || null
+      const finalCategory = nativeMatch?.type || ''
+      const autoTags: string[] = []
+      if (finalCategory && (PRESET_TAGS as readonly string[]).includes(finalCategory)) {
+        autoTags.push(finalCategory)
+      }
+
+      const inserted = await insertItem({
+        user_id: user.id,
+        common: finalCommon,
+        scientific: finalScientific,
+        type: 'plant' as const,
+        category: finalCategory,
+        confidence: null,
+        description: null,
+        care: null,
+        bloom: nativeMatch?.bloom || null,
+        season: null,
+        is_native: !!nativeMatch,
+        source: 'Manual',
+        image_url: imageUrl,
+        notes: notes,
+        tags: autoTags,
+        location: '',
+        care_profile: null,
+        health: null,
+        flowering: null,
+        height: null,
+        features: null,
+        linked_plant_id: null,
+        nickname: null,
+        propagation_advice: null,
+      })
+
+      if (!inserted) throw new Error('Failed to save')
+      toast.success(`${finalCommon} added to your garden`)
+
+      if (inserted.type === 'plant') {
+        generateCareProfile(inserted.id, inserted.common, inserted.scientific, inserted.type, inserted.category)
+      }
+
+      handleClose()
+    } catch (err: any) {
+      toast.error('Error saving: ' + err.message)
+      setStep('results')
+    }
+  }
+
+  async function handleManualSaveToWishlist() {
+    if (!canvasRef.current || !manualCommon.trim()) return
+    setStep('saving')
+    setShowSpottedPrompt(false)
+
+    try {
+      const imageUrl = await uploadToStorage(canvasRef.current, 0.82, '')
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const common = manualCommon.trim()
+      const scientific = manualScientific.trim() || null
+      const nativeMatch = matchNative(common, scientific ?? '')
+
+      await addToWishlist({
+        user_id: user.id,
+        common: nativeMatch?.name || common,
+        scientific: scientific || nativeMatch?.scientific || null,
+        type: 'plant',
+        category: nativeMatch?.type || '',
+        confidence: null,
+        description: null,
+        image_url: imageUrl,
+        spotted_at: spottedAt.trim() || null,
+        notes: notes,
+        is_native: !!nativeMatch,
+        bloom: nativeMatch?.bloom || null,
+        season: null,
+        care_profile: null,
+        suggested_zones: null,
+        sun_needs: null,
+        soil_needs: null,
+        moisture_needs: null,
+        source: 'Manual',
+        propagation_advice: null,
+      })
+
+      toast.success(`${nativeMatch?.name || common} saved as a friend of the garden`)
+      handleClose()
+    } catch (err: any) {
+      toast.error('Error saving: ' + err.message)
+      setStep('results')
+    }
+  }
+
   async function handleSaveToWishlist() {
     if (!canvasRef.current || !results.length) return
     setStep('saving')
@@ -366,9 +483,11 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
       <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader className="mb-4">
           <SheetTitle className="font-display">
-            {step === 'photo' && 'Capture a Species'}
+            {step === 'photo' && !manualMode && 'Capture a Species'}
+            {step === 'photo' && manualMode && 'Name This Species'}
             {step === 'identifying' && 'Identifying...'}
-            {step === 'results' && 'Species Identified'}
+            {step === 'results' && !manualMode && 'Species Identified'}
+            {step === 'results' && manualMode && 'Name This Species'}
             {step === 'saving' && 'Saving...'}
           </SheetTitle>
         </SheetHeader>
@@ -410,7 +529,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
               <X size={16} />
             </button>
           </div>
-          {step === 'photo' && (
+          {step === 'photo' && !manualMode && (
             <div className="space-y-3 mt-3">
               <div className="space-y-2.5">
                 <HintPills label="What is it?" options={GROWTH_FORMS} value={growthForm} onChange={setGrowthForm} />
@@ -420,6 +539,49 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
               <Button onClick={handleIdentify} className="w-full" size="lg">
                 <Leaf size={20} className="mr-2" /> Identify species
               </Button>
+              <button
+                type="button"
+                onClick={() => setManualMode(true)}
+                className="w-full text-center text-xs text-ink-light hover:text-ink-mid py-1"
+              >
+                I know what this is
+              </button>
+            </div>
+          )}
+
+          {step === 'photo' && manualMode && (
+            <div className="space-y-3 mt-3">
+              <div className="space-y-2">
+                <Input
+                  value={manualCommon}
+                  onChange={e => setManualCommon(e.target.value)}
+                  placeholder="Common name *"
+                  className="text-sm"
+                  autoFocus
+                />
+                <Input
+                  value={manualScientific}
+                  onChange={e => setManualScientific(e.target.value)}
+                  placeholder="Scientific name (optional)"
+                  className="text-sm"
+                />
+              </div>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes (optional)..." rows={2} />
+              <div className="flex gap-3">
+                <Button onClick={() => handleManualSave('garden')} className="flex-1" size="lg" disabled={!manualCommon.trim()}>
+                  <Leaf size={18} className="mr-2" /> Add to Garden
+                </Button>
+                <Button onClick={() => handleManualSave('wishlist')} variant="outline" className="flex-1" size="lg" disabled={!manualCommon.trim()}>
+                  <Heart size={18} className="mr-2" /> Save as Friend
+                </Button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setManualMode(false)}
+                className="w-full text-center text-xs text-ink-light hover:text-ink-mid py-1"
+              >
+                Back to identification
+              </button>
             </div>
           )}
         </div>
@@ -438,7 +600,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
           </div>
         )}
 
-        {step === 'results' && results.length > 0 && !showSpottedPrompt && (
+        {step === 'results' && results.length > 0 && !showSpottedPrompt && !manualMode && (
           <div className="space-y-3 mt-4">
             {results.map((r, i) => (
               <IdResultCard key={i} result={r} selected={selectedIndex === i} onSelect={() => setSelectedIndex(i)} />
@@ -452,6 +614,49 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
                 <Heart size={18} className="mr-2" /> Save as Friend
               </Button>
             </div>
+            <button
+              type="button"
+              onClick={() => setManualMode(true)}
+              className="w-full text-center text-xs text-ink-light hover:text-ink-mid py-2"
+            >
+              Not right? Enter name manually
+            </button>
+          </div>
+        )}
+
+        {step === 'results' && manualMode && !showSpottedPrompt && (
+          <div className="space-y-3 mt-4">
+            <div className="space-y-2">
+              <Input
+                value={manualCommon}
+                onChange={e => setManualCommon(e.target.value)}
+                placeholder="Common name *"
+                className="text-sm"
+                autoFocus
+              />
+              <Input
+                value={manualScientific}
+                onChange={e => setManualScientific(e.target.value)}
+                placeholder="Scientific name (optional)"
+                className="text-sm"
+              />
+            </div>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes (optional)..." rows={2} />
+            <div className="flex gap-3">
+              <Button onClick={() => handleManualSave('garden')} className="flex-1" size="lg" disabled={!manualCommon.trim()}>
+                <Leaf size={18} className="mr-2" /> Add to Garden
+              </Button>
+              <Button onClick={() => handleManualSave('wishlist')} variant="outline" className="flex-1" size="lg" disabled={!manualCommon.trim()}>
+                <Heart size={18} className="mr-2" /> Save as Friend
+              </Button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setManualMode(false)}
+              className="w-full text-center text-xs text-ink-light hover:text-ink-mid py-1"
+            >
+              Back to results
+            </button>
           </div>
         )}
 
@@ -477,7 +682,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
               placeholder="Or type a location..."
               className="text-sm"
             />
-            <Button onClick={handleSaveToWishlist} className="w-full" size="lg">
+            <Button onClick={manualMode ? handleManualSaveToWishlist : handleSaveToWishlist} className="w-full" size="lg">
               <Heart size={18} className="mr-2" /> Save as Friend
             </Button>
           </div>
