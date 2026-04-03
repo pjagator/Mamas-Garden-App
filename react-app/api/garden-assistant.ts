@@ -145,6 +145,34 @@ For each plant, provide 2-3 specific, actionable tips for this month in Tampa Ba
       if (!jsonMatch) throw new Error('Failed to generate propagation advice')
       return res.status(200).json({ propagation: JSON.parse(jsonMatch[0]) })
 
+    } else if (action === 'enrich') {
+      const { common, scientific } = data
+      const text = await callClaude('claude-haiku-4-5-20251001',
+        'You are a botanist specializing in Tampa Bay, Florida (USDA Zone 9b-10a).',
+        `The user has a plant called "${common}"${scientific ? ` (${scientific})` : ''}. Provide species details and a care profile. Return a JSON object with these exact fields:
+{
+  "scientific": "Scientific binomial name",
+  "category": "Tree, Shrub, Wildflower, Vine, Fern, Palm, Grass, or Groundcover",
+  "description": "One sentence description",
+  "care": "One care tip for Tampa Bay",
+  "bloom": ["Spring","Summer","Fall","Winter"] or null if not applicable,
+  "is_native": true or false (native to Florida),
+  "care_profile": {
+    "watering": { "frequency": "...", "notes": "..." },
+    "sun": "...",
+    "soil": "...",
+    "fertilizing": { "schedule": "...", "type": "..." },
+    "pruning": { "timing": "...", "method": "..." },
+    "mature_size": { "height": "...", "spread": "..." },
+    "pests_diseases": "...",
+    "companions": "..."
+  }
+}
+Return ONLY the JSON object.`, 2048)
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('Failed to enrich species data')
+      return res.status(200).json({ enrichment: JSON.parse(jsonMatch[0]) })
+
     } else {
       return res.status(400).json({ error: `Unknown action: ${action}` })
     }

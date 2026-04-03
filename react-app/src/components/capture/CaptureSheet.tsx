@@ -58,6 +58,38 @@ async function generateCareProfile(itemId: string, common: string | null, scient
   }
 }
 
+async function enrichManualEntry(itemId: string, common: string, scientific: string | null) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const response = await resilientFetch('/api/garden-assistant', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ action: 'enrich', data: { common, scientific } }),
+    }, { timeoutMs: 30000 })
+    const result = await response.json()
+    if (result.enrichment) {
+      const { data: { user } } = await supabase.auth.getUser()
+      const updates: Record<string, unknown> = {}
+      const e = result.enrichment
+      if (e.scientific) updates.scientific = e.scientific
+      if (e.category) updates.category = e.category
+      if (e.description) updates.description = e.description
+      if (e.care) updates.care = e.care
+      if (e.bloom) updates.bloom = e.bloom
+      if (e.is_native !== undefined) updates.is_native = e.is_native
+      if (e.care_profile) updates.care_profile = e.care_profile
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('inventory').update(updates).eq('id', itemId).eq('user_id', user!.id)
+      }
+    }
+  } catch (err) {
+    console.error('Manual entry enrichment failed:', err)
+  }
+}
+
 function HintPills({ label, options, value, onChange }: {
   label: string
   options: readonly string[]
@@ -380,9 +412,8 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
       if (!inserted) throw new Error('Failed to save')
       toast.success(`${finalCommon} added to your garden`)
 
-      if (inserted.type === 'plant') {
-        generateCareProfile(inserted.id, inserted.common, inserted.scientific, inserted.type, inserted.category)
-      }
+      // Enrich with full species details + care profile in background
+      enrichManualEntry(inserted.id, finalCommon, finalScientific)
 
       handleClose()
     } catch (err: any) {
