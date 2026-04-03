@@ -13,6 +13,8 @@ import { useWishlist } from '@/hooks/useWishlist'
 import IdResultCard from './IdResultCard'
 import type { IdResult } from './IdResultCard'
 import type { InventoryItem } from '@/types'
+import ViewfinderOverlay from './ViewfinderOverlay'
+import ImageCropper from './ImageCropper'
 
 interface CaptureSheetProps {
   open: boolean
@@ -98,6 +100,8 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
   const [growthForm, setGrowthForm] = useState<string | null>(null)
   const [lifeStage, setLifeStage] = useState<string | null>(null)
   const [partPhotographed, setPartPhotographed] = useState<string | null>(null)
+  const [galleryDataUrl, setGalleryDataUrl] = useState<string | null>(null)
+  const [isCropping, setIsCropping] = useState(false)
 
   const reset = useCallback(() => {
     setStep('photo')
@@ -111,6 +115,8 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
     setGrowthForm(null)
     setLifeStage(null)
     setPartPhotographed(null)
+    setGalleryDataUrl(null)
+    setIsCropping(false)
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d')
       if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
@@ -126,28 +132,57 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
     if (!file) return
     if (file.type && !file.type.startsWith('image/')) return
 
+    const isGallery = event.target.id === 'capture-gallery'
+
     const reader = new FileReader()
     reader.onload = (e) => {
-      const img = new window.Image()
-      img.onload = () => {
-        const canvas = canvasRef.current
-        if (!canvas) return
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-        const max = 900
-        let w = img.width, h = img.height
-        if (w > h) { if (w > max) { h = h * max / w; w = max } }
-        else { if (h > max) { w = w * max / h; h = max } }
-        canvas.width = w
-        canvas.height = h
-        ctx.drawImage(img, 0, 0, w, h)
-        setHasImage(true)
-        setResults([])
-        setError(null)
+      const dataUrl = e.target?.result as string
+      if (isGallery) {
+        setGalleryDataUrl(dataUrl)
+        setIsCropping(true)
+      } else {
+        drawImageToCanvas(dataUrl)
       }
-      img.src = e.target?.result as string
     }
     reader.readAsDataURL(file)
+  }
+
+  function drawImageToCanvas(dataUrl: string) {
+    const img = new window.Image()
+    img.onload = () => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const max = 900
+      let w = img.width, h = img.height
+      if (w > h) { if (w > max) { h = h * max / w; w = max } }
+      else { if (h > max) { w = w * max / h; h = max } }
+      canvas.width = w
+      canvas.height = h
+      ctx.drawImage(img, 0, 0, w, h)
+      setHasImage(true)
+      setResults([])
+      setError(null)
+      setIsCropping(false)
+      setGalleryDataUrl(null)
+    }
+    img.src = dataUrl
+  }
+
+  function handleCropDone(croppedCanvas: HTMLCanvasElement) {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    canvas.width = croppedCanvas.width
+    canvas.height = croppedCanvas.height
+    ctx.drawImage(croppedCanvas, 0, 0)
+    setHasImage(true)
+    setResults([])
+    setError(null)
+    setIsCropping(false)
+    setGalleryDataUrl(null)
   }
 
   function removeImage() {
@@ -359,9 +394,18 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
           </div>
         )}
 
-        <div className={hasImage && step !== 'saving' ? 'space-y-4' : 'hidden'}>
+        {isCropping && galleryDataUrl && (
+          <ImageCropper
+            imageDataUrl={galleryDataUrl}
+            onCrop={handleCropDone}
+            onCancel={() => { setIsCropping(false); setGalleryDataUrl(null) }}
+          />
+        )}
+
+        <div className={hasImage && step !== 'saving' && !isCropping ? 'space-y-4' : 'hidden'}>
           <div className="relative">
             <canvas ref={canvasRef} className="w-full rounded-[--radius-card]" />
+            {step === 'photo' && <ViewfinderOverlay />}
             <button onClick={removeImage} className="absolute top-2 right-2 w-11 h-11 rounded-full bg-black/50 text-white flex items-center justify-center">
               <X size={16} />
             </button>
