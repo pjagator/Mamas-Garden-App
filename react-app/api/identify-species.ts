@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    const { imageUrl } = req.body
+    const { imageUrl, hints } = req.body
     if (!imageUrl) return res.status(400).json({ error: 'imageUrl is required' })
 
     const imageResponse = await fetch(imageUrl)
@@ -34,6 +34,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const imageBuffer = await imageResponse.arrayBuffer()
     const base64Image = Buffer.from(imageBuffer).toString('base64')
     const mediaType = imageResponse.headers.get('content-type') || 'image/jpeg'
+
+    let hintsText = ''
+    if (hints) {
+      const parts: string[] = []
+      if (hints.growthForm) parts.push(`- Growth form: ${hints.growthForm}`)
+      if (hints.lifeStage) parts.push(`- Life stage: ${hints.lifeStage}`)
+      if (hints.partPhotographed) parts.push(`- Part photographed: ${hints.partPhotographed}`)
+      if (parts.length > 0) {
+        hintsText = `\n\nThe user has provided these hints about the subject:\n${parts.join('\n')}`
+      }
+    }
 
     const claudeResponse = await fetchWithRetry('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -49,7 +60,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Image } },
-            { type: 'text', text: `You are a botanist and entomologist specializing in Tampa Bay, Florida (USDA Zone 9b-10a). Identify the species in this photo. Return a JSON array of up to 3 possible identifications, ordered by confidence. Each object must have exactly these fields:
+            { type: 'text', text: `You are a botanist and entomologist specializing in Tampa Bay, Florida (USDA Zone 9b-10a).
+
+The subject of interest is centered in this photo.
+
+Identification guidelines:
+- Focus on the most prominent organism near the center of the image
+- Consider the plant's growth form carefully: distinguish trees from shrubs from herbaceous plants from vines from grasses
+- Account for life stage: seedlings, juvenile plants, and dormant plants look very different from mature specimens in bloom
+- If the photo shows bark, trunk, or canopy of a large plant, it is likely a tree — not an herb or wildflower
+- Be conservative with confidence scores: use 90+ only when diagnostic features (flowers, fruit, leaf arrangement) are clearly visible. Use 50-70 when working from foliage alone
+- If multiple species are visible, identify only the centered/most prominent one${hintsText}
+
+Identify the species. Return a JSON array of up to 3 possible identifications, ordered by confidence. Each object must have exactly these fields:
 { "common": "Common name", "scientific": "Scientific binomial", "type": "plant" or "bug", "category": "Tree", "Shrub", "Wildflower", etc., "confidence": 0-100 integer, "isNative": true/false (native to Florida), "description": "One sentence", "care": "One care tip for Tampa Bay" or null for insects, "bloom": ["Spring","Summer","Fall","Winter","Year-round"] or null, "season": ["Spring","Summer","Fall","Winter","Year-round"] or null (for insects) }
 Return ONLY the JSON array, no other text.` },
           ],
