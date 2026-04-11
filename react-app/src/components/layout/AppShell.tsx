@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { InventoryProvider } from '@/hooks/useInventory'
 import { useConnection } from '@/hooks/useConnection'
 import { shouldShowWelcome, markVisit } from '@/lib/constants'
 import BottomNav from './BottomNav'
@@ -58,26 +59,28 @@ export default function AppShell() {
   }
 
   return (
-    <div className={isDesktop ? 'min-h-screen bg-cream' : 'h-dvh flex flex-col bg-cream overflow-hidden'}>
-      <ConnectionToast visible={showToast} message={toastMessage} type={toastType} />
-      {showWelcome && <Welcome onDismiss={handleDismissWelcome} />}
-      <CaptureSheet open={captureOpen} onClose={() => setCaptureOpen(false)} />
+    <InventoryProvider>
+      <div className={isDesktop ? 'min-h-screen bg-cream' : 'h-dvh flex flex-col bg-cream overflow-hidden'}>
+        <ConnectionToast visible={showToast} message={toastMessage} type={toastType} />
+        {showWelcome && <Welcome onDismiss={handleDismissWelcome} />}
+        <CaptureSheet open={captureOpen} onClose={() => setCaptureOpen(false)} />
 
-      {isDesktop ? (
-        <>
-          <Sidebar onFabClick={handleFabClick} />
-          <main className="ml-56">
-            <Outlet />
-          </main>
-        </>
-      ) : (
-        <>
-          <main className="flex-1 overflow-y-auto flex flex-col min-h-0">
-            <Outlet />
-          </main>
-          <BottomNav onFabClick={handleFabClick} offline={!online} />
-        </>
-      )}
-    </div>
+        {isDesktop ? (
+          <>
+            <Sidebar onFabClick={handleFabClick} />
+            <main className="ml-56">
+              <Outlet />
+            </main>
+          </>
+        ) : (
+          <>
+            <main className="flex-1 overflow-y-auto flex flex-col min-h-0">
+              <Outlet />
+            </main>
+            <BottomNav onFabClick={handleFabClick} offline={!online} />
+          </>
+        )}
+      </div>
+    </InventoryProvider>
   )
 }

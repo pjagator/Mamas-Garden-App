@@ -117,10 +117,24 @@ Offline behavior:
 - Read operations: work from localStorage cache + service worker image cache
 - FAB: disabled via `.fab-offline` CSS class (not inline styles, to avoid scroll handler conflicts)
 
+## React App: Shared Inventory State via Context
+
+`useInventory()` is a **context-backed hook**, not a standalone hook. The module in `react-app/src/hooks/useInventory.ts` exports:
+
+- `useInventoryState()` — private, the actual `useState` + Supabase loader + CRUD callbacks
+- `InventoryProvider` — wraps children, calls `useInventoryState()` once, publishes via `InventoryContext`
+- `useInventory()` — calls `useContext(InventoryContext)`, throws if no provider
+
+`AppShell.tsx` wraps everything below the auth gate in `<InventoryProvider>`. That means `CaptureSheet` (rendered at shell level) and the route pages (Garden, Map, Timeline, Wishlist, Settings) all share **one** items array. An insert from CaptureSheet is immediately visible to Garden without a refetch; similarly for updates and deletes from ItemDetail.
+
+**Why this pattern exists:** early versions had each consumer call `useInventory()` directly, which gave each its own isolated `useState`. CaptureSheet's inserts only updated its own throwaway state — the DB row was written fine, but Garden's separate state never learned about it until a hard reload. The context lift was the minimal fix and requires no call-site changes at any consumer.
+
+**When adding a new consumer:** just call `useInventory()`. Make sure the component is rendered inside the `InventoryProvider` subtree (everything under `AppShell` already is). Don't call `useInventoryState` directly — it's intentionally not exported.
+
 ## React App: Garden Page Filter Data Flow
 
 The Garden page combines data from two hooks to power zone filtering:
-- `useInventory()` — provides plant/insect items with their `location` field
+- `useInventory()` — provides plant/insect items with their `location` field (shared via context, see above)
 - `useGardenMap()` — provides `beds` (garden zones) and `placements` (which items are placed in which zones)
 
 Filter chain in `Garden.tsx` via `useMemo`:

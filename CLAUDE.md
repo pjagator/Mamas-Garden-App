@@ -76,8 +76,15 @@ LEARNING-PLAN.md        -- 10-lesson curriculum for professional app polish (2 o
 
 ## Design Constraints
 
-- **No build tools**. No npm, no webpack, no Vite, no React, no TypeScript on the frontend. Raw files served from GitHub Pages.
-- **Mobile-first, iPhone-optimized**. Target device is iPhone Safari. Test at 390px width. 44px minimum touch targets everywhere.
+- **No build tools**. No npm, no webpack, no Vite, no React,
+- **Mobile UX Rules** (non-negotiable, iPhone Safari, 390px target)
+Touch targets: All tappable elements minimum 44x44px. Buttons with short labels need explicit padding -- don't rely on text content to create height. Never place two tappable elements closer than 8px edge-to-edge.
+Typography: Body text minimum 16px to prevent iOS auto-zoom on inputs. Never use font-size below 14px anywhere. Line height minimum 1.5 for body copy.
+Inputs and forms: All input, select, textarea elements get font-size: 16px explicitly set -- iOS zooms the viewport on anything smaller. Use inputmode attribute for numeric fields (inputmode="decimal", inputmode="numeric"). Avoid requiring keyboard + tap combinations in sequence.
+Layout: Single column by default. No horizontal scroll anywhere -- if something overflows, fix it, don't hide it. Max content width 100% with 16px horizontal padding on mobile. Avoid fixed-height containers on scrollable content.
+Interactions: No hover-only affordances. Everything interactive must be reachable by tap. No drag interactions without a tap fallback. Modals and sheets must have a clear dismiss target of at least 44px (close button or tap-outside area).
+Spacing: 16px minimum padding inside cards and containers. 12px minimum between stacked interactive elements. Bottom nav and FAB must clear iOS home indicator -- use env(safe-area-inset-bottom).
+When building any new UI: mentally walk through the flow on a 390px screen before finishing. If a button is hard to tap, a form is annoying to fill, or content is cramped, fix it before presenting the code.
 - **ES modules, no bundler**. JS files in `js/`, CSS files in `css/`, loaded directly by `index.html`. New features get their own module file.
 - **API keys stay server-side**. Only the Supabase anon key appears in client code. All AI calls go through edge functions.
 - **Edge functions use direct `fetch()`**, NOT `sb.functions.invoke()`. The SDK method had persistent JWT/EarlyDrop failures. This is a settled decision -- see PROJECT-CONTEXT.md for the full story.
@@ -184,6 +191,7 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 - **New components**: `ViewfinderOverlay.tsx`, `ImageCropper.tsx` in `react-app/src/components/capture/`
 
 ### React App Gotchas
+- `useInventory()` is **context-backed** — state is owned by a single `<InventoryProvider>` in `AppShell.tsx` so CaptureSheet, Garden, Map, Timeline, Wishlist, and Settings all share one items array. Calling `useInventory()` outside the provider throws. This fixed a bug where captured photos didn't appear in the Garden list until a hard refresh because each hook call used to get its own independent `useState`. When adding a new consumer, just call `useInventory()` — the Provider is already wired.
 - shadcn Sheet overlays block canvas events — close sheets before expecting taps to reach Konva canvas
 - `useGardenMap.placeItem()` returns `{ placement, error }` (not null) — always check `result.error` for real error messages
 - Garden page Settings sheet was removed — sign-out is now a button in the header. If you need export/clear-data features, re-import Settings.tsx

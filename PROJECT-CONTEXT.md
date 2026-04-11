@@ -183,6 +183,10 @@ See `supabase/functions/identify-species/index.ts` for the current source code.
 - Bottom nav safe area: use `height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px))` — never a fixed height alone. Padding-bottom handles the visual inset; the height must grow to preserve button space above the home indicator.
 - iOS Safari returns `file.type` as `""` (empty string) when selecting photos from the Collections/Albums view. Guard against this in file input handlers: check `if (file.type && !file.type.startsWith('image/'))` rather than `!file.type.startsWith('image/')` — the latter silently rejects all Collections photos.
 
+### React App
+
+- **`useInventory()` is context-backed, not a local hook.** `react-app/src/hooks/useInventory.ts` exposes `InventoryProvider` (owns one `useState`) and `useInventory()` (reads from context via `useContext`). `AppShell.tsx` wraps the authed app in the provider. Multiple sibling components — Garden, CaptureSheet, Map, Timeline, Wishlist, Settings, ManualEntry — all see the same items array, so an insert in CaptureSheet is immediately visible in Garden without a refetch. **Gotcha we hit the hard way:** previously each call to `useInventory()` ran its own `useState`, so captured photos appeared to be "lost" — they were written to Supabase correctly but the Garden tab kept showing its stale in-memory snapshot until a hard reload. If you ever see "item saved but not showing", suspect this pattern and check that any new consumer is rendered inside the `InventoryProvider`. Calling `useInventory()` outside the provider throws a descriptive error.
+
 ---
 
 ## Native Plant Database (client-side)

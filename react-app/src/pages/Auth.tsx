@@ -52,7 +52,7 @@ export default function Auth() {
 
   async function handleVerifyCode(e: React.FormEvent) {
     e.preventDefault()
-    if (!otpCode || otpCode.length < 6) { toast.error('Please enter the 6-digit code.'); return }
+    if (!otpCode || otpCode.length < 6) { toast.error('Please enter the code from your email.'); return }
     setLoading(true)
     const error = await verifyOtp(otpEmail, otpCode)
     setLoading(false)
@@ -132,8 +132,8 @@ export default function Auth() {
               </div>
               {otpSent && (
                 <div className="space-y-2">
-                  <Label htmlFor="otp-code">6-digit code</Label>
-                  <Input id="otp-code" type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value)} placeholder="000000" autoFocus />
+                  <Label htmlFor="otp-code">Enter code</Label>
+                  <Input id="otp-code" type="text" inputMode="numeric" maxLength={8} value={otpCode} onChange={e => setOtpCode(e.target.value)} placeholder="000000" autoFocus />
                 </div>
               )}
               <Button type="submit" className="w-full" disabled={loading}>

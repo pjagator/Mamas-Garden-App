@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext, createElement, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { InventoryItem } from '@/types'
 
@@ -30,7 +30,7 @@ function writeCache(data: InventoryItem[]) {
   }
 }
 
-export function useInventory() {
+function useInventoryState() {
   const [items, setItems] = useState<InventoryItem[]>(() => readCache() ?? [])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -138,4 +138,21 @@ export function useInventory() {
   }
 
   return { items, loading, error, stats, refresh, deleteItem, updateItem, insertItem }
+}
+
+type InventoryContextValue = ReturnType<typeof useInventoryState>
+
+const InventoryContext = createContext<InventoryContextValue | null>(null)
+
+export function InventoryProvider({ children }: { children: ReactNode }) {
+  const value = useInventoryState()
+  return createElement(InventoryContext.Provider, { value }, children)
+}
+
+export function useInventory() {
+  const ctx = useContext(InventoryContext)
+  if (!ctx) {
+    throw new Error('useInventory must be used within an InventoryProvider')
+  }
+  return ctx
 }
