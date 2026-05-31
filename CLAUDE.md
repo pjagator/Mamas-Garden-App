@@ -198,6 +198,7 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 - Care dashboard weather depends on Open-Meteo API availability. If it's down, the weather card silently fails and the rest of the Care view still renders
 - `useSeasonalCare.generate()` must be called after weather loads — weather data is passed as context to the AI batch call
 - Zone assignment from ItemDetail: ItemDetail accepts optional `onPlaceInZone` and `onRemovePlacement` props. Tapping a zone pill either creates a map placement (center of the zone) or shows a move confirmation. Tapping the currently-selected zone removes the placement. Garden.tsx wires these to `useGardenMap.placeItem()` and `useGardenMap.removePlacement()`.
+- **Green-screen hang on load**: AppShell shows a bare `bg-primary` (forest green) placeholder while `useAuth().loading` is true. If the Supabase project is **paused** (free tier auto-pauses after ~1 week idle — check `status` via the dashboard or `get_project`), `getSession()` can hang/reject while refreshing an expired token. `useAuth` now `.catch()`es a rejected `getSession()` and has an 8s safety timeout that falls through to the auth screen, so it degrades gracefully instead of hanging forever. If you see the green hang, first check whether the project is paused and restore it.
 
 ## Deploy
 

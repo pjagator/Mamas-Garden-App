@@ -7,19 +7,47 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    let cancelled = false
+
+    // Safety net: if getSession() never settles (e.g. the Supabase project is
+    // paused or the network hangs while refreshing an expired token), fall
+    // through to the auth screen instead of hanging on the green loading
+    // placeholder forever.
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        setUser(null)
+        setLoading(false)
+      }
+    }, 8000)
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (cancelled) return
+        setUser(session?.user ?? null)
+        setLoading(false)
+      })
+      .catch(() => {
+        // A rejected getSession() (bad/expired token, backend down) must still
+        // clear loading, otherwise the app hangs on the loading placeholder.
+        if (cancelled) return
+        setUser(null)
+        setLoading(false)
+      })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (cancelled) return
         setUser(session?.user ?? null)
         setLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function signIn(email: string, password: string): Promise<string | null> {
