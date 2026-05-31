@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useAuth } from '@/hooks/useAuth'
 
 const mockOnAuthStateChange = vi.fn()
@@ -39,6 +39,40 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth())
     expect(result.current.user).toBeNull()
     expect(result.current.loading).toBe(true)
+  })
+
+  it('clears loading even when getSession resolves', async () => {
+    const { result } = renderHook(() => useAuth())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.user).toBeNull()
+  })
+
+  // Regression: when getSession() rejects (expired/corrupt token, or the
+  // Supabase project is paused), loading must still clear so the app falls
+  // through to the auth screen instead of hanging on the green placeholder.
+  it('clears loading when getSession rejects', async () => {
+    mockGetSession.mockRejectedValue(new Error('Network/backend unavailable'))
+    const { result } = renderHook(() => useAuth())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.user).toBeNull()
+  })
+
+  // Regression: a getSession() that never settles must not hang forever — the
+  // safety timeout falls through to the auth screen.
+  it('clears loading via safety timeout when getSession never settles', async () => {
+    vi.useFakeTimers()
+    mockGetSession.mockReturnValue(new Promise(() => {})) // never resolves
+    try {
+      const { result } = renderHook(() => useAuth())
+      expect(result.current.loading).toBe(true)
+      await act(async () => {
+        vi.advanceTimersByTime(8000)
+      })
+      expect(result.current.loading).toBe(false)
+      expect(result.current.user).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('calls signInWithPassword and returns error on failure', async () => {
