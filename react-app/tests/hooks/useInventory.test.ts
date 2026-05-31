@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useInventory } from '@/hooks/useInventory'
+import { useInventory, InventoryProvider } from '@/hooks/useInventory'
 
 const mockFrom = vi.fn()
 const mockGetUser = vi.fn()
@@ -40,7 +40,7 @@ describe('useInventory', () => {
       }),
     })
 
-    const { result } = renderHook(() => useInventory())
+    const { result } = renderHook(() => useInventory(), { wrapper: InventoryProvider })
     expect(result.current.items).toEqual([])
     expect(result.current.loading).toBe(true)
   })
@@ -57,7 +57,7 @@ describe('useInventory', () => {
       }),
     })
 
-    const { result } = renderHook(() => useInventory())
+    const { result } = renderHook(() => useInventory(), { wrapper: InventoryProvider })
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
@@ -82,7 +82,7 @@ describe('useInventory', () => {
       }),
     })
 
-    const { result } = renderHook(() => useInventory())
+    const { result } = renderHook(() => useInventory(), { wrapper: InventoryProvider })
     expect(result.current.items).toEqual(cachedItems)
   })
 })
