@@ -604,10 +604,11 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
                   className="text-sm"
                 />
               </div>
+              <DuplicateNotice matches={manualMatches} />
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes (optional)..." rows={2} />
               <div className="flex gap-3">
                 <Button onClick={() => handleManualSave('garden')} className="flex-1" size="lg" disabled={!manualCommon.trim()}>
-                  <Leaf size={18} className="mr-2" /> Add to Garden
+                  <Leaf size={18} className="mr-2" /> {manualMatches.length ? 'Add another to Garden' : 'Add to Garden'}
                 </Button>
                 <Button onClick={() => handleManualSave('wishlist')} variant="outline" className="flex-1" size="lg" disabled={!manualCommon.trim()}>
                   <Heart size={18} className="mr-2" /> Save as Friend
