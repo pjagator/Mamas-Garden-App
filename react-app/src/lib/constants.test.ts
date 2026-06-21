@@ -26,6 +26,12 @@ describe('findExistingMatches', () => {
     expect(result).toHaveLength(1)
   })
 
+  it('collapses internal whitespace in common name', () => {
+    const garden2: TestItem[] = [{ common: 'Wild  Coffee', scientific: '' }]
+    const result = findExistingMatches({ common: 'Wild Coffee', scientific: '' }, garden2)
+    expect(result).toHaveLength(1)
+  })
+
   it('returns empty when nothing matches', () => {
     expect(findExistingMatches({ common: 'Beautyberry', scientific: 'Callicarpa americana' }, garden)).toHaveLength(0)
   })
