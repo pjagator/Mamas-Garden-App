@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
-import { matchNative, PRESET_TAGS } from '@/lib/constants'
+import { matchNative, PRESET_TAGS, findExistingMatches } from '@/lib/constants'
 import { useInventory } from '@/hooks/useInventory'
+import DuplicateNotice from './DuplicateNotice'
 
 interface ManualEntryProps {
   open: boolean
@@ -18,7 +19,7 @@ interface ManualEntryProps {
 const SEASONS = ['Spring', 'Summer', 'Fall', 'Winter'] as const
 
 export default function ManualEntry({ open, onClose }: ManualEntryProps) {
-  const { insertItem } = useInventory()
+  const { insertItem, items } = useInventory()
   const [common, setCommon] = useState('')
   const [scientific, setScientific] = useState('')
   const [type, setType] = useState<'plant' | 'bug'>('plant')
@@ -91,6 +92,10 @@ export default function ManualEntry({ open, onClose }: ManualEntryProps) {
     }
   }
 
+  const matches = (common.trim() || scientific.trim())
+    ? findExistingMatches({ common, scientific }, items)
+    : []
+
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
       <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto rounded-t-2xl">
@@ -133,8 +138,9 @@ export default function ManualEntry({ open, onClose }: ManualEntryProps) {
             <Label htmlFor="manual-notes">Notes</Label>
             <Textarea id="manual-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Where you found it, observations..." rows={2} />
           </div>
+          <DuplicateNotice matches={matches} />
           <Button type="submit" className="w-full" size="lg" disabled={saving}>
-            {saving ? 'Saving...' : 'Add to Garden'}
+            {saving ? 'Saving...' : matches.length ? 'Add another to Garden' : 'Add to Garden'}
           </Button>
         </form>
       </SheetContent>
