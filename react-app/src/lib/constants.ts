@@ -130,3 +130,22 @@ export function shouldShowWelcome(): boolean {
 export function markVisit(): void {
   localStorage.setItem(LAST_VISIT_KEY, Date.now().toString())
 }
+
+function normalizeName(name?: string | null): string {
+  return (name ?? '').toLowerCase().trim().replace(/\s+/g, ' ')
+}
+
+export function findExistingMatches<T extends { common?: string | null; scientific?: string | null }>(
+  candidate: { common?: string | null; scientific?: string | null },
+  items: T[],
+): T[] {
+  const cSci = normalizeName(candidate.scientific)
+  const cCommon = normalizeName(candidate.common)
+  return items.filter(item => {
+    const iSci = normalizeName(item.scientific)
+    const iCommon = normalizeName(item.common)
+    if (cSci && iSci && cSci === iSci) return true
+    if (cCommon && iCommon && cCommon === iCommon) return true
+    return false
+  })
+}
