@@ -143,7 +143,7 @@
 
 | Function | URL | Auth | Model |
 |----------|-----|------|-------|
-| `identify-species` | `.../functions/v1/identify-species` | JWT disabled, anon key only | Claude Sonnet (claude-sonnet-4-20250514) |
+| `identify-species` | `.../functions/v1/identify-species` | JWT disabled, anon key only | Claude Sonnet (claude-sonnet-4-6) |
 | `garden-assistant` | `.../functions/v1/garden-assistant` | JWT disabled, anon key only | Claude Haiku (claude-haiku-4-5-20251001) |
 
 ### Secrets
@@ -319,7 +319,7 @@ DM Sans was removed. Body text now uses the system-ui font stack (`-apple-system
 ### External APIs (via Edge Functions)
 | API | Model/Endpoint | Used For | Called From |
 |-----|---------------|----------|------------|
-| Anthropic Claude API | claude-sonnet-4-20250514 | Species identification from photos (plants + insects) | `identify-species` edge function |
+| Anthropic Claude API | claude-sonnet-4-6 | Species identification from photos (plants + insects) | `identify-species` edge function |
 | Anthropic Claude API | claude-haiku-4-5-20251001 | Care profile generation + seasonal reminders (Tampa Bay-specific) | `garden-assistant` edge function |
 
 ### Services
@@ -432,6 +432,7 @@ All have RLS enabled (users own their rows). SQL in `docs/firebush-deployment-gu
   - `ImageCropper.tsx` — Drag/zoom positioning for gallery images, crops to viewfinder area
   - `IdResultCard.tsx` — Selectable result cards with confidence badges and native indicator
   - `ManualEntry.tsx` — Form for manual species entry (common name, scientific name, type, category)
+  - `DuplicateNotice.tsx` — Terracotta banner shown when the selected/typed species already exists in the garden; relabels save button to "Add another to Garden". Uses `findExistingMatches()` helper in `lib/constants.ts` to match by normalized scientific or common name.
 - **Improved identification prompt**: `identify-species` API accepts optional `hints` object with:
   - `growthForm` (Tree, Shrub, Vine, Wildflower, Grass, Herbaceous perennial, etc.)
   - `lifeStage` (Seedling, Juvenile, Mature, Flowering/Fruiting, Dormant, etc.)

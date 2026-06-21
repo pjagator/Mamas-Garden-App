@@ -16,7 +16,7 @@ A mobile-first web app for tracking native plants and wildlife in a Tampa Bay, F
 
 - **Frontend**: Vanilla JS / HTML / CSS -- no frameworks, no build step, no bundlers, no npm
 - **Backend**: Supabase (auth, Postgres with RLS, Storage, Edge Functions on Deno)
-- **Species ID**: Claude Sonnet (claude-sonnet-4-20250514) via `identify-species` edge function -- handles both plants and insects from photos
+- **Species ID**: Claude Sonnet (claude-sonnet-4-6) via `identify-species` edge function -- handles both plants and insects from photos
 - **Care Profiles**: Claude Haiku (claude-haiku-4-5-20251001) via `garden-assistant` edge function -- generates Tampa Bay-specific plant care data
 - **Seasonal Reminders**: Claude Haiku via `garden-assistant` edge function (action: `"reminders"`) -- generates monthly care tasks based on user's plant inventory
 - **Propagation Advice**: Claude Haiku via `garden-assistant` API route (action: `"propagation"`) -- generates species-specific propagation advice with optional zone-aware tips
@@ -188,7 +188,8 @@ A React/TypeScript rewrite lives on the `firebush` branch under `react-app/`. De
 - **ImageCropper**: Shown in gallery mode for drag/zoom positioning; crops to viewfinder area
 - **Hint pills**: Three optional toggle rows on photo screen: growth form (Tree, Shrub, Vine, etc.), life stage (Seedling, Mature, etc.), part photographed (Whole plant, Leaves, etc.). Selected hints are passed to `identify-species` API
 - **Manual entry with photo**: "I know what this is" button on photo screen bypasses identification. "Not right? Enter manually" button on results screen lets user type common/scientific name. Both save with photo and trigger background care profile generation.
-- **New components**: `ViewfinderOverlay.tsx`, `ImageCropper.tsx` in `react-app/src/components/capture/`
+- **Duplicate awareness**: When the selected ID candidate (or a typed manual name) matches an existing garden item by normalized scientific OR common name, a terracotta `DuplicateNotice` banner appears ("You already grow X — N in your garden") and the Garden save button relabels to "Add another to Garden". Matching is `findExistingMatches()` in `lib/constants.ts`; multiples are still allowed. Banner shows on the AI-results screen, both in-sheet manual blocks, and the standalone ManualEntry sheet.
+- **New components**: `ViewfinderOverlay.tsx`, `ImageCropper.tsx`, `DuplicateNotice.tsx` in `react-app/src/components/capture/`
 
 ### React App Gotchas
 - `useInventory()` is **context-backed** — state is owned by a single `<InventoryProvider>` in `AppShell.tsx` so CaptureSheet, Garden, Map, Timeline, Wishlist, and Settings all share one items array. Calling `useInventory()` outside the provider throws. This fixed a bug where captured photos didn't appear in the Garden list until a hard refresh because each hook call used to get its own independent `useState`. When adding a new consumer, just call `useInventory()` — the Provider is already wired.
