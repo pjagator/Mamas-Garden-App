@@ -27,7 +27,7 @@ export default function DuplicateNotice({ matches }: { matches: InventoryItem[] 
       <Sprout size={18} className="text-terra flex-shrink-0 mt-0.5" />
       <div className="min-w-0">
         <p className="text-sm font-medium text-terra">You already grow {common}</p>
-        <p className="text-xs text-ink-mid mt-0.5">{detail}</p>
+        <p className="text-sm text-ink-mid mt-0.5">{detail}</p>
       </div>
     </div>
   )

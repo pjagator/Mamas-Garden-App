@@ -703,6 +703,7 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
 
         {showSpottedPrompt && (
           <div className="space-y-3 mt-4">
+            <DuplicateNotice matches={manualMode ? manualMatches : aiMatches} />
             <p className="font-display text-sm text-primary">Where did you spot this friend?</p>
             <div className="flex flex-wrap gap-2">
               {['Leu Gardens', 'Garden center', "Neighbor's yard", 'Botanical garden', 'Hiking trail'].map(place => (
