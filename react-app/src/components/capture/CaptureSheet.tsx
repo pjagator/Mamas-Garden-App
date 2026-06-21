@@ -7,7 +7,7 @@ import { Camera, Image as ImageIcon, X, Loader2, Leaf, Heart } from 'lucide-reac
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { resilientFetch } from '@/lib/api'
-import { matchNative, PRESET_TAGS } from '@/lib/constants'
+import { matchNative, PRESET_TAGS, findExistingMatches } from '@/lib/constants'
 import { useInventory } from '@/hooks/useInventory'
 import { useWishlist } from '@/hooks/useWishlist'
 import IdResultCard from './IdResultCard'
@@ -15,6 +15,7 @@ import type { IdResult } from './IdResultCard'
 import type { InventoryItem } from '@/types'
 import ViewfinderOverlay from './ViewfinderOverlay'
 import ImageCropper from './ImageCropper'
+import DuplicateNotice from './DuplicateNotice'
 
 interface CaptureSheetProps {
   open: boolean
@@ -115,7 +116,7 @@ function HintPills({ label, options, value, onChange }: {
 }
 
 export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
-  const { insertItem } = useInventory()
+  const { insertItem, items } = useInventory()
   const { addItem: addToWishlist } = useWishlist()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
@@ -509,6 +510,12 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
     }
   }
 
+  const aiCandidate = results[selectedIndex]
+  const aiMatches = aiCandidate ? findExistingMatches(aiCandidate, items) : []
+  const manualMatches = (manualCommon.trim() || manualScientific.trim())
+    ? findExistingMatches({ common: manualCommon, scientific: manualScientific }, items)
+    : []
+
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
       <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto rounded-t-2xl">
@@ -633,13 +640,14 @@ export default function CaptureSheet({ open, onClose }: CaptureSheetProps) {
 
         {step === 'results' && results.length > 0 && !showSpottedPrompt && !manualMode && (
           <div className="space-y-3 mt-4">
+            <DuplicateNotice matches={aiMatches} />
             {results.map((r, i) => (
               <IdResultCard key={i} result={r} selected={selectedIndex === i} onSelect={() => setSelectedIndex(i)} />
             ))}
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes (optional)..." rows={2} className="mt-3" />
             <div className="flex gap-3 mt-3">
               <Button onClick={() => handleSave('garden')} className="flex-1" size="lg">
-                <Leaf size={18} className="mr-2" /> Add to Garden
+                <Leaf size={18} className="mr-2" /> {aiMatches.length ? 'Add another to Garden' : 'Add to Garden'}
               </Button>
               <Button onClick={() => handleSave('wishlist')} variant="outline" className="flex-1" size="lg">
                 <Heart size={18} className="mr-2" /> Save as Friend
