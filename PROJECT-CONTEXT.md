@@ -11,7 +11,7 @@ A mobile-first (iPhone) web app for tracking native plants and insects in a Tamp
 - GitHub Pages (static hosting, no build step)
 - Supabase (auth, Postgres database, Storage, Edge Functions)
 - Vanilla JS / HTML / CSS (no framework)
-- Claude Sonnet API (claude-sonnet-4-20250514) via Supabase Edge Function for species identification, care tips, and native status (handles both plants and insects)
+- Claude Sonnet API (claude-sonnet-4-6) via Supabase Edge Function for species identification, care tips, and native status (handles both plants and insects)
 
 ---
 
@@ -102,7 +102,7 @@ The function flow:
 1. Receives `{ imageUrl: string }` in the request body
 2. Fetches the image from Supabase Storage
 3. Converts to base64 server-side using chunked conversion (8KB chunks to avoid call stack overflow)
-4. Sends the image to Claude Sonnet (claude-sonnet-4-20250514) with a Tampa Bay botanist/entomologist prompt, with retry logic (exponential backoff up to 3 retries for 529/5xx errors)
+4. Sends the image to Claude Sonnet (claude-sonnet-4-6) with a Tampa Bay botanist/entomologist prompt, with retry logic (exponential backoff up to 3 retries for 529/5xx errors)
 5. Claude identifies the species (plant or insect), returns top 3 matches with confidence scores, native status, bloom/active seasons, care tips, and descriptions
 6. Returns `{ identifications: [...] }` with top 3 matches
 

@@ -77,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const response = await fetchWithRetry('https://api.anthropic.com/v1/messages', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY!, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1024, system: 'You are a plant pathologist specializing in Tampa Bay, Florida gardens.', messages }),
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: 'You are a plant pathologist specializing in Tampa Bay, Florida gardens.', messages }),
       })
       const claudeData = await response.json()
       if (claudeData.error) throw new Error(claudeData.error.message)
